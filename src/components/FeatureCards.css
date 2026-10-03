@@ -24,13 +24,6 @@
   pointer-events: none;
 }
 
-.feature-card__glow {
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(circle at 24% 60%, rgb(230 210 24 / 0.1), transparent 50%);
-  opacity: var(--hover);
-}
-
 .feature-card__bg {
   position: absolute;
   inset: 0;
@@ -175,7 +168,6 @@
   letter-spacing: 0.36px;
   color: var(--color-accent);
   height: 43px;
-  text-shadow: 0 0 calc(var(--hover) * 10px) rgb(230 210 24 / calc(var(--hover) * 0.2));
 }
 
 .feature-card__cta {

@@ -82,7 +82,6 @@ function FeatureCard({ kicker, title, cta, href, art }: Feature) {
       <img className="feature-card__bg" src={cardBg1} alt="" />
       <div className="feature-card__bg feature-card__bg--gradient" />
       <img className="feature-card__bg" src={cardBg2} alt="" />
-      <div className="feature-card__glow" aria-hidden />
       <div
         className="feature-card__art"
         style={{ maskImage: `url("${cardMask}")`, WebkitMaskImage: `url("${cardMask}")` }}
