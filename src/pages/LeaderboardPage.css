@@ -1,0 +1,58 @@
+.leaderboard-page {
+  position: relative;
+  /* Full-bleed across the main column's side padding */
+  margin: 0 -24px;
+  padding: 0 24px 64px;
+  /* Keep the artwork from spilling over the sidebar or causing page scroll */
+  overflow-x: clip;
+}
+
+/*
+ * Character / stage artwork behind the hero: kept at its design size
+ * (1669 × 962, 80% opacity) and centred on the content, never stretched or
+ * cropped, so the characters stay where they are in the design at any
+ * width. A mask guarantees every edge fades into the page background.
+ */
+.leaderboard-page__bg {
+  position: absolute;
+  top: -7px;
+  left: calc(50% - 836.5px);
+  width: 1669px;
+  max-width: none;
+  height: 962px;
+  opacity: 0.8;
+  pointer-events: none;
+  mask-image: linear-gradient(to bottom, #000 88%, transparent);
+  -webkit-mask-image: linear-gradient(to bottom, #000 88%, transparent);
+}
+
+/* Wider than the artwork: also fade its left and right edges */
+@media (min-width: 1925px) {
+  .leaderboard-page__bg {
+    mask-image:
+      linear-gradient(to bottom, #000 88%, transparent),
+      linear-gradient(to right, transparent, #000 12%, #000 88%, transparent);
+    mask-composite: intersect;
+    -webkit-mask-image:
+      linear-gradient(to bottom, #000 88%, transparent),
+      linear-gradient(to right, transparent, #000 12%, #000 88%, transparent);
+    -webkit-mask-composite: source-in;
+  }
+}
+
+.leaderboard-page__content {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.leaderboard-page__notice {
+  margin: 32px auto -32px;
+  padding: 8px 14px;
+  border-radius: var(--radius-md);
+  background: rgb(36 44 58 / 0.65);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-subtle);
+  text-align: center;
+}

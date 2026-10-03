@@ -1,0 +1,16 @@
+.floating-symbol {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.floating-symbol img {
+  flex: none;
+  object-fit: cover;
+  transform:
+    translateY(calc(var(--hover) * var(--motion) * -6px))
+    rotate(calc(var(--rotation) + var(--hover) * var(--motion) * 18deg))
+    scale(calc(1 + var(--hover) * var(--motion) * 0.18));
+  filter: drop-shadow(0 calc(var(--hover) * 8px) calc(var(--hover) * 8px) rgb(0 0 0 / 0.35));
+}

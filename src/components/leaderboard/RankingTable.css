@@ -1,0 +1,111 @@
+.ranking-table {
+  width: 811px;
+  max-width: 100%;
+  margin: 64px auto 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 16px;
+  line-height: 19px;
+  color: #d7dbe4;
+}
+
+.ranking-table__head,
+.ranking-table__row {
+  display: grid;
+  align-items: center;
+  white-space: nowrap;
+}
+
+/* Column starts from the design: header 10 / 210 / 490, rows 16 / 206 / 492 */
+.ranking-table__head {
+  grid-template-columns: 200px 280px 1fr auto;
+  padding: 0 16px 0 10px;
+  margin-bottom: 12px;
+  font-family: var(--font-display);
+  font-weight: 500;
+  color: #dfdfdf;
+}
+
+.ranking-table__row {
+  grid-template-columns: 190px 286px 1fr auto;
+  height: 58px;
+  padding: 0 20px 0 16px;
+  border-radius: var(--radius-md);
+  background: linear-gradient(to left, #11141c 80%, #161d2d);
+}
+
+.ranking-table__row:nth-child(odd) {
+  background: linear-gradient(to left, #171b26 80%, #222b41);
+}
+
+.ranking-table__head > span {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.ranking-table__head > span:last-child,
+.ranking-table__reward {
+  justify-self: end;
+}
+
+.ranking-table__head-dollar {
+  font-weight: 800;
+  line-height: 24px;
+  margin-top: -5px;
+  color: var(--color-accent);
+}
+
+.ranking-table__place {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: #2c3448;
+  font-family: var(--font-display);
+  font-weight: 800;
+  color: var(--color-text);
+}
+
+.ranking-table__row:nth-child(odd) .ranking-table__place {
+  background: #374058;
+}
+
+.ranking-table__user {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-weight: 600;
+}
+
+.ranking-table__avatar {
+  flex: none;
+  width: 38px;
+  height: 38px;
+  object-fit: cover;
+}
+
+.ranking-table__avatar--square {
+  border-radius: 6px;
+}
+
+.ranking-table__avatar--circle {
+  width: 40px;
+  height: 40px;
+  margin: -1px;
+}
+
+.ranking-table__wagered {
+  font-weight: 600;
+}
+
+.ranking-table__reward {
+  font-weight: 700;
+}
+
+.ranking-table__dollar {
+  color: var(--color-accent);
+}

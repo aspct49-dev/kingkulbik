@@ -1,0 +1,155 @@
+.footer {
+  position: relative;
+  margin: auto -24px 0;
+  padding: 44px 24px 28px;
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-border);
+}
+
+.footer__wrap {
+  max-width: 1094px;
+  margin: 0 auto;
+}
+
+.footer__top {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 40px 64px;
+  align-items: start;
+}
+
+.footer__logo {
+  font-family: var(--font-logo);
+  font-size: 26px;
+  line-height: normal;
+  white-space: nowrap;
+}
+
+.footer__logo-king,
+.footer__logo-kulbik {
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+.footer__logo-king {
+  background-image: linear-gradient(to right, #e3e3e3, #c5c5c5);
+}
+
+.footer__logo-kulbik {
+  background-image: linear-gradient(to right, #e4de2c, #a88600);
+}
+
+.footer__marks {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.footer__age {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid #364151;
+  color: #aab3c6;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.footer__aware {
+  height: 18px;
+  width: auto;
+  opacity: 0.75;
+  transition: opacity 0.15s ease;
+}
+
+.footer__marks a:hover .footer__aware {
+  opacity: 1;
+}
+
+.footer__note {
+  max-width: 52ch;
+  margin-top: 14px;
+  color: var(--color-text-subtle);
+  font-size: 13.5px;
+  line-height: 1.65;
+}
+
+.footer__note strong {
+  color: var(--color-accent);
+  font-weight: 600;
+}
+
+.footer__col {
+  display: flex;
+  flex-direction: column;
+}
+
+.footer h4 {
+  margin: 0 0 14px;
+  color: var(--color-accent);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.footer__col a {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 6px 0;
+  color: #aab3c6;
+  font-size: 14.5px;
+  white-space: nowrap;
+  transition: color 0.15s ease;
+}
+
+.footer__col a:hover {
+  color: #efefef;
+}
+
+.footer__col svg {
+  width: 16px;
+  height: 16px;
+  color: var(--color-text-subtle);
+  transition: color 0.15s ease;
+}
+
+.footer__col a:hover svg {
+  color: var(--brand, var(--color-accent));
+}
+
+.footer__legal {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-top: 36px;
+  padding-top: 22px;
+  border-top: 1px solid var(--color-border);
+  color: var(--color-text-subtle);
+  font-size: 13px;
+}
+
+@media (max-width: 960px) {
+  .footer__top {
+    grid-template-columns: 1fr 1fr;
+    gap: 30px 24px;
+  }
+
+  .footer__brand {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 720px) {
+  .footer__col a {
+    padding: 10px 0;
+  }
+}

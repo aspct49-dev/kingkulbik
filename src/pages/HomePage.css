@@ -1,0 +1,8 @@
+.home-page {
+  width: 100%;
+  max-width: 1094px;
+  margin: 0 auto;
+  padding: 35px 0 64px;
+  display: flex;
+  flex-direction: column;
+}

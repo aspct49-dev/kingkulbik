@@ -1,0 +1,135 @@
+:root {
+  --color-bg: #0e1219;
+  --color-surface: #151b25;
+  --color-border: #262f3f;
+  --color-text: #dadada;
+  --color-text-muted: #57657b;
+  --color-text-subtle: #6d7a96;
+  --color-text-dark: #151b25;
+  --color-accent: #e6d218;
+  --color-accent-button: #ac9d15;
+  --color-accent-button-highlight: #cdc152;
+  --color-accent-button-hover: #c7b61b;
+
+  --nav-item-from: #242c3a;
+  --nav-item-to: #1d2430;
+  --nav-item-highlight: #2f384a;
+  --nav-item-active-from: #384255;
+  --nav-item-active-to: #2a3445;
+  --nav-item-active-highlight: #586989;
+
+  --font-body: 'Onest', system-ui, sans-serif;
+  --font-display: 'Rubik', system-ui, sans-serif;
+  --font-logo: 'Titan One', system-ui, sans-serif;
+
+  --header-height: 73px;
+  --sidebar-width: 255px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font: inherit;
+  border: 0;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+  padding: 0;
+}
+
+img {
+  display: block;
+}
+
+p,
+h1,
+h2,
+h3 {
+  margin: 0;
+}
+
+.app {
+  display: grid;
+  grid-template-columns: var(--sidebar-width) 1fr;
+  grid-template-rows: var(--header-height) 1fr;
+  min-height: 100vh;
+}
+
+.app__header {
+  grid-column: 1 / -1;
+}
+
+.app__main {
+  position: relative;
+  padding: 0 24px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  /* Keeps the footer at the bottom on short pages */
+  min-height: calc(100vh - var(--header-height));
+}
+
+/*
+ * Shared hover animation (see useHoverAnimation): the element animates a
+ * single registered property, --hover, from 0 → 1 (in) and 1 → 0 (out).
+ * Components derive their hovered styles from var(--hover).
+ */
+@property --hover {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 0;
+}
+
+@keyframes hover-progress-in {
+  from { --hover: 0; }
+  to { --hover: 1; }
+}
+
+@keyframes hover-progress-out {
+  from { --hover: 1; }
+  to { --hover: 0; }
+}
+
+.hover-anim {
+  --hover-duration: 550ms;
+  --hover-easing: cubic-bezier(0.45, 0, 0.25, 1);
+  --motion: 1;
+}
+
+.hover-anim--in {
+  animation: hover-progress-in var(--hover-duration) var(--hover-easing) forwards;
+}
+
+.hover-anim--held {
+  --hover: 1;
+}
+
+.hover-anim--out {
+  animation: hover-progress-out var(--hover-duration) var(--hover-easing) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hover-anim {
+    --motion: 0;
+  }
+}

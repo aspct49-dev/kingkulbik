@@ -1,0 +1,78 @@
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  height: var(--header-height);
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.header__logo {
+  width: 256px;
+  padding-left: 30px;
+  font-family: var(--font-logo);
+  font-size: 30px;
+  line-height: normal;
+  white-space: nowrap;
+}
+
+.header__logo-king,
+.header__logo-kulbik {
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+.header__logo-king {
+  background-image: linear-gradient(to right, #e3e3e3, #c5c5c5);
+}
+
+.header__logo-kulbik {
+  background-image: linear-gradient(to right, #e4de2c, #a88600);
+}
+
+.header__divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 0;
+  height: 35px;
+}
+
+.header__divider img {
+  flex: none;
+  transform: rotate(-90deg);
+}
+
+.header__auth {
+  margin-left: auto;
+  padding-right: 47px;
+  display: flex;
+  align-items: center;
+  gap: 40px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.header__sign-in {
+  color: var(--color-text);
+  transition: color 0.15s;
+}
+
+.header__sign-in:hover {
+  color: #fff;
+}
+
+.header__register {
+  width: 111px;
+  height: 37px;
+  color: var(--color-text-dark);
+  background: url('../assets/sidebar/register-bg.svg') center / 100% 100% no-repeat;
+  transition: filter 0.15s;
+}
+
+.header__register:hover {
+  filter: brightness(1.1);
+}
