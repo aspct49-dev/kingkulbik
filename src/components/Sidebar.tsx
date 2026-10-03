@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import type { ReactNode } from 'react'
 import { NavLink } from 'react-router'
 import homeActiveIcon from '../assets/sidebar/home.svg'
@@ -119,23 +120,44 @@ function SidebarLink({ label, href, icon, activeIcon }: NavItem) {
   )
 }
 
-export default function Sidebar() {
+type SidebarProps = {
+  /** Mobile drawer state; on desktop the sidebar is always shown. */
+  open: boolean
+  onClose: () => void
+}
+
+export default function Sidebar({ open, onClose }: SidebarProps) {
+  // While the drawer is open: Escape closes it and the page behind can't scroll
+  useEffect(() => {
+    if (!open) return
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
+    document.addEventListener('keydown', onKey)
+    document.documentElement.classList.add('has-drawer-open')
+    return () => {
+      document.removeEventListener('keydown', onKey)
+      document.documentElement.classList.remove('has-drawer-open')
+    }
+  }, [open, onClose])
+
   return (
-    <aside className="sidebar">
-      <nav className="sidebar__nav" aria-label="Main">
-        {sections.map((section, i) => (
-          <div className="sidebar__section" key={section.title ?? i}>
-            {section.title && <p className="sidebar__section-title">{section.title}</p>}
-            <ul className="sidebar__list">
-              {section.items.map((item) => (
-                <li key={item.label}>
-                  <SidebarLink {...item} />
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))}
-      </nav>
-    </aside>
+    <>
+      <div className={`sidebar__backdrop${open ? ' sidebar__backdrop--visible' : ''}`} onClick={onClose} aria-hidden />
+      <aside className={`sidebar${open ? ' sidebar--open' : ''}`} id="site-nav">
+        <nav className="sidebar__nav" aria-label="Main">
+          {sections.map((section, i) => (
+            <div className="sidebar__section" key={section.title ?? i}>
+              {section.title && <p className="sidebar__section-title">{section.title}</p>}
+              <ul className="sidebar__list">
+                {section.items.map((item) => (
+                  <li key={item.label}>
+                    <SidebarLink {...item} />
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </nav>
+      </aside>
+    </>
   )
 }

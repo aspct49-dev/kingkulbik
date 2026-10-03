@@ -79,3 +79,14 @@
     display: none;
   }
 }
+
+@media (max-width: 600px) {
+  .hero-banner {
+    height: 150px;
+  }
+
+  .hero-banner__logo {
+    width: 200px;
+    height: auto;
+  }
+}

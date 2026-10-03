@@ -1,8 +1,8 @@
 .leaderboard-page {
   position: relative;
   /* Full-bleed across the main column's side padding */
-  margin: 0 -24px;
-  padding: 0 24px 64px;
+  margin: 0 calc(-1 * var(--page-gutter));
+  padding: 0 var(--page-gutter) 64px;
   /* Keep the artwork from spilling over the sidebar or causing page scroll */
   overflow-x: clip;
 }

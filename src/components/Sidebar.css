@@ -93,3 +93,69 @@
   line-height: 1;
   color: var(--color-text-muted);
 }
+
+.sidebar__backdrop {
+  display: none;
+}
+
+/* Below 1024px the sidebar becomes a slide-in drawer under the header */
+@media (max-width: 1024px) {
+  .sidebar {
+    position: fixed;
+    z-index: 20;
+    top: var(--header-height);
+    bottom: 0;
+    left: 0;
+    width: min(var(--sidebar-width), 85vw);
+    transform: translateX(-100%);
+    visibility: hidden;
+    transition: transform 0.28s cubic-bezier(0.32, 0.72, 0, 1), visibility 0s linear 0.28s;
+    box-shadow: 8px 0 32px rgb(0 0 0 / 0.45);
+  }
+
+  .sidebar--open {
+    transform: none;
+    visibility: visible;
+    transition: transform 0.28s cubic-bezier(0.32, 0.72, 0, 1), visibility 0s;
+  }
+
+  .sidebar__nav {
+    position: static;
+    height: 100%;
+    max-height: none;
+    overscroll-behavior: contain;
+  }
+
+  .sidebar__item {
+    height: 40px;
+  }
+
+  .sidebar__backdrop {
+    display: block;
+    position: fixed;
+    z-index: 15;
+    inset: var(--header-height) 0 0 0;
+    background: rgb(5 7 11 / 0.6);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.28s ease;
+  }
+
+  .sidebar__backdrop--visible {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  :root.has-drawer-open,
+  :root.has-drawer-open body {
+    overflow: hidden;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sidebar,
+  .sidebar--open,
+  .sidebar__backdrop {
+    transition: none;
+  }
+}

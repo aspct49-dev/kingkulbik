@@ -32,3 +32,17 @@
   font-weight: 600;
   color: #d0cfcb;
 }
+
+@media (max-width: 600px) {
+  .countdown {
+    margin-top: 28px;
+  }
+
+  .countdown__time {
+    flex-wrap: wrap;
+    justify-content: center;
+    column-gap: 0.4em;
+    font-size: 15px;
+    line-height: 20px;
+  }
+}

@@ -4,11 +4,23 @@ import './Header.css'
 
 type HeaderProps = {
   className?: string
+  menuOpen: boolean
+  onMenuToggle: () => void
 }
 
-export default function Header({ className = '' }: HeaderProps) {
+export default function Header({ className = '', menuOpen, onMenuToggle }: HeaderProps) {
   return (
     <header className={`header ${className}`}>
+      <button
+        type="button"
+        className="header__menu"
+        aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+        aria-expanded={menuOpen}
+        aria-controls="site-nav"
+        onClick={onMenuToggle}
+      >
+        <span className={`header__menu-icon${menuOpen ? ' header__menu-icon--open' : ''}`} aria-hidden />
+      </button>
       <Link to="/" className="header__logo" aria-label="King Kulbik home">
         <span className="header__logo-king">KING</span>{' '}
         <span className="header__logo-kulbik">KULBIK</span>

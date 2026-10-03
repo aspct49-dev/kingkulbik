@@ -44,3 +44,39 @@
   height: 100%;
   object-fit: cover;
 }
+
+/* Phones: one swipeable row that bleeds to the screen edges */
+@media (max-width: 600px) {
+  .exclusive-games {
+    margin-top: 32px;
+  }
+
+  .exclusive-games__heading {
+    font-size: 18px;
+  }
+
+  .exclusive-games__list {
+    margin: 16px calc(-1 * var(--page-gutter)) 0;
+    padding: 0 var(--page-gutter) 4px;
+    flex-wrap: nowrap;
+    gap: 10px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: var(--page-gutter);
+    scrollbar-width: none;
+  }
+
+  .exclusive-games__list::-webkit-scrollbar {
+    display: none;
+  }
+
+  .exclusive-games__list > li {
+    flex: none;
+    scroll-snap-align: start;
+  }
+
+  .exclusive-games__card {
+    width: 140px;
+    height: 186px;
+  }
+}

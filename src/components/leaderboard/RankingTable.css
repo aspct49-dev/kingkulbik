@@ -98,6 +98,12 @@
   margin: -1px;
 }
 
+.ranking-table__name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .ranking-table__wagered {
   font-weight: 600;
 }
@@ -108,4 +114,66 @@
 
 .ranking-table__dollar {
   color: var(--color-accent);
+}
+
+/* Phones: compact columns; long names truncate instead of pushing amounts off */
+@media (max-width: 720px) {
+  .ranking-table {
+    margin-top: 40px;
+    font-size: 14px;
+  }
+
+  .ranking-table__head,
+  .ranking-table__row {
+    grid-template-columns: 56px minmax(0, 1fr) auto auto;
+    column-gap: 12px;
+  }
+
+  .ranking-table__head {
+    padding: 0 12px;
+    margin-bottom: 6px;
+  }
+
+  .ranking-table__head > span {
+    gap: 6px;
+  }
+
+  .ranking-table__row {
+    height: 52px;
+    padding: 0 12px;
+  }
+
+  .ranking-table__user {
+    gap: 8px;
+    min-width: 0;
+  }
+
+  
+
+  .ranking-table__avatar {
+    width: 32px;
+    height: 32px;
+  }
+
+  .ranking-table__avatar--circle {
+    width: 34px;
+    height: 34px;
+  }
+}
+
+@media (max-width: 380px) {
+  .ranking-table__head > span img,
+  .ranking-table__head-dollar {
+    display: none;
+  }
+
+  .ranking-table__head,
+  .ranking-table__row {
+    grid-template-columns: 44px minmax(0, 1fr) auto auto;
+    column-gap: 10px;
+  }
+
+  .ranking-table__avatar {
+    display: none;
+  }
 }

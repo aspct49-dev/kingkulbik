@@ -227,3 +227,72 @@
     justify-content: center;
   }
 }
+
+/*
+ * Phones: a shorter card with the 3D art scaled down proportionally
+ * (zoom keeps each object's position relative to the card) and the text
+ * column narrowed. The CTA stays a comfortable touch target.
+ */
+@media (max-width: 560px) {
+  .feature-cards {
+    margin-top: 20px;
+    gap: 10px;
+  }
+
+  .feature-card {
+    height: 172px;
+  }
+
+  .feature-card__art-motion > * {
+    zoom: 0.7;
+  }
+
+  .feature-card__content {
+    right: 12px;
+    top: 50%;
+    width: 172px;
+    gap: 10px;
+    transform: translateY(-50%);
+  }
+
+  .feature-card__kicker {
+    height: auto;
+    font-size: 15px;
+    line-height: 1.2;
+  }
+
+  .feature-card__title {
+    height: auto;
+    font-size: 23px;
+    line-height: 1.2;
+  }
+
+  .feature-card__cta {
+    width: 150px;
+    height: 34px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 360px) {
+  .feature-card__art-motion > * {
+    zoom: 0.52;
+  }
+
+  .feature-card__content {
+    right: 8px;
+    width: 150px;
+  }
+
+  .feature-card__kicker {
+    font-size: 14px;
+  }
+
+  .feature-card__title {
+    font-size: 19px;
+  }
+
+  .feature-card__cta {
+    width: 132px;
+  }
+}

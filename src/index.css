@@ -23,6 +23,7 @@
   --font-logo: 'Titan One', system-ui, sans-serif;
 
   --header-height: 73px;
+  --page-gutter: 24px;
   --sidebar-width: 255px;
   --radius-sm: 6px;
   --radius-md: 8px;
@@ -75,13 +76,26 @@ h3 {
   min-height: 100vh;
 }
 
+@media (max-width: 1024px) {
+  .app {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  :root {
+    --header-height: 60px;
+    --page-gutter: 16px;
+  }
+}
+
 .app__header {
   grid-column: 1 / -1;
 }
 
 .app__main {
   position: relative;
-  padding: 0 24px;
+  padding: 0 var(--page-gutter);
   min-width: 0;
   display: flex;
   flex-direction: column;

@@ -48,7 +48,7 @@ export default function RankingTable({ entries, prizes }: RankingTableProps) {
                 src={avatar.src}
                 alt=""
               />
-              {entry?.name ?? '—'}
+              <span className="ranking-table__name">{entry?.name ?? '—'}</span>
             </span>
             <span role="cell" className="ranking-table__wagered">
               {entry ? (
