@@ -70,7 +70,10 @@
   width: 111px;
   height: 37px;
   color: var(--color-text-dark);
-  background: url('../assets/sidebar/register-bg.svg') center / 100% 100% no-repeat;
+  /* Plain CSS (not the Figma SVG) so it stays crisp at any size and pixel density */
+  border-radius: var(--radius-sm);
+  background: linear-gradient(to right, #a88600, #e4de2c);
+  box-shadow: inset 0 1px 0 0 #e2db70;
   transition: filter 0.15s;
 }
 
