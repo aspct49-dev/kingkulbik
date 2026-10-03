@@ -116,26 +116,44 @@
   color: var(--color-accent);
 }
 
-/* Phones: compact columns; long names truncate instead of pushing amounts off */
+/*
+ * Phones: the header and every row share one set of columns (subgrid), so
+ * amounts line up down the table whatever their length. Money columns are
+ * right-aligned; long names truncate instead of pushing amounts off.
+ */
 @media (max-width: 720px) {
   .ranking-table {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto auto;
+    column-gap: 14px;
+    row-gap: 6px;
     margin-top: 40px;
     font-size: 14px;
   }
 
   .ranking-table__head,
   .ranking-table__row {
-    grid-template-columns: 56px minmax(0, 1fr) auto auto;
-    column-gap: 12px;
+    grid-column: 1 / -1;
+    grid-template-columns: subgrid;
   }
 
   .ranking-table__head {
     padding: 0 12px;
-    margin-bottom: 6px;
+    margin-bottom: 2px;
   }
 
-  .ranking-table__head > span {
-    gap: 6px;
+  /* Header icons would widen the columns past their content on a phone */
+  .ranking-table__head > span img,
+  .ranking-table__head-dollar {
+    display: none;
+  }
+
+  .ranking-table__head > span:nth-child(3),
+  .ranking-table__head > span:nth-child(4),
+  .ranking-table__wagered,
+  .ranking-table__reward {
+    justify-self: end;
+    text-align: right;
   }
 
   .ranking-table__row {
@@ -147,8 +165,6 @@
     gap: 8px;
     min-width: 0;
   }
-
-  
 
   .ranking-table__avatar {
     width: 32px;
@@ -162,14 +178,7 @@
 }
 
 @media (max-width: 380px) {
-  .ranking-table__head > span img,
-  .ranking-table__head-dollar {
-    display: none;
-  }
-
-  .ranking-table__head,
-  .ranking-table__row {
-    grid-template-columns: 44px minmax(0, 1fr) auto auto;
+  .ranking-table {
     column-gap: 10px;
   }
 
