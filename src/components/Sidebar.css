@@ -7,10 +7,16 @@
   top: var(--header-height);
   max-height: calc(100vh - var(--header-height));
   overflow-y: auto;
+  /* Still scrollable on short screens, just without a visible scrollbar */
+  scrollbar-width: none;
   padding: 24px 16px;
   display: flex;
   flex-direction: column;
   gap: 23px;
+}
+
+.sidebar__nav::-webkit-scrollbar {
+  display: none;
 }
 
 .sidebar__section {
