@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import KenoControls, { MIN_BET } from '../components/keno/KenoControls'
 import KenoBoard from '../components/keno/KenoBoard'
 import KenoPayTable from '../components/keno/KenoPayTable'
+import gemIcon from '../assets/keno/gem.svg'
+import GameTitleBar from '../components/GameTitleBar'
 import GameToolbar, { EMPTY_STATS, recordBet } from '../components/GameToolbar'
 import type { SessionStats } from '../components/GameToolbar'
 import { formatMultiplier, formatPoints } from '../components/keno/format'
@@ -283,6 +285,13 @@ export default function KenoPage() {
               : `${result.hits} hits. No win this round.`)}
         </p>
       </section>
+
+      <GameTitleBar
+        name="Keno"
+        icon={gemIcon}
+        rtp={picks.length > 0 ? getReturnToPlayer(risk, picks.length) : 0.99}
+        wide={theater}
+      />
     </div>
   )
 }

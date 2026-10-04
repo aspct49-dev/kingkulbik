@@ -1,0 +1,48 @@
+.game-titlebar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: 1200px;
+  margin: 12px auto 0;
+  padding: 10px 14px;
+  border: 1px solid #232b3a;
+  border-radius: 8px;
+  background: #151b25;
+  transition: max-width 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.game-titlebar--wide {
+  max-width: 1520px;
+}
+
+.game-titlebar__name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.game-titlebar__name img {
+  object-fit: contain;
+}
+
+.game-titlebar__tag {
+  padding: 5px 9px;
+  border-radius: 5px;
+  background: rgb(50 106 189 / 0.18);
+  font-size: 12px;
+  font-weight: 600;
+  color: #7fa8e6;
+}
+
+.game-titlebar__rtp {
+  margin-left: auto;
+  padding: 5px 9px;
+  border-radius: 5px;
+  background: #222a38;
+  font-size: 12px;
+  font-weight: 700;
+  color: #c6ccd8;
+}

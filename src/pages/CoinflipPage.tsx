@@ -3,6 +3,7 @@ import coinIcon from '../assets/keno/coin.png'
 import CoinflipControls, { MIN_BET } from '../components/coinflip/CoinflipControls'
 import CoinStage, { QUICK_TOSS_SECONDS, TOSS_SECONDS } from '../components/coinflip/CoinStage'
 import type { Toss } from '../components/coinflip/CoinStage'
+import GameTitleBar from '../components/GameTitleBar'
 import GameToolbar, { EMPTY_STATS, recordBet } from '../components/GameToolbar'
 import type { SessionStats } from '../components/GameToolbar'
 import AnimatedNumber from '../components/AnimatedNumber'
@@ -249,14 +250,7 @@ export default function CoinflipPage() {
         </div>
       </section>
 
-      <div className="coinflip-titlebar">
-        <span className="coinflip-titlebar__name">
-          <img src={coinIcon} width={16} height={16} alt="" />
-          Coinflip
-        </span>
-        <span className="coinflip-titlebar__tag">King Kulbik Originals</span>
-        <span className="coinflip-titlebar__rtp">RTP {(RETURN_TO_PLAYER * 100).toFixed(0)}%</span>
-      </div>
+      <GameTitleBar name="Coinflip" icon={coinIcon} rtp={RETURN_TO_PLAYER} wide={theater} />
     </div>
   )
 }

@@ -193,51 +193,6 @@
   }
 }
 
-/* Title bar under the panel */
-.coinflip-titlebar {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  max-width: 1200px;
-  margin: 12px auto 0;
-  padding: 10px 14px;
-  border: 1px solid #232b3a;
-  border-radius: 8px;
-  background: #151b25;
-}
-
-.coinflip-titlebar__name {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 14px;
-  font-weight: 700;
-  color: #fff;
-}
-
-.coinflip-titlebar__name img {
-  object-fit: contain;
-}
-
-.coinflip-titlebar__tag {
-  padding: 5px 9px;
-  border-radius: 5px;
-  background: rgb(50 106 189 / 0.18);
-  font-size: 12px;
-  font-weight: 600;
-  color: #7fa8e6;
-}
-
-.coinflip-titlebar__rtp {
-  margin-left: auto;
-  padding: 5px 9px;
-  border-radius: 5px;
-  background: #222a38;
-  font-size: 12px;
-  font-weight: 700;
-  color: #c6ccd8;
-}
-
 /* Narrow: stage first, controls below */
 @container (max-width: 760px) {
   .coinflip {
