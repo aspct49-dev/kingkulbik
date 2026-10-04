@@ -11,6 +11,8 @@ export const TOSS_SECONDS = 1.9
 export const QUICK_TOSS_SECONDS = 0.35
 const SETTLE_SECONDS = 0.55
 const SPINS = 5
+/** Brightness of the tails blue relative to the model file (see where it is applied) */
+const BLUE_TONE = 0.4
 /** Pivot angles that show each face to the camera */
 const HEADS_ANGLE = Math.PI
 const TAILS_ANGLE = 0
@@ -117,6 +119,39 @@ function makeCrownMaps() {
   })
 
   return { map, bump, metalRough }
+}
+
+/** The heads side's gold (the gold coin model's KK_Gold, which the blue model replaces with blue) */
+function makeGold() {
+  return new THREE.MeshStandardMaterial({
+    color: new THREE.Color().setRGB(0.4793, 0.2874, 0.0103, THREE.LinearSRGBColorSpace),
+    metalness: 0.9,
+    roughness: 0.36,
+    side: THREE.DoubleSide,
+  })
+}
+
+/**
+ * Splits a part that wraps both faces into two material groups by which half each
+ * triangle sits in: group 0 below the middle (-Y, our heads), group 1 above (+Y, tails).
+ */
+function splitBySide(geometry: THREE.BufferGeometry) {
+  const position = geometry.getAttribute('position')
+  const count = geometry.index ? geometry.index.count : position.count
+  const vertex = (i: number) => (geometry.index ? geometry.index.getX(i) : i)
+  const below: number[] = []
+  const above: number[] = []
+  for (let i = 0; i < count; i += 3) {
+    const a = vertex(i)
+    const b = vertex(i + 1)
+    const c = vertex(i + 2)
+    const side = position.getY(a) + position.getY(b) + position.getY(c) < 0 ? below : above
+    side.push(a, b, c)
+  }
+  geometry.setIndex([...below, ...above])
+  geometry.clearGroups()
+  geometry.addGroup(0, below.length, 0)
+  geometry.addGroup(below.length, above.length, 1)
 }
 
 /** Soft round shadow for under the coin */
@@ -253,6 +288,7 @@ export default function CoinStage({ face, toss, onLanded, quick = false }: CoinS
       .then((gltf) => {
         if (disposed) return
         const model = gltf.scene
+        const gold = makeGold()
         // Each part is exported in a tilted "hero" pose; the flip needs it flat
         model.children.forEach((part) => part.quaternion.identity())
         model.rotation.x = Math.PI / 2 // the model's +Y side now faces the camera at angle 0
@@ -260,8 +296,21 @@ export default function CoinStage({ face, toss, onLanded, quick = false }: CoinS
         model.traverse((o) => {
           const mesh = o as THREE.Mesh
           if (mesh.isMesh) {
-            // Both centres carry the emblem in the model. Our tails is its navy-ring side
-            // (named Heads in the file), which gets the crown; our heads is the gold-ring side.
+            // The model is the blue coin, and both centres carry the emblem. Our tails is its
+            // +Y side (named Heads in the file): blue ring, crown. Our heads is its -Y side,
+            // turned gold here: gold ring, gold rim segments, emblem.
+            if (mesh.name === 'Inner_Ring_Tails') mesh.material = gold
+            // The file's blue is near full brightness; under this scene's key light it clips to
+            // pastel, so it is scaled down to read as the intended deep blue on screen
+            const blue = mesh.material as THREE.MeshStandardMaterial
+            if (blue.name === 'KK_Blue' && !blue.userData.toned) {
+              blue.color.multiplyScalar(BLUE_TONE)
+              blue.userData.toned = true
+            }
+            if (mesh.name === 'Outer_Gold_Segments') {
+              splitBySide(mesh.geometry)
+              mesh.material = [gold, mesh.material as THREE.Material]
+            }
             if (mesh.name === 'Center_Tails') {
               // Its UVs are laid out for a side-to-side flip; ours turns end over end
               const emblem = (mesh.material as THREE.MeshStandardMaterial).clone()
