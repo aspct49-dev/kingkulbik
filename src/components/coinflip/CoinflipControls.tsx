@@ -1,9 +1,10 @@
 import { memo } from 'react'
-import coinIcon from '../../assets/keno/coin.png'
+import coinIcon from '../../assets/coin.svg'
 import { MULTIPLIER, formatMultiplier, multiplierFor } from '../../games/coinflip/engine'
 import type { Side } from '../../games/coinflip/engine'
 import AnimatedNumber from '../AnimatedNumber'
 import { formatPoints } from '../keno/format'
+import '../BetPanel.css'
 import './CoinflipControls.css'
 
 export const MIN_BET = 1
@@ -43,11 +44,11 @@ export default memo(function CoinflipControls(props: CoinflipControlsProps) {
   const canCall = playing && !flipping
 
   return (
-    <div className="coinflip-controls">
-      <label className="coinflip-controls__label" htmlFor="coinflip-bet">
+    <div className="bet-panel">
+      <label className="bet-panel__label" htmlFor="coinflip-bet">
         Bet Amount
       </label>
-      <div className="coinflip-field">
+      <div className="bet-field">
         <img src={coinIcon} width={14} height={14} alt="" />
         <input
           id="coinflip-bet"
@@ -58,11 +59,11 @@ export default memo(function CoinflipControls(props: CoinflipControlsProps) {
           onChange={(e) => props.onBetInputChange(e.target.value)}
           onBlur={props.onBetBlur}
         />
-        <div className="coinflip-field__actions">
+        <div className="bet-field__actions">
           <button type="button" onClick={props.onHalve} disabled={locked} aria-label="Halve bet">
             ½
           </button>
-          <span className="coinflip-field__divider" aria-hidden />
+          <span className="bet-field__divider" aria-hidden />
           <button type="button" onClick={props.onDouble} disabled={locked} aria-label="Double bet">
             2x
           </button>
@@ -72,25 +73,25 @@ export default memo(function CoinflipControls(props: CoinflipControlsProps) {
       {playing ? (
         <button
           type="button"
-          className="coinflip-controls__bet coinflip-controls__bet--cashout"
+          className="bet-panel__bet bet-panel__bet--cashout"
           onClick={props.onCashout}
           disabled={flipping || streak === 0}
         >
           Cashout
           {streak > 0 && (
-            <span className="coinflip-controls__bet-amount">
+            <span className="bet-panel__bet-amount">
               <img src={coinIcon} width={15} height={15} alt="" />
               <AnimatedNumber value={cashout} format={formatPoints} duration={450} />
             </span>
           )}
         </button>
       ) : (
-        <button type="button" className="coinflip-controls__bet" onClick={props.onBet} disabled={!props.canBet}>
+        <button type="button" className="bet-panel__bet" onClick={props.onBet} disabled={!props.canBet}>
           Bet
         </button>
       )}
 
-      <button type="button" className="coinflip-controls__secondary" onClick={props.onRandomPick} disabled={!canCall}>
+      <button type="button" className="bet-panel__secondary" onClick={props.onRandomPick} disabled={!canCall}>
         Random Pick
       </button>
 
@@ -109,27 +110,27 @@ export default memo(function CoinflipControls(props: CoinflipControlsProps) {
         ))}
       </div>
 
-      <span className="coinflip-controls__label coinflip-controls__label--spaced">
+      <span className="bet-panel__label bet-panel__label--spaced">
         Total Profit ({formatMultiplier(playing ? multiplier : MULTIPLIER)}×)
       </span>
-      <div className="coinflip-field coinflip-field--readonly" aria-live="polite">
+      <div className="bet-field bet-field--readonly" aria-live="polite">
         <img src={coinIcon} width={14} height={14} alt="" />
         <AnimatedNumber value={playing ? Math.max(0, cashout - game.bet) : 0} format={formatPoints} duration={450} />
       </div>
       {props.error && (
-        <p className="coinflip-controls__error" role="alert">
+        <p className="bet-panel__error" role="alert">
           {props.error}
         </p>
       )}
 
-      <div className="coinflip-controls__balance">
+      <div className="bet-panel__balance">
         <span>Demo balance</span>
-        <span className="coinflip-controls__balance-value">
+        <span className="bet-panel__balance-value">
           <img src={coinIcon} width={13} height={13} alt="" />
           <AnimatedNumber value={props.balance} format={formatPoints} duration={500} />
         </span>
         {props.balance < MIN_BET && !locked && (
-          <button type="button" className="coinflip-controls__reset" onClick={props.onResetBalance}>
+          <button type="button" className="bet-panel__reset" onClick={props.onResetBalance}>
             Reset
           </button>
         )}

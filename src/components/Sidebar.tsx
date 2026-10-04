@@ -9,7 +9,6 @@ import rewardsIcon from '../assets/sidebar/rewards.svg'
 import challengesIcon from '../assets/sidebar/challenges.svg'
 import rafflesIcon from '../assets/sidebar/raffles.svg'
 import itemStoreIcon from '../assets/sidebar/item-store.svg'
-import topEarnersIcon from '../assets/sidebar/top-earners.svg'
 import bonusHuntIcon from '../assets/sidebar/bonus-hunt.svg'
 import coinflipIcon from '../assets/sidebar/coinflip.svg'
 import videocamIcon from '../assets/sidebar/videocam.svg'
@@ -62,17 +61,15 @@ const sections: NavSection[] = [
       { label: 'Challenges', href: '#challenges', icon: svgIcon(challengesIcon, 16, 16) },
       { label: 'Raffles', href: '#raffles', icon: svgIcon(rafflesIcon, 16, 16) },
       { label: 'Item Store', href: '#item-store', icon: svgIcon(itemStoreIcon, 16, 16) },
-      { label: 'Top Earners', href: '#top-earners', icon: svgIcon(topEarnersIcon, 14, 14) },
     ],
   },
   {
     title: 'Games',
     items: [
-      { label: 'Bonus Hunt', href: '#bonus-hunt', icon: svgIcon(bonusHuntIcon, 19, 19) },
-      { label: 'Predictions', href: '#predictions', icon: numberIcon },
+      { label: 'Bonus Hunt', href: '/bonus-hunt', icon: svgIcon(bonusHuntIcon, 19, 19) },
       {
         label: 'Guess the Balance',
-        href: '#guess-the-balance',
+        href: '/guess-the-balance',
         icon: <span className="sidebar__question-icon">?</span>,
       },
       { label: 'Coinflip', href: '/coinflip', icon: svgIcon(coinflipIcon, 17, 17) },

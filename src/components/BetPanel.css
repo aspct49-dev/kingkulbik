@@ -1,0 +1,250 @@
+/* The bet panel on the left of every game: bet amount, Bet, game options, demo balance */
+.bet-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 12px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.bet-panel__label {
+  margin-bottom: 8px;
+  line-height: 14px;
+  color: var(--color-text-muted);
+}
+
+.bet-panel__label--spaced {
+  margin-top: 14px;
+}
+
+/* Fields */
+.bet-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 42px;
+  padding: 0 4px 0 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: #151a24;
+  transition: border-color 0.15s;
+}
+
+.bet-field:focus-within {
+  border-color: #4a576e;
+}
+
+.bet-field img {
+  flex: none;
+  object-fit: contain;
+}
+
+.bet-field input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  border: 0;
+  outline: 0;
+  background: none;
+  font: inherit;
+  font-size: 14px;
+  color: #fff;
+  -moz-appearance: textfield;
+}
+
+.bet-field input::-webkit-outer-spin-button,
+.bet-field input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.bet-field input::placeholder {
+  color: #4f5b70;
+}
+
+.bet-field input:disabled {
+  color: #8a94a6;
+}
+
+.bet-field--readonly {
+  padding-right: 12px;
+  font-size: 14px;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+}
+
+.bet-field__actions {
+  display: flex;
+  align-items: center;
+  align-self: stretch;
+  margin: 3px 0;
+  border-radius: 6px;
+  background: #2b3546;
+}
+
+.bet-field__actions button {
+  height: 100%;
+  min-width: 40px;
+  padding: 0 8px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #dfe3ea;
+  transition:
+    background-color 0.15s,
+    transform 0.18s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.bet-field__actions button:first-child {
+  font-size: 15px;
+}
+
+.bet-field__actions button:hover:not(:disabled) {
+  background: #35415a;
+}
+
+.bet-field__actions button:disabled {
+  color: #5a6578;
+}
+
+.bet-field__divider {
+  width: 1px;
+  height: 16px;
+  background: #4a5568;
+}
+
+/* Dropdown in the same frame as the fields */
+.bet-select {
+  position: relative;
+}
+
+.bet-select select {
+  appearance: none;
+  width: 100%;
+  height: 42px;
+  padding: 0 36px 0 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: #151a24;
+  font: inherit;
+  font-size: 14px;
+  color: #fff;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.bet-select select:focus-visible {
+  border-color: #4a576e;
+  outline: 0;
+}
+
+.bet-select select:disabled {
+  color: #8a94a6;
+}
+
+.bet-select__caret {
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%) rotate(180deg);
+  pointer-events: none;
+}
+
+/* Buttons */
+.bet-panel__secondary,
+.bet-panel__bet {
+  border-radius: 7px;
+  font-weight: 700;
+  color: #fff;
+  transition:
+    background-color 0.15s,
+    box-shadow 0.15s,
+    filter 0.15s,
+    opacity 0.15s,
+    transform 0.18s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.bet-panel__bet {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 46px;
+  margin-top: 12px;
+  background: var(--color-accent-button);
+  box-shadow: inset 0 1px 0 0 #e2db70;
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+}
+
+.bet-panel__bet:hover:not(:disabled) {
+  filter: brightness(1.1);
+}
+
+.bet-panel__secondary {
+  height: 40px;
+  margin-top: 10px;
+  background: #2b3546;
+  font-size: 13.88px;
+}
+
+.bet-panel__secondary:hover:not(:disabled) {
+  background: #35415a;
+}
+
+.bet-panel button:active:not(:disabled) {
+  transform: scale(0.97);
+  transition-duration: 0.08s;
+}
+
+.bet-panel button:disabled,
+.bet-panel input:disabled,
+.bet-panel select:disabled {
+  cursor: not-allowed;
+}
+
+.bet-panel__secondary:disabled,
+.bet-panel__bet:disabled {
+  opacity: 0.5;
+}
+
+.bet-panel__error {
+  margin-top: 8px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #e5736f;
+}
+
+/* Demo balance, pinned to the bottom of the panel */
+.bet-panel__balance {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 20px;
+  color: var(--color-text-muted);
+}
+
+.bet-panel__balance-value {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-left: auto;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+}
+
+.bet-panel__balance-value img {
+  object-fit: contain;
+}
+
+.bet-panel__reset {
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: #2b3546;
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+}

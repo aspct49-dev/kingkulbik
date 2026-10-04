@@ -1,116 +1,23 @@
-.coinflip-controls {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  padding: 12px;
-  font-size: 13px;
-  font-weight: 700;
+/* Coinflip's own parts of the bet panel (the shared frame is in ../BetPanel.css) */
+
+.bet-panel__bet--cashout {
+  animation: coinflip-cashout-in 0.32s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-.coinflip-controls__label {
-  margin-bottom: 8px;
-  line-height: 14px;
-  color: var(--color-text-muted);
-}
-
-.coinflip-controls__label--spaced {
-  margin-top: 14px;
-}
-
-/* Fields */
-.coinflip-field {
+.bet-panel__bet-amount {
   display: flex;
   align-items: center;
-  gap: 8px;
-  height: 42px;
-  padding: 0 4px 0 12px;
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
-  background: #151a24;
-  transition: border-color 0.15s;
+  gap: 5px;
 }
 
-.coinflip-field:focus-within {
-  border-color: #4a576e;
-}
-
-.coinflip-field img {
-  flex: none;
+.bet-panel__bet-amount img {
   object-fit: contain;
 }
 
-.coinflip-field input {
-  flex: 1;
-  min-width: 0;
-  height: 100%;
-  border: 0;
-  outline: 0;
-  background: none;
-  font: inherit;
-  font-size: 14px;
-  color: #fff;
-  -moz-appearance: textfield;
-}
-
-.coinflip-field input::-webkit-outer-spin-button,
-.coinflip-field input::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-
-.coinflip-field input::placeholder {
-  color: #4f5b70;
-}
-
-.coinflip-field input:disabled {
-  color: #8a94a6;
-}
-
-.coinflip-field--readonly {
-  padding-right: 12px;
-  font-size: 14px;
-  color: #fff;
-  font-variant-numeric: tabular-nums;
-}
-
-.coinflip-field__actions {
-  display: flex;
-  align-items: center;
-  align-self: stretch;
-  margin: 3px 0;
-  border-radius: 6px;
-  background: #2b3546;
-}
-
-.coinflip-field__actions button {
-  height: 100%;
-  min-width: 40px;
-  padding: 0 8px;
-  border-radius: 6px;
-  font-size: 13px;
-  font-weight: 700;
-  color: #dfe3ea;
-  transition:
-    background-color 0.15s,
-    transform 0.18s cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-
-.coinflip-field__actions button:first-child {
-  font-size: 15px;
-}
-
-.coinflip-field__actions button:hover:not(:disabled) {
-  background: #35415a;
-}
-
-.coinflip-field__actions button:disabled {
-  color: #5a6578;
-}
-
-.coinflip-field__divider {
-  width: 1px;
-  height: 16px;
-  background: #4a5568;
+@keyframes coinflip-cashout-in {
+  from {
+    transform: scale(0.96);
+  }
 }
 
 /* Heads ● / Tails ◆ */
@@ -134,69 +41,6 @@
   transform: rotate(45deg);
 }
 
-/* Buttons */
-.coinflip-controls__secondary,
-.coinflip-side,
-.coinflip-controls__bet {
-  border-radius: 7px;
-  font-weight: 700;
-  color: #fff;
-  transition:
-    background-color 0.15s,
-    box-shadow 0.15s,
-    filter 0.15s,
-    opacity 0.15s,
-    transform 0.18s cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-
-.coinflip-controls__bet {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  height: 46px;
-  margin-top: 12px;
-  background: var(--color-accent-button);
-  box-shadow: inset 0 1px 0 0 #e2db70;
-  font-size: 15px;
-  font-variant-numeric: tabular-nums;
-}
-
-.coinflip-controls__bet:hover:not(:disabled) {
-  filter: brightness(1.1);
-}
-
-.coinflip-controls__bet--cashout {
-  animation: coinflip-cashout-in 0.32s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-.coinflip-controls__bet-amount {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-
-.coinflip-controls__bet-amount img {
-  object-fit: contain;
-}
-
-@keyframes coinflip-cashout-in {
-  from {
-    transform: scale(0.96);
-  }
-}
-
-.coinflip-controls__secondary {
-  height: 40px;
-  margin-top: 10px;
-  background: #2b3546;
-  font-size: 13.88px;
-}
-
-.coinflip-controls__secondary:hover:not(:disabled) {
-  background: #35415a;
-}
-
 .coinflip-sides {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -210,8 +54,16 @@
   justify-content: center;
   gap: 8px;
   height: 40px;
+  border-radius: 7px;
   background: #2b3546;
   font-size: 13.88px;
+  font-weight: 700;
+  color: #fff;
+  transition:
+    background-color 0.15s,
+    box-shadow 0.15s,
+    opacity 0.15s,
+    transform 0.18s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .coinflip-side:hover:not(:disabled) {
@@ -223,58 +75,6 @@
   box-shadow: inset 0 0 0 2px #6d7a96;
 }
 
-.coinflip-controls button:active:not(:disabled) {
-  transform: scale(0.97);
-  transition-duration: 0.08s;
-}
-
-.coinflip-controls button:disabled,
-.coinflip-controls input:disabled {
-  cursor: not-allowed;
-}
-
-.coinflip-controls__secondary:disabled,
-.coinflip-side:disabled:not(.coinflip-side--active),
-.coinflip-controls__bet:disabled {
+.coinflip-side:disabled:not(.coinflip-side--active) {
   opacity: 0.5;
-}
-
-.coinflip-controls__error {
-  margin-top: 8px;
-  font-size: 12.5px;
-  font-weight: 600;
-  color: #e5736f;
-}
-
-/* Demo balance, pinned to the bottom of the panel */
-.coinflip-controls__balance {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: auto;
-  padding-top: 20px;
-  color: var(--color-text-muted);
-}
-
-.coinflip-controls__balance-value {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  margin-left: auto;
-  color: #fff;
-  font-variant-numeric: tabular-nums;
-}
-
-.coinflip-controls__balance-value img {
-  object-fit: contain;
-}
-
-.coinflip-controls__reset {
-  padding: 4px 10px;
-  border-radius: 6px;
-  background: #2b3546;
-  font-size: 12px;
-  font-weight: 700;
-  color: #fff;
 }

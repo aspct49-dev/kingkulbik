@@ -1,0 +1,51 @@
+.wordmark {
+  overflow: visible;
+  height: auto;
+  filter: drop-shadow(0 0 4px rgb(255 196 0 / 0.25)) drop-shadow(0 9px 5.1px rgba(0, 0, 0, 0.25));
+}
+
+/* Outline drawn under the fill, so only its outer half shows */
+.wordmark__text {
+  font-family: var(--font-logo);
+  text-anchor: middle;
+  stroke-width: 2.4px;
+  stroke-linejoin: round;
+  paint-order: stroke fill;
+}
+
+/* The outline's LED-strip shimmer (CSS: SMIL gradient animation does not repaint text in Chrome) */
+.wordmark__strip-stop {
+  stop-color: #ffc400;
+  animation: wordmark-strip 2.4s linear infinite;
+}
+
+@keyframes wordmark-strip {
+  0%,
+  100% {
+    stop-color: #ffc400;
+  }
+  25% {
+    stop-color: #fff38a;
+  }
+  50% {
+    stop-color: #ffa600;
+  }
+  75% {
+    stop-color: #ffe24d;
+  }
+}
+
+/* No outline: drop the yellow glow too */
+.wordmark--plain {
+  filter: drop-shadow(0 9px 5.1px rgba(0, 0, 0, 0.25));
+}
+
+.wordmark--still .wordmark__strip-stop {
+  animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wordmark__strip-stop {
+    animation: none;
+  }
+}

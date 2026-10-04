@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import coinIcon from '../assets/keno/coin.png'
+import coinIcon from '../assets/coin.svg'
 import CoinflipControls, { MIN_BET } from '../components/coinflip/CoinflipControls'
 import CoinStage, { QUICK_TOSS_SECONDS, TOSS_SECONDS } from '../components/coinflip/CoinStage'
 import type { Toss } from '../components/coinflip/CoinStage'

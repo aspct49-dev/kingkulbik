@@ -1,0 +1,205 @@
+.coming-soon {
+  position: relative;
+  /* Full-bleed across the main column's side padding, like the leaderboard */
+  margin: 0 calc(-1 * var(--page-gutter));
+  padding: 40px var(--page-gutter) 56px;
+  overflow: hidden;
+  container-type: inline-size;
+}
+
+/* Blue stage light behind the content */
+.coming-soon__glow {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 52% 60% at 50% 50%, rgb(44 96 178 / 0.4), transparent 72%),
+    radial-gradient(ellipse 26% 30% at 32% 50%, rgb(240 185 30 / 0.07), transparent 70%);
+  pointer-events: none;
+}
+
+/* The game cards' grid, fading out from the centre */
+.coming-soon__grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(to right, rgb(70 130 220 / 0.14) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(70 130 220 / 0.14) 1px, transparent 1px);
+  background-size: 48px 48px;
+  background-position: center;
+  mask-image: radial-gradient(ellipse 56% 62% at 50% 50%, #000 25%, transparent 78%);
+  -webkit-mask-image: radial-gradient(ellipse 56% 62% at 50% 50%, #000 25%, transparent 78%);
+  pointer-events: none;
+}
+
+/* Phones: one centred column, wordmark first, then the art, then the rest of the text */
+.coming-soon__content {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+/* The artwork, cropped out of its card image (--art-* set per game) */
+.coming-soon__art {
+  position: relative;
+  width: min(100%, 300px);
+  margin-top: 18px;
+  overflow: hidden;
+}
+
+.coming-soon__art img {
+  position: absolute;
+  left: calc(-100% * var(--art-x) / var(--art-w));
+  top: calc(-100% * var(--art-y) / var(--art-h));
+  width: calc(100% / var(--art-w));
+  height: calc(100% / var(--art-h));
+  max-width: none;
+}
+
+/* Fade just the outer edge, where the art's own backdrop would show as a box */
+.coming-soon__art--soft {
+  --fade: linear-gradient(to right, transparent, #000 7%, #000 93%, transparent);
+  mask-image: var(--fade), linear-gradient(to bottom, transparent, #000 7%, #000 93%, transparent);
+  mask-composite: intersect;
+  -webkit-mask-image: var(--fade), linear-gradient(to bottom, transparent, #000 7%, #000 93%, transparent);
+  -webkit-mask-composite: source-in;
+}
+
+/* Its children join the column above, so the wordmark can sit above the art */
+.coming-soon__text {
+  display: contents;
+}
+
+.coming-soon__wordmark {
+  order: -1;
+  width: 150px;
+}
+
+.coming-soon__title {
+  display: flex;
+  flex-direction: column;
+  align-items: inherit;
+  margin-top: 14px;
+  font-family: var(--font-logo);
+  font-weight: 400;
+  line-height: 1.1;
+  text-transform: uppercase;
+}
+
+.coming-soon__kicker,
+.coming-soon__headline {
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+.coming-soon__kicker {
+  font-size: clamp(24px, 7cqi, 40px);
+  background-image: linear-gradient(180deg, #f9f9f9, #aaa);
+}
+
+.coming-soon__headline {
+  margin-top: -0.12em;
+  font-size: clamp(38px, 11cqi, 64px);
+  background-image: linear-gradient(0deg, #a88600, #e4de2c);
+}
+
+.coming-soon__blurb {
+  max-width: 420px;
+  margin-top: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+  color: #6d7a96;
+}
+
+.coming-soon__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.coming-soon__button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  height: 40px;
+  padding: 0 20px;
+  border-radius: var(--radius-md);
+  font-size: 15px;
+  font-weight: 700;
+  transition: filter 0.15s;
+}
+
+.coming-soon__button:hover {
+  filter: brightness(1.12);
+}
+
+.coming-soon__button--dark {
+  background: var(--nav-item-from);
+  box-shadow: inset 0 1px 0 0 #364151;
+  color: #efefef;
+}
+
+.coming-soon__button--gold {
+  background: linear-gradient(to right, #a88600, #e4de2c);
+  box-shadow: inset 0 1px 0 0 #eedb4a;
+  color: #0e1218;
+}
+
+/* Kick's logo is white; darken it for the gold button */
+.coming-soon__button--gold img {
+  filter: brightness(0) saturate(0) opacity(0.85);
+}
+
+/* Wide: big art on the left, the text beside it */
+@container (min-width: 760px) {
+  .coming-soon {
+    padding-top: 48px;
+    padding-bottom: 64px;
+  }
+
+  .coming-soon__content {
+    flex-direction: row;
+    justify-content: center;
+    gap: clamp(32px, 5cqi, 64px);
+    text-align: left;
+  }
+
+  .coming-soon__art {
+    flex: none;
+    width: clamp(300px, 38cqi, 430px);
+    margin-top: 0;
+  }
+
+  .coming-soon__text {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    min-width: 0;
+  }
+
+  .coming-soon__wordmark {
+    order: 0;
+  }
+
+  .coming-soon__actions {
+    justify-content: flex-start;
+  }
+
+  .coming-soon__wordmark {
+    width: 170px;
+  }
+
+  .coming-soon__kicker {
+    font-size: clamp(26px, 3.6cqi, 40px);
+  }
+
+  .coming-soon__headline {
+    font-size: clamp(40px, 6.2cqi, 66px);
+  }
+}

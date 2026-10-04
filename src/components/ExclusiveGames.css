@@ -5,6 +5,7 @@
 .exclusive-games__heading {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 10px;
   height: 26px;
   font-size: 20px;
@@ -17,35 +18,55 @@
   margin-top: 2px;
 }
 
+/* Cards sized as four across the content width (spaced like the feature cards above), centred */
 .exclusive-games__list {
+  --columns: 4;
+  --gap: 12px;
   list-style: none;
   margin: 26px 0 0;
   padding: 0;
   display: flex;
   flex-wrap: wrap;
-  gap: 9px;
+  justify-content: center;
+  gap: var(--gap);
 }
 
+.exclusive-games__list > li {
+  width: calc((100% - (var(--columns) - 1) * var(--gap)) / var(--columns));
+}
+
+/* Hover styles derive from --hover (see .hover-anim in index.css) */
 .exclusive-games__card {
+  position: relative;
   display: block;
-  width: 161px;
-  height: 214px;
+  width: 100%;
+  aspect-ratio: 161 / 214;
   border-radius: var(--radius-md);
   overflow: hidden;
-  transition: transform 0.15s;
+  transform: translateY(calc(var(--hover) * var(--motion) * -4px));
+  box-shadow: 0 calc(var(--hover) * 10px) calc(var(--hover) * 24px) rgb(0 0 0 / calc(var(--hover) * 0.4));
 }
 
-.exclusive-games__card:hover {
-  transform: translateY(-4px);
-}
-
-.exclusive-games__card img {
+.exclusive-games__layer {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
+  pointer-events: none;
 }
 
-/* Phones: one swipeable row that bleeds to the screen edges */
+/* The art floats up, grows a touch and leans (--tilt per card) */
+.exclusive-games__art {
+  transform-origin: 50% 38%;
+  transform:
+    translateY(calc(var(--hover) * var(--motion) * -7px))
+    scale(calc(1 + var(--hover) * var(--motion) * 0.07))
+    rotate(calc(var(--hover) * var(--motion) * var(--tilt)));
+  filter: brightness(calc(1 + var(--hover) * 0.08));
+}
+
+/* Phones: two by two */
 @media (max-width: 600px) {
   .exclusive-games {
     margin-top: 32px;
@@ -56,27 +77,8 @@
   }
 
   .exclusive-games__list {
-    margin: 16px calc(-1 * var(--page-gutter)) 0;
-    padding: 0 var(--page-gutter) 4px;
-    flex-wrap: nowrap;
-    gap: 10px;
-    overflow-x: auto;
-    scroll-snap-type: x mandatory;
-    scroll-padding-inline: var(--page-gutter);
-    scrollbar-width: none;
-  }
-
-  .exclusive-games__list::-webkit-scrollbar {
-    display: none;
-  }
-
-  .exclusive-games__list > li {
-    flex: none;
-    scroll-snap-align: start;
-  }
-
-  .exclusive-games__card {
-    width: 140px;
-    height: 186px;
+    --columns: 2;
+    --gap: 10px;
+    margin-top: 16px;
   }
 }

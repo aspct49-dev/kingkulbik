@@ -1,5 +1,5 @@
 import { memo, useEffect } from 'react'
-import coinIcon from '../../assets/keno/coin.png'
+import coinIcon from '../../assets/coin.svg'
 import gemIcon from '../../assets/keno/gem.svg'
 import { TILE_COUNT } from '../../games/keno/engine'
 import AnimatedNumber from '../AnimatedNumber'
