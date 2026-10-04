@@ -23,9 +23,9 @@ import { useStableCallback } from '../hooks/useStableCallback'
 import './KenoPage.css'
 
 const REVEAL_MS = 125
-/** Pause after Bet so the gold → green crossfade settles before the first reveal */
+/** Pause after Bet so the gold → blue crossfade settles before the first reveal */
 const REVEAL_LEAD_MS = 220
-const AUTO_PICK_MS = 80
+const AUTO_PICK_MS = 120
 const INSTANT_KEY = 'kk:keno-instant'
 const HISTORY_LIMIT = 300
 const EMPTY_STATS: SessionStats = { bets: 0, wagered: 0, profit: 0, wins: 0, losses: 0, history: [0] }

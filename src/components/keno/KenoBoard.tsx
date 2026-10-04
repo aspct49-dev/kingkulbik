@@ -12,7 +12,7 @@ type KenoBoardProps = {
   picks: number[]
   /** Tiles revealed so far in the current draw */
   drawn: number[]
-  /** A bet has been placed: picks show as green, hits as gems, other tiles dim */
+  /** A bet has been placed: picks show as blue, hits as gems, other tiles dim */
   inRound: boolean
   /** The maximum number of tiles is picked: the rest can't be chosen */
   full: boolean
@@ -47,7 +47,7 @@ const Tile = memo(function Tile({ tile, state, unavailable, disabled, onToggle }
     >
       {/* Each visual is its own layer so it can fade/scale independently (GPU-friendly) */}
       <span className="keno-tile__fill keno-tile__fill--gold" aria-hidden />
-      <span className="keno-tile__fill keno-tile__fill--green" aria-hidden />
+      <span className="keno-tile__fill keno-tile__fill--blue" aria-hidden />
       <span className="keno-tile__flash" aria-hidden />
       {/* Only hits carry the ring and gem: 40 hidden copies would be repainted on every change */}
       {state === 'hit' && (

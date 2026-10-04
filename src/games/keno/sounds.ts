@@ -1,8 +1,8 @@
 /*
  * Keno sound design (Web Audio), in the style of casino originals: short,
  * crisp and dry. Clicks are a band-passed noise transient with a little
- * tonal body; the gem hit layers a soft rising "bloop-ting" over the calmed
- * gem sample; the win is a glassy double-ding. Everything passes through a soft limiter so overlapping
+ * tonal body; the gem hit is the supplied sample; the win is a glassy
+ * double-ding. Everything passes through a soft limiter so overlapping
  * sounds never clip.
  *
  * The AudioContext is created on first use, which is always inside a click,
@@ -66,7 +66,7 @@ function audio() {
  * A crisp click: a noise transient band-passed around `freq`, plus a short
  * sine at `freq / 2` for body. `duration` is the decay time in seconds.
  */
-function click(freq: number, duration: number, volume: number, bodyVolume = 0.35) {
+function click(freq: number, duration: number, volume: number, bodyVolume = 0.35, q = 1.4) {
   const context = audio()
   if (!context || !bus || !noise) return
   const t = context.currentTime
@@ -76,7 +76,7 @@ function click(freq: number, duration: number, volume: number, bodyVolume = 0.35
   const band = context.createBiquadFilter()
   band.type = 'bandpass'
   band.frequency.value = freq
-  band.Q.value = 1.4
+  band.Q.value = q
   const env = context.createGain()
   env.gain.setValueAtTime(volume, t)
   env.gain.exponentialRampToValueAtTime(0.0001, t + duration)
@@ -121,8 +121,9 @@ export function preloadSounds() {
 
 /** Picking a tile: a crisp click that lifts slightly with each pick. Un-picking is duller. */
 export function playSelect(picked: boolean, count: number) {
-  if (picked) click(2600 + Math.min(count, 10) * 90, 0.035, 0.42)
-  else click(1700, 0.03, 0.3)
+  // Sharp and bright: higher pitch, tighter band, short decay, little low body
+  if (picked) click(3600 + Math.min(count, 10) * 110, 0.026, 0.46, 0.16, 2.4)
+  else click(2400, 0.024, 0.32, 0.12, 2.2)
 }
 
 /** Bet placed: a firm click over a soft low thump */
@@ -136,63 +137,55 @@ export function playReveal(index: number) {
   click(1250 + (index % 3) * 60, 0.03, 0.28, 0.25)
 }
 
-const GEM_STEPS = [0, 2, 4, 7, 9, 12] // pentatonic semitones; later hits hold the octave
+let gemReverb: ConvolverNode | null = null
+
+/** A small, soft room used only to give the gem hit a bit of bloom. */
+function gemRoom(context: AudioContext) {
+  if (!gemReverb && bus) {
+    const length = Math.floor(context.sampleRate * 1.1)
+    const impulse = context.createBuffer(2, length, context.sampleRate)
+    for (let ch = 0; ch < 2; ch++) {
+      const data = impulse.getChannelData(ch)
+      for (let i = 0; i < length; i++) data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / length, 3.5)
+    }
+    gemReverb = context.createConvolver()
+    gemReverb.buffer = impulse
+    const wet = context.createGain()
+    wet.gain.value = 0.16
+    gemReverb.connect(wet).connect(bus)
+  }
+  return gemReverb
+}
 
 /**
- * A drawn pick — two layers:
- * - on top, a soft rounded "bloop-ting" in the style of casino-original Keno:
- *   a sine glides up into its note, with a quiet overtone and a tiny echo for
- *   shimmer; each further hit in the round steps up the scale;
- * - underneath, the gem sample, kept calm (faded in, low-passed, quiet) for
- *   body and tail.
+ * A drawn pick: the gem sample, mostly as-is, with the edge taken off — a
+ * 10ms fade-in rounds the initial strike, a gentle high-shelf trims only the
+ * harshest highs, and a light room adds bloom. Each further hit is a little higher.
  */
 export function playGemHit(hitNumber: number) {
   const context = audio()
   if (!context || !bus) return
-  const semitones = GEM_STEPS[Math.min(hitNumber - 1, GEM_STEPS.length - 1)]
-  const freq = 660 * Math.pow(2, semitones / 12)
-  const t = context.currentTime
-
-  const soften = context.createBiquadFilter()
-  soften.type = 'lowpass'
-  soften.frequency.value = 4200
-  soften.connect(bus)
-
-  const voice = (f: number, startF: number, glide: number, peak: number, decay: number, delay = 0) => {
-    const osc = context.createOscillator()
-    const env = context.createGain()
-    const at = t + delay
-    osc.type = 'sine'
-    osc.frequency.setValueAtTime(startF, at)
-    osc.frequency.exponentialRampToValueAtTime(f, at + glide)
-    env.gain.setValueAtTime(0.0001, at)
-    env.gain.exponentialRampToValueAtTime(peak, at + 0.008)
-    env.gain.exponentialRampToValueAtTime(0.0001, at + decay)
-    osc.connect(env).connect(soften)
-    osc.start(at)
-    osc.stop(at + decay + 0.02)
-  }
-
-  voice(freq, freq * 0.72, 0.045, 0.19, 0.36) // the bloop
-  voice(freq * 2, freq * 1.6, 0.03, 0.05, 0.18) // glassy overtone
-  voice(freq * 2, freq * 2, 0.001, 0.025, 0.14, 0.065) // tiny shimmer echo
-
-  // The sample layer underneath
   void loadGem(context).then((buffer) => {
     if (!buffer || !bus) return
-    const at = context.currentTime
+    const t = context.currentTime
     const source = context.createBufferSource()
-    const gain = context.createGain()
-    const warm = context.createBiquadFilter()
     source.buffer = buffer
-    source.playbackRate.value = 0.92 + Math.min(hitNumber - 1, 9) * 0.03
-    warm.type = 'lowpass'
-    warm.frequency.value = 2600
-    warm.Q.value = 0.5
-    gain.gain.setValueAtTime(0.0001, at)
-    gain.gain.exponentialRampToValueAtTime(0.15, at + 0.035)
-    source.connect(warm).connect(gain).connect(bus)
-    source.start(at)
+    source.playbackRate.value = 1 + Math.min(hitNumber - 1, 9) * 0.06
+
+    const shelf = context.createBiquadFilter()
+    shelf.type = 'highshelf'
+    shelf.frequency.value = 3800
+    shelf.gain.value = -6
+
+    const gain = context.createGain()
+    gain.gain.setValueAtTime(0.0001, t)
+    gain.gain.exponentialRampToValueAtTime(0.45, t + 0.01)
+
+    source.connect(shelf).connect(gain)
+    gain.connect(bus)
+    const room = gemRoom(context)
+    if (room) gain.connect(room)
+    source.start(t)
   })
 }
 

@@ -16,7 +16,7 @@
 /*
  * Tiles animate only transform and opacity (GPU-composited), so every change
  * stays smooth on phones. Each visual is its own layer inside the button:
- *   fill--gold   picked (before a bet)        fill--green  picked (in a round)
+ *   fill--gold   picked (before a bet)        fill--blue   picked (in a round)
  *   flash        white flash on pick          ring         gold ring + glow on a hit
  *   gem          the hit gem                  number       always on top
  * State changes crossfade/spring between layers instead of snapping.
@@ -72,18 +72,19 @@
   box-shadow: 0 3px 0 0 #6c620d;
 }
 
-.keno-tile__fill--green {
-  background: linear-gradient(to bottom, #6ff59a, #3fdc78);
-  box-shadow: 0 3px 0 0 #2a9e56;
+/* Steel blue: the home page banner/card blue (hue ~216°), lifted to stand out from idle tiles */
+.keno-tile__fill--blue {
+  background: linear-gradient(to bottom, #326abd, #235095);
+  box-shadow: 0 3px 0 0 #163564;
 }
 
 .keno-tile--picked .keno-tile__fill--gold,
-.keno-board--round .keno-tile--picked .keno-tile__fill--green {
+.keno-board--round .keno-tile--picked .keno-tile__fill--blue {
   opacity: 1;
   transform: none;
 }
 
-/* On Bet, gold crossfades to green */
+/* On Bet, gold crossfades to blue */
 .keno-board--round .keno-tile--picked .keno-tile__fill--gold {
   opacity: 0;
   transform: none;
@@ -112,7 +113,7 @@
 }
 
 .keno-board--round .keno-tile--picked {
-  color: #0b2614;
+  color: #fff;
 }
 
 /*
