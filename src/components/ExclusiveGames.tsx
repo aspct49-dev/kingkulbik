@@ -1,3 +1,4 @@
+import { Link } from 'react-router'
 import gamesIcon from '../assets/games/games-icon.svg'
 import flipImg from '../assets/games/flip.png'
 import kenoImg from '../assets/games/keno.png'
@@ -8,7 +9,7 @@ import './ExclusiveGames.css'
 
 const games = [
   { name: 'Flip', href: '#coinflip', image: flipImg },
-  { name: 'Keno', href: '#keno', image: kenoImg },
+  { name: 'Keno', href: '/keno', image: kenoImg },
   { name: 'Dragon Tower', href: '#dragon-tower', image: dragonTowerImg },
   { name: 'Dice', href: '#dice', image: diceImg },
   { name: 'Limbo', href: '#limbo', image: limboImg },
@@ -24,9 +25,9 @@ export default function ExclusiveGames() {
       <ul className="exclusive-games__list">
         {games.map((game) => (
           <li key={game.name}>
-            <a className="exclusive-games__card" href={game.href}>
+            <Link className="exclusive-games__card" to={game.href}>
               <img src={game.image} alt={game.name} />
-            </a>
+            </Link>
           </li>
         ))}
       </ul>

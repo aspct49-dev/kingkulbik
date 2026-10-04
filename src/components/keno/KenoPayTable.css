@@ -1,0 +1,164 @@
+.keno-pay {
+  --gap: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.8px;
+  color: #fff;
+}
+
+.keno-pay__multipliers,
+.keno-pay__hits {
+  display: grid;
+  grid-template-columns: repeat(var(--columns), minmax(0, 1fr));
+  gap: var(--gap);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.keno-pay__cell,
+.keno-pay__hit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  white-space: nowrap;
+}
+
+.keno-pay__cell {
+  height: 50px;
+  border-radius: 4px;
+  background: #27303f;
+  transition: background-color 0.15s, color 0.15s;
+}
+
+.keno-pay__cell--active {
+  background: var(--color-accent-button);
+  box-shadow: inset 0 1px 0 0 #e2db70;
+}
+
+.keno-pay__hits {
+  height: 50px;
+  align-items: center;
+  border-radius: 4px;
+  background: #27303f;
+}
+
+.keno-pay__hit--active {
+  color: var(--color-accent);
+}
+
+.keno-pay__times {
+  flex: none;
+  margin-left: 1px;
+}
+
+/* Gem beside each hit count: grey until it's the current number of hits */
+.keno-pay__gem {
+  flex: none;
+  margin-left: 5px;
+  filter: grayscale(1) brightness(0.9) opacity(0.55);
+  transition: filter 0.15s;
+}
+
+.keno-pay__hit--active .keno-pay__gem {
+  filter: drop-shadow(0 0 4px rgb(240 185 30 / 0.6));
+}
+
+.keno-pay--empty {
+  align-items: center;
+  justify-content: center;
+  height: 112px;
+  border-radius: 4px;
+  background: #27303f;
+  letter-spacing: 0;
+}
+
+.keno-pay--empty p {
+  color: var(--color-text-muted);
+  font-size: 15px;
+}
+
+.keno-pay__compact {
+  display: none;
+}
+
+/* Narrower boards (tablets, small laptops): tighter cells, smaller numbers */
+@container (max-width: 760px) {
+  .keno-pay {
+    --gap: 6px;
+    gap: 8px;
+    font-size: 13px;
+    letter-spacing: -0.4px;
+  }
+
+  .keno-pay__cell,
+  .keno-pay__hits {
+    height: 40px;
+  }
+
+  .keno-pay__times {
+    width: 9px;
+    height: 9px;
+  }
+
+  .keno-pay__gem {
+    width: 10px;
+    height: 10px;
+    margin-left: 3px;
+  }
+
+  .keno-pay--empty {
+    height: 88px;
+  }
+
+  .keno-pay--empty p {
+    font-size: 13px;
+  }
+}
+
+/*
+ * Phones: compact numbers (1k, 250, 1.1) without the × glyph. If a row
+ * still can't fit, it scrolls sideways rather than cutting numbers off.
+ */
+@container (max-width: 480px) {
+  .keno-pay {
+    --gap: 3px;
+    gap: 6px;
+    font-size: 11px;
+    letter-spacing: -0.3px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .keno-pay::-webkit-scrollbar {
+    display: none;
+  }
+
+  .keno-pay__multipliers,
+  .keno-pay__hits {
+    grid-template-columns: repeat(var(--columns), minmax(22px, 1fr));
+  }
+
+  .keno-pay__cell,
+  .keno-pay__hits {
+    height: 36px;
+  }
+
+  .keno-pay__full,
+  .keno-pay__times,
+  .keno-pay__gem {
+    display: none;
+  }
+
+  .keno-pay__compact {
+    display: inline;
+  }
+
+  .keno-pay--empty {
+    height: 78px;
+  }
+}

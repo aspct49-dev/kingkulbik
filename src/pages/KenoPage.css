@@ -1,0 +1,79 @@
+.keno-page {
+  padding: 37px 0 64px;
+  /* Lets the panel switch layout by its own available width (sidebar or not) */
+  container-type: inline-size;
+}
+
+/* 1200px panel: 300px controls | game area, toolbar underneath */
+.keno {
+  display: grid;
+  grid-template-columns: 300px minmax(0, 1fr);
+  grid-template-areas:
+    'controls game'
+    'toolbar toolbar';
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.keno--theater {
+  max-width: 1520px;
+}
+
+.keno--theater .keno-board {
+  max-width: 1060px;
+}
+
+.keno__controls {
+  grid-area: controls;
+  display: flex;
+  flex-direction: column;
+  border-radius: 6px 0 0 0;
+  background: #1d2430;
+}
+
+.keno__controls > * {
+  flex: 1;
+}
+
+.keno__game {
+  grid-area: game;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+  padding: 16px;
+  border-radius: 0 6px 0 0;
+  background: linear-gradient(to top, #11151d 0.4%, #191f2a 99.6%);
+  container-type: inline-size;
+}
+
+.keno__toolbar {
+  grid-area: toolbar;
+}
+
+/* Narrow (phones, or a squeezed main column): board first, controls below */
+@container (max-width: 760px) {
+  .keno {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      'game'
+      'controls'
+      'toolbar';
+  }
+
+  .keno__game {
+    gap: 12px;
+    padding: 12px;
+    border-radius: 6px 6px 0 0;
+  }
+
+  .keno__controls {
+    border-radius: 0;
+  }
+}
+
+@media (max-width: 600px) {
+  .keno-page {
+    padding: 16px 0 48px;
+  }
+}

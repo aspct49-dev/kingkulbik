@@ -1,0 +1,217 @@
+.keno-board {
+  position: relative;
+  width: 100%;
+  max-width: 780px;
+  margin: 0 auto;
+  container-type: inline-size;
+}
+
+/* 8 × 5 tiles, 87px with 12px gaps at the design's 780px width */
+.keno-board__grid {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  gap: clamp(5px, 1.54cqi, 12px);
+}
+
+.keno-tile {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: clamp(5px, 1.03cqi, 8px);
+  background: #3a465b;
+  box-shadow: 0 3px 0 0 #2c3648;
+  font-size: clamp(13px, 3.18cqi, 24.78px);
+  font-weight: 700;
+  color: #fff;
+  transition: transform 0.12s ease, background-color 0.12s ease, filter 0.12s ease;
+}
+
+.keno-tile:hover:not(:disabled) {
+  filter: brightness(1.12);
+  transform: translateY(-2px);
+}
+
+.keno-tile:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.keno-tile:disabled {
+  cursor: default;
+}
+
+.keno-tile:focus-visible {
+  outline: 2px solid #e6d218;
+  outline-offset: 2px;
+}
+
+.keno-tile--picked {
+  background: linear-gradient(to bottom, #decc2c, #9e9013);
+  box-shadow: 0 3px 0 0 #6c620d;
+  animation: keno-pick-pop 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* A quick scale-and-flash as a tile is picked (by hand or by Random Pick) */
+@keyframes keno-pick-pop {
+  0% {
+    transform: scale(0.86);
+    filter: brightness(1.45);
+  }
+  100% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+}
+
+/* Selection full (10 picked): the tiles that can't be chosen dim and stop lifting */
+.keno-board--full .keno-tile--idle {
+  background: #2a3240;
+  box-shadow: 0 3px 0 0 #222936;
+  color: #6b7689;
+  cursor: not-allowed;
+}
+
+.keno-board--full .keno-tile--idle:hover {
+  filter: none;
+  transform: none;
+}
+
+/*
+ * During a round (after Bet): picks turn green, hits become the gold gem in
+ * a ringed tile, drawn misses show a red number and the rest dim.
+ */
+.keno-board--round .keno-tile--idle {
+  background: #2f3847;
+  box-shadow: 0 3px 0 0 #262e3b;
+  color: #8a94a6;
+}
+
+.keno-board--round .keno-tile--picked {
+  background: linear-gradient(to bottom, #6ff59a, #3fdc78);
+  box-shadow: 0 3px 0 0 #2a9e56;
+  color: #0b2614;
+}
+
+/* Drawn but not picked: sunk, with a red number */
+.keno-tile--drawn {
+  background: #1d232d;
+  box-shadow: 0 3px 0 0 #161b23;
+  color: #e0484a;
+  animation: keno-tile-reveal 0.22s ease-out;
+}
+
+/* Picked and drawn: the gem */
+.keno-tile--hit {
+  display: grid;
+  place-items: center;
+  background: #121821;
+  box-shadow:
+    0 3px 0 0 #0c1117,
+    inset 0 0 0 clamp(2px, 0.38cqi, 3px) #f0b91e,
+    0 0 16px 1px rgb(240 185 30 / 0.4);
+  animation: keno-gem-hit 0.32s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* The gem sits behind the number, which stays readable on top of it */
+.keno-tile__gem {
+  position: absolute;
+  inset: 13%;
+  width: 74%;
+  height: 74%;
+  filter: drop-shadow(0 2px 4px rgb(0 0 0 / 0.45));
+}
+
+.keno-tile__number {
+  position: relative;
+}
+
+.keno-tile--hit .keno-tile__number {
+  color: #3b2a00;
+  text-shadow: 0 1px 0 rgb(255 240 170 / 0.55);
+}
+
+@keyframes keno-gem-hit {
+  0% {
+    transform: scale(0.7);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes keno-tile-reveal {
+  0% {
+    transform: scale(0.88);
+  }
+  60% {
+    transform: scale(1.06);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Win card over the board */
+.keno-board__win {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  min-width: 150px;
+  padding: 16px 22px;
+  border: 2px solid var(--color-accent-button);
+  border-radius: 10px;
+  background: rgb(21 26 36 / 0.96);
+  box-shadow: 0 12px 32px rgb(0 0 0 / 0.5);
+  transform: translate(-50%, -50%);
+  animation: keno-win-in 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+}
+
+.keno-board__win-multiplier {
+  font-family: var(--font-display);
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--color-accent);
+}
+
+.keno-board__win-divider {
+  width: 40px;
+  height: 2px;
+  border-radius: 2px;
+  background: #2b3546;
+}
+
+.keno-board__win-payout {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.keno-board__win-payout img {
+  object-fit: contain;
+}
+
+@keyframes keno-win-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.85);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .keno-tile,
+  .keno-tile--picked,
+  .keno-tile--drawn,
+  .keno-tile--hit,
+  .keno-tile__gem,
+  .keno-board__win {
+    animation: none;
+    transition: none;
+  }
+}

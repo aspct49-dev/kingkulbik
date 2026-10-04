@@ -42,59 +42,74 @@ const socialLinks: SocialLink[] = [
 export default function Footer() {
   return (
     <footer className="footer">
-      <div className="footer__wrap">
-        <div className="footer__top">
-          <div className="footer__brand">
-            <Link to="/" className="footer__logo" aria-label="King Kulbik home">
-              <span className="footer__logo-king">KING</span>{' '}
-              <span className="footer__logo-kulbik">KULBIK</span>
-            </Link>
+      <div className="footer__card">
+      <div className="footer__top">
+        <div className="footer__brand">
+          <Link to="/" className="footer__logo" aria-label="King Kulbik home">
+            <span className="footer__logo-king">KING</span>{' '}
+            <span className="footer__logo-kulbik">KULBIK</span>
+          </Link>
 
-            <div className="footer__marks">
-              <span className="footer__age">18+</span>
-              <a href="https://www.begambleaware.org" target="_blank" rel="noopener noreferrer">
-                <img className="footer__aware" src={gambleAware} alt="BeGambleAware" width={163} height={24} />
-              </a>
-            </div>
-
-            <p className="footer__note">
-              We take no responsibility for losses at any casino linked or promoted here. You are
-              responsible for your own bets. King Kulbik is a community leaderboard for Stake players
-              under the code <strong>{STAKE_CODE}</strong>. It is not a casino, and it is not operated by
-              Stake.
-            </p>
+          <div className="footer__marks">
+            <a href="https://www.begambleaware.org" target="_blank" rel="noopener noreferrer">
+              <img className="footer__aware" src={gambleAware} alt="BeGambleAware" width={163} height={24} />
+            </a>
+            <span className="footer__age">18+</span>
           </div>
 
-          <nav className="footer__col" aria-label="Explore">
-            <h4>Explore</h4>
-            <Link to="/">Home</Link>
-            <Link to="/leaderboard">Monthly Leaderboard</Link>
-            <a href={STAKE_URL} target="_blank" rel="noopener noreferrer">
-              Visit Stake
-            </a>
-          </nav>
+          <p className="footer__note">
+            We take no responsibility for losses at any casino linked or promoted here. You are responsible
+            for your own bets. King Kulbik is a community leaderboard for Stake players under the code{' '}
+            <strong>{STAKE_CODE}</strong>. It is not a casino, and it is not operated by Stake.
+          </p>
 
-          <nav className="footer__col" aria-label="Social media">
-            <h4>Social Media</h4>
+          <div className="footer__icons" aria-label="Social media">
             {socialLinks.map((link) => (
               <a
                 key={link.label}
                 href={link.url}
                 target="_blank"
                 rel="noopener noreferrer"
+                aria-label={link.label}
                 style={{ '--brand': link.brand } as CSSProperties}
               >
                 {link.icon}
-                {link.label}
               </a>
             ))}
-          </nav>
+          </div>
         </div>
 
-        <div className="footer__legal">
-          <span>© {new Date().getFullYear()} King Kulbik. All rights reserved.</span>
-          <span>18+ only. Gamble responsibly. If gambling stops being fun, stop.</span>
-        </div>
+        <nav className="footer__col" aria-label="Explore">
+          <h4>Explore</h4>
+          <Link to="/">Home</Link>
+          <Link to="/leaderboard">Leaderboard</Link>
+          <Link to="/keno">Keno</Link>
+          <a href={STAKE_URL} target="_blank" rel="noopener noreferrer">
+            Visit Stake
+          </a>
+        </nav>
+
+        <nav className="footer__col" aria-label="Social media links">
+          <h4>Social Media</h4>
+          {socialLinks.map((link) => (
+            <a
+              key={link.label}
+              href={link.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ '--brand': link.brand } as CSSProperties}
+            >
+              {link.icon}
+              {link.label}
+            </a>
+          ))}
+        </nav>
+      </div>
+
+      <div className="footer__legal">
+        <span className="footer__copyright">© {new Date().getFullYear()} King Kulbik - All Rights Reserved.</span>
+        <span className="footer__responsible">18+ only · Gamble responsibly</span>
+      </div>
       </div>
     </footer>
   )

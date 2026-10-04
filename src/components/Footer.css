@@ -1,20 +1,28 @@
+/*
+ * The footer is its own band: full width across the content area, a
+ * slightly lighter background and a top border, so it is clearly separated
+ * from the page above. The content sits in a bordered card inside it.
+ */
 .footer {
-  position: relative;
   margin: auto calc(-1 * var(--page-gutter)) 0;
-  padding: 44px var(--page-gutter) 28px;
-  background: var(--color-surface);
-  border-top: 1px solid var(--color-border);
+  padding: 20px var(--page-gutter);
+  border-top: 1px solid #1f2734;
+  background: #12171f;
 }
 
-.footer__wrap {
-  max-width: 1094px;
+.footer__card {
+  max-width: 1400px;
   margin: 0 auto;
+  padding: 28px 28px 20px;
+  border: 1px solid #252e3d;
+  border-radius: 12px;
+  background: #0f131a;
 }
 
 .footer__top {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto auto;
-  gap: 40px 64px;
+  gap: 32px 60px;
   align-items: start;
 }
 
@@ -43,27 +51,14 @@
 .footer__marks {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-top: 18px;
-}
-
-.footer__age {
-  display: inline-grid;
-  place-items: center;
-  flex: none;
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  border: 1px solid #364151;
-  color: #aab3c6;
-  font-size: 11px;
-  font-weight: 700;
+  gap: 10px;
+  margin-top: 12px;
 }
 
 .footer__aware {
-  height: 18px;
+  height: 20px;
   width: auto;
-  opacity: 0.75;
+  opacity: 0.7;
   transition: opacity 0.15s ease;
 }
 
@@ -71,12 +66,25 @@
   opacity: 1;
 }
 
+.footer__age {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1px solid #364151;
+  color: #aab3c6;
+  font-size: 10px;
+  font-weight: 700;
+}
+
 .footer__note {
-  max-width: 52ch;
-  margin-top: 14px;
-  color: var(--color-text-subtle);
-  font-size: 13.5px;
-  line-height: 1.65;
+  max-width: 420px;
+  margin-top: 10px;
+  font-size: 12.5px;
+  line-height: 1.8;
+  color: #aab3c6;
 }
 
 .footer__note strong {
@@ -84,39 +92,62 @@
   font-weight: 600;
 }
 
+.footer__icons {
+  display: flex;
+  gap: 14px;
+  margin-top: 12px;
+}
+
+.footer__icons a {
+  display: flex;
+  color: var(--color-text-subtle);
+  transition: color 0.15s ease;
+}
+
+.footer__icons a:hover {
+  color: var(--brand, var(--color-accent));
+}
+
+.footer__icons svg {
+  width: 15px;
+  height: 15px;
+}
+
 .footer__col {
   display: flex;
   flex-direction: column;
+  gap: 8px;
+  padding-top: 18px;
 }
 
 .footer h4 {
-  margin: 0 0 14px;
+  margin: 0 0 4px;
   color: var(--color-accent);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
 }
 
 .footer__col a {
   display: flex;
   align-items: center;
-  gap: 9px;
-  padding: 6px 0;
-  color: #aab3c6;
-  font-size: 14.5px;
+  gap: 8px;
+  color: #e6e9ef;
+  font-size: 14px;
+  font-weight: 500;
   white-space: nowrap;
   transition: color 0.15s ease;
 }
 
 .footer__col a:hover {
-  color: #efefef;
+  color: var(--color-accent);
 }
 
 .footer__col svg {
-  width: 16px;
-  height: 16px;
-  color: var(--color-text-subtle);
+  width: 14px;
+  height: 14px;
+  color: #e6e9ef;
   transition: color 0.15s ease;
 }
 
@@ -129,40 +160,57 @@
   flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
-  gap: 16px;
-  margin-top: 36px;
-  padding-top: 22px;
-  border-top: 1px solid var(--color-border);
+  gap: 12px;
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid #232b3a;
+}
+
+.footer__copyright {
+  font-size: 14px;
+  font-weight: 700;
+  color: #cfd5e2;
+}
+
+.footer__responsible {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   color: var(--color-text-subtle);
-  font-size: 13px;
 }
 
 @media (max-width: 960px) {
   .footer__top {
     grid-template-columns: 1fr 1fr;
-    gap: 30px 24px;
+    gap: 24px;
   }
 
   .footer__brand {
     grid-column: 1 / -1;
   }
-}
 
-@media (max-width: 720px) {
-  .footer__col a {
-    padding: 10px 0;
+  .footer__col {
+    padding-top: 0;
   }
 }
 
 @media (max-width: 600px) {
   .footer {
-    padding-top: 32px;
+    padding: 16px var(--page-gutter);
+  }
+
+  .footer__card {
+    padding: 22px 18px 18px;
+  }
+
+  .footer__col a {
+    padding: 4px 0;
   }
 
   .footer__legal {
     flex-direction: column;
     align-items: flex-start;
-    gap: 8px;
-    margin-top: 28px;
+    gap: 6px;
   }
 }

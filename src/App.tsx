@@ -5,6 +5,7 @@ import Sidebar from './components/Sidebar'
 import Footer from './components/Footer'
 import HomePage from './pages/HomePage'
 import LeaderboardPage from './pages/LeaderboardPage'
+import KenoPage from './pages/KenoPage'
 
 function Layout() {
   // Mobile navigation drawer (the sidebar is always visible on desktop)
@@ -24,6 +25,7 @@ function Layout() {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/leaderboard" element={<LeaderboardPage />} />
+          <Route path="/keno" element={<KenoPage />} />
         </Routes>
         <Footer />
       </main>

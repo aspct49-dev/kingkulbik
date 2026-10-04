@@ -1,5 +1,6 @@
 .sidebar {
   background: var(--color-surface);
+  border-right: 1px solid #1f2734;
 }
 
 .sidebar__nav {
