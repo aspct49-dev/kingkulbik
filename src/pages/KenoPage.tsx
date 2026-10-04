@@ -149,7 +149,8 @@ export default function KenoPage() {
       bet,
       picks: [...picks],
       risk,
-      drawn: drawTiles(),
+      // Reveal in reading order (top-left, row by row). Same random draw, only the order shown changes.
+      drawn: drawTiles().sort((a, b) => a - b),
       revealed: 0,
       result: null,
     })
