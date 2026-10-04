@@ -1,9 +1,9 @@
 import { useId, useState } from 'react'
 import type { PointerEvent } from 'react'
-import { formatPoints } from './format'
-import './KenoProfitChart.css'
+import { formatPoints } from './keno/format'
+import './ProfitChart.css'
 
-type KenoProfitChartProps = {
+type ProfitChartProps = {
   /** Cumulative profit after each bet, starting with 0 before the first bet */
   history: number[]
 }
@@ -18,12 +18,12 @@ const signed = (value: number) => `${value >= 0 ? '+' : '−'}${formatPoints(Mat
  * Session profit over bets: one line, green above the zero baseline and red
  * below (via two clip regions), with a crosshair tooltip on hover.
  */
-export default function KenoProfitChart({ history }: KenoProfitChartProps) {
+export default function ProfitChart({ history }: ProfitChartProps) {
   const id = useId()
   const [hover, setHover] = useState<number | null>(null)
 
   if (history.length < 2) {
-    return <p className="keno-chart__empty">Place a bet to start the graph.</p>
+    return <p className="profit-chart__empty">Place a bet to start the graph.</p>
   }
 
   const n = history.length
@@ -49,7 +49,7 @@ export default function KenoProfitChart({ history }: KenoProfitChartProps) {
   const hv = hover !== null ? history[hover] : null
 
   return (
-    <div className="keno-chart">
+    <div className="profit-chart">
       <svg
         viewBox={`0 0 ${W} ${H}`}
         preserveAspectRatio="none"
@@ -65,21 +65,21 @@ export default function KenoProfitChart({ history }: KenoProfitChartProps) {
           </clipPath>
         </defs>
 
-        <path d={area} className="keno-chart__area keno-chart__area--up" clipPath={`url(#${above})`} />
-        <path d={area} className="keno-chart__area keno-chart__area--down" clipPath={`url(#${below})`} />
-        <line x1="0" x2={W} y1={zero} y2={zero} className="keno-chart__zero" />
-        <path d={line} className="keno-chart__line keno-chart__line--up" clipPath={`url(#${above})`} />
-        <path d={line} className="keno-chart__line keno-chart__line--down" clipPath={`url(#${below})`} />
+        <path d={area} className="profit-chart__area profit-chart__area--up" clipPath={`url(#${above})`} />
+        <path d={area} className="profit-chart__area profit-chart__area--down" clipPath={`url(#${below})`} />
+        <line x1="0" x2={W} y1={zero} y2={zero} className="profit-chart__zero" />
+        <path d={line} className="profit-chart__line profit-chart__line--up" clipPath={`url(#${above})`} />
+        <path d={line} className="profit-chart__line profit-chart__line--down" clipPath={`url(#${below})`} />
 
         {hover !== null && hv !== null && (
-          <line x1={x(hover)} x2={x(hover)} y1="0" y2={H} className="keno-chart__crosshair" />
+          <line x1={x(hover)} x2={x(hover)} y1="0" y2={H} className="profit-chart__crosshair" />
         )}
         <rect
           x="0"
           y="0"
           width={W}
           height={H}
-          className="keno-chart__hit"
+          className="profit-chart__hit"
           onPointerMove={onMove}
           onPointerDown={onMove}
           onPointerLeave={() => setHover(null)}
@@ -89,11 +89,11 @@ export default function KenoProfitChart({ history }: KenoProfitChartProps) {
       {hover !== null && hv !== null && (
         <>
           <span
-            className={`keno-chart__dot ${hv >= 0 ? 'is-up' : 'is-down'}`}
+            className={`profit-chart__dot ${hv >= 0 ? 'is-up' : 'is-down'}`}
             style={{ left: `${(x(hover) / W) * 100}%`, top: `${(y(hv) / H) * 100}%` }}
           />
           <div
-            className="keno-chart__tooltip"
+            className="profit-chart__tooltip"
             style={{ left: `${Math.min(82, Math.max(18, (x(hover) / W) * 100))}%` }}
           >
             <span>{hover === 0 ? 'Start' : `Bet ${hover}`}</span>

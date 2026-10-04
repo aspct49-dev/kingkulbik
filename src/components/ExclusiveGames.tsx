@@ -8,7 +8,7 @@ import limboImg from '../assets/games/limbo.png'
 import './ExclusiveGames.css'
 
 const games = [
-  { name: 'Flip', href: '#coinflip', image: flipImg },
+  { name: 'Flip', href: '/coinflip', image: flipImg },
   { name: 'Keno', href: '/keno', image: kenoImg },
   { name: 'Dragon Tower', href: '#dragon-tower', image: dragonTowerImg },
   { name: 'Dice', href: '#dice', image: diceImg },

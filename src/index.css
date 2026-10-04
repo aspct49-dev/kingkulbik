@@ -189,3 +189,8 @@ label {
     animation: none;
   }
 }
+
+/* Shown while a code-split page (e.g. Coinflip) loads */
+.page-loading {
+  min-height: 60vh;
+}

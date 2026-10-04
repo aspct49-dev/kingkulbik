@@ -31,5 +31,7 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
   return {
     plugins: [react(), leaderboardApi(env.STAKE_API_TOKEN, env.STAKE_API_URL)],
+    // The Coinflip chunk carries three.js (~580 kB, loaded only on /coinflip)
+    build: { chunkSizeWarningLimit: 650 },
   }
 })

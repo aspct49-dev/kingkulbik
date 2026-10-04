@@ -2,10 +2,10 @@ import { useEffect, useRef, useState } from 'react'
 import KenoControls, { MIN_BET } from '../components/keno/KenoControls'
 import KenoBoard from '../components/keno/KenoBoard'
 import KenoPayTable from '../components/keno/KenoPayTable'
-import KenoToolbar from '../components/keno/KenoToolbar'
-import type { SessionStats } from '../components/keno/KenoToolbar'
+import GameToolbar, { EMPTY_STATS, recordBet } from '../components/GameToolbar'
+import type { SessionStats } from '../components/GameToolbar'
 import { formatMultiplier, formatPoints } from '../components/keno/format'
-import { DRAW_COUNT, MAX_PICKS, drawTiles, getMultiplier, getPayouts } from '../games/keno/engine'
+import { DRAW_COUNT, MAX_PICKS, RISKS, TILE_COUNT, drawTiles, getMultiplier, getPayouts, getReturnToPlayer } from '../games/keno/engine'
 import type { Risk } from '../games/keno/engine'
 import {
   isSoundEnabled,
@@ -27,8 +27,6 @@ const REVEAL_MS = 125
 const REVEAL_LEAD_MS = 220
 const AUTO_PICK_MS = 120
 const INSTANT_KEY = 'kk:keno-instant'
-const HISTORY_LIMIT = 300
-const EMPTY_STATS: SessionStats = { bets: 0, wagered: 0, profit: 0, wins: 0, losses: 0, history: [0] }
 
 type Round = {
   id: number
@@ -107,17 +105,7 @@ export default function KenoPage() {
       setBalance((b) => b + payout)
       playWin()
     }
-    setStats((s) => {
-      const profit = Math.round((s.profit + payout - round.bet) * 100) / 100
-      return {
-        bets: s.bets + 1,
-        wagered: s.wagered + round.bet,
-        profit,
-        wins: s.wins + (payout > round.bet ? 1 : 0),
-        losses: s.losses + (payout > round.bet ? 0 : 1),
-        history: [...s.history, profit].slice(-HISTORY_LIMIT),
-      }
-    })
+    setStats((s) => recordBet(s, round.bet, payout))
     setRound({ ...round, result: { hits, multiplier, payout } })
   }, [round, instant, setBalance])
 
@@ -273,16 +261,18 @@ export default function KenoPage() {
         </div>
 
         <div className="keno__toolbar">
-          <KenoToolbar
-            instant={instant}
-            onInstantChange={onInstantChange}
+          <GameToolbar
             sound={sound}
             onSoundChange={onSoundChange}
+            instant={instant}
+            onInstantChange={onInstantChange}
+            instantLabel="Instant draws"
+            instantHint={`Show all ${DRAW_COUNT} drawn tiles at once instead of one by one.`}
             theater={theater}
             onTheaterChange={setTheater}
             stats={stats}
             onResetStats={onResetStats}
-            risk={risk}
+            fairness={<KenoFairness risk={risk} />}
           />
         </div>
 
@@ -294,5 +284,44 @@ export default function KenoPage() {
         </p>
       </section>
     </div>
+  )
+}
+
+/** Body of Keno's Fairness dialog: how it works, and every payout with its return */
+function KenoFairness({ risk }: { risk: Risk }) {
+  const riskLabel = RISKS.find((r) => r.id === risk)?.label
+  return (
+    <>
+      <h2>Fairness</h2>
+      <p>
+        Pick 1–{MAX_PICKS} of the {TILE_COUNT} tiles, then {DRAW_COUNT} tiles are drawn. Every tile is equally likely
+        to be drawn; your payout is your bet times the multiplier for how many of your picks were hit.
+      </p>
+      <p>
+        <strong>Demo mode:</strong> the draw happens in your browser using its cryptographic random number generator,
+        and the points are a demo balance stored only on this device.
+      </p>
+      <h3>{riskLabel} payouts</h3>
+      <div className="game-fairness__table-wrap">
+        <table className="game-fairness__table">
+          <thead>
+            <tr>
+              <th scope="col">Picks</th>
+              <th scope="col">Multiplier by hits (0, 1, 2 …)</th>
+              <th scope="col">Return</th>
+            </tr>
+          </thead>
+          <tbody>
+            {Array.from({ length: MAX_PICKS }, (_, i) => i + 1).map((picks) => (
+              <tr key={picks}>
+                <th scope="row">{picks}</th>
+                <td>{getPayouts(risk, picks).map(formatMultiplier).join(' · ')}</td>
+                <td>{(getReturnToPlayer(risk, picks) * 100).toFixed(2)}%</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </>
   )
 }

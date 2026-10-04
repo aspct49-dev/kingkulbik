@@ -1,0 +1,55 @@
+.coin-stage {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.coin-stage canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  animation: coin-stage-in 0.5s ease-out;
+}
+
+@keyframes coin-stage-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/* A soft pulsing disc while the model loads */
+.coin-stage__loading {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  border: 3px solid #2b3546;
+  border-top-color: var(--color-accent);
+  transform: translate(-50%, -50%);
+  animation: coin-stage-spin 0.9s linear infinite;
+}
+
+@keyframes coin-stage-spin {
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+.coin-stage__fallback {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .coin-stage canvas,
+  .coin-stage__loading {
+    animation: none;
+  }
+}

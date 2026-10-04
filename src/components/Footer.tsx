@@ -84,6 +84,7 @@ export default function Footer() {
           <Link to="/">Home</Link>
           <Link to="/leaderboard">Leaderboard</Link>
           <Link to="/keno">Keno</Link>
+          <Link to="/coinflip">Coinflip</Link>
           <a href={STAKE_URL} target="_blank" rel="noopener noreferrer">
             Visit Stake
           </a>

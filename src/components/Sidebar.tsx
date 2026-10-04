@@ -75,7 +75,7 @@ const sections: NavSection[] = [
         href: '#guess-the-balance',
         icon: <span className="sidebar__question-icon">?</span>,
       },
-      { label: 'Coinflip', href: '#coinflip', icon: svgIcon(coinflipIcon, 17, 17) },
+      { label: 'Coinflip', href: '/coinflip', icon: svgIcon(coinflipIcon, 17, 17) },
       { label: 'Keno', href: '/keno', icon: numberIcon },
     ],
   },

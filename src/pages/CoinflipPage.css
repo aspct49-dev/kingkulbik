@@ -1,0 +1,287 @@
+.coinflip-page {
+  padding: 37px 0 64px;
+  container-type: inline-size;
+}
+
+/* Panel: 300px controls | stage, toolbar underneath — same frame as Keno */
+.coinflip {
+  display: grid;
+  grid-template-columns: 300px minmax(0, 1fr);
+  grid-template-areas:
+    'controls stage'
+    'toolbar toolbar';
+  max-width: 1200px;
+  margin: 0 auto;
+  transition: max-width 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* Theatre mode: a wider panel and a taller stage */
+.coinflip--theater {
+  max-width: 1520px;
+}
+
+.coinflip--theater .coinflip__coin {
+  min-height: 560px;
+}
+
+.coinflip__controls {
+  grid-area: controls;
+  border-radius: 6px 0 0 0;
+  background: #1d2430;
+}
+
+.coinflip__stage {
+  grid-area: stage;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+  padding: 16px;
+  position: relative;
+  isolation: isolate;
+  border-radius: 0 6px 0 0;
+  background:
+    radial-gradient(ellipse 55% 45% at 50% 45%, rgb(50 106 189 / 0.16), transparent 70%),
+    linear-gradient(to top, #11151d 0.4%, #191f2a 99.6%);
+}
+
+/* Faint topographic contours over the stage, fading out towards the edges */
+.coinflip__stage::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: url('../assets/coinflip/topography.webp') center / cover no-repeat;
+  opacity: 0.07;
+  mix-blend-mode: screen;
+  -webkit-mask-image: radial-gradient(ellipse 85% 80% at 50% 45%, #000 40%, transparent 100%);
+  mask-image: radial-gradient(ellipse 85% 80% at 50% 45%, #000 40%, transparent 100%);
+  pointer-events: none;
+}
+
+.coinflip__coin {
+  position: relative;
+  flex: 1;
+  min-height: 420px;
+}
+
+.coinflip__toolbar {
+  grid-area: toolbar;
+}
+
+/* Win card on the coin after a cashout */
+.coinflip-win {
+  position: absolute;
+  left: 50%;
+  top: 52%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  min-width: 150px;
+  padding: 16px 22px;
+  border: 3px solid var(--color-accent-button);
+  border-radius: 12px;
+  background: rgb(21 26 36 / 0.96);
+  box-shadow:
+    0 12px 32px rgb(0 0 0 / 0.5),
+    0 0 26px -6px rgb(230 210 24 / 0.6);
+  transform: translate(-50%, -50%);
+  animation: coinflip-win-in 0.42s cubic-bezier(0.34, 1.56, 0.64, 1);
+  pointer-events: none;
+}
+
+.coinflip-win__multiplier {
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--color-accent);
+}
+
+.coinflip-win__divider {
+  width: 44px;
+  height: 2px;
+  border-radius: 2px;
+  background: #2b3546;
+}
+
+.coinflip-win__payout {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.coinflip-win__payout img {
+  object-fit: contain;
+}
+
+@keyframes coinflip-win-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, calc(-50% + 10px)) scale(0.82);
+  }
+}
+
+/* History: this game's flips — heads ●, tails ◆, a missed call ringed in red */
+.coinflip-history {
+  padding: 10px 12px 12px;
+  border-radius: 6px;
+  background: #1d2430;
+}
+
+.coinflip-history__title {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #c6ccd8;
+}
+
+.coinflip-history__slots {
+  display: grid;
+  grid-template-columns: repeat(20, minmax(0, 1fr));
+  gap: 6px;
+  margin: 0;
+  padding: 6px;
+  border-radius: 6px;
+  background: #11151d;
+  list-style: none;
+}
+
+.coinflip-history__slot {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  max-height: 24px;
+  border-radius: 4px;
+  background: #1a2029;
+}
+
+.coinflip-history__slot--miss {
+  box-shadow: inset 0 0 0 2px rgb(229 115 111 / 0.7);
+}
+
+.coinflip-history__icon {
+  width: 62%;
+  height: 62%;
+  animation: coinflip-slot-in 0.36s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.coinflip-history__icon--heads {
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #ffe27a, #e0a512);
+}
+
+.coinflip-history__icon--tails {
+  width: 52%;
+  height: 52%;
+  border-radius: 2px;
+  background: linear-gradient(135deg, #6a9bea, #2f61b4);
+  transform: rotate(45deg);
+}
+
+@keyframes coinflip-slot-in {
+  from {
+    opacity: 0;
+    scale: 0.3;
+  }
+}
+
+/* Title bar under the panel */
+.coinflip-titlebar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: 1200px;
+  margin: 12px auto 0;
+  padding: 10px 14px;
+  border: 1px solid #232b3a;
+  border-radius: 8px;
+  background: #151b25;
+}
+
+.coinflip-titlebar__name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.coinflip-titlebar__name img {
+  object-fit: contain;
+}
+
+.coinflip-titlebar__tag {
+  padding: 5px 9px;
+  border-radius: 5px;
+  background: rgb(50 106 189 / 0.18);
+  font-size: 12px;
+  font-weight: 600;
+  color: #7fa8e6;
+}
+
+.coinflip-titlebar__rtp {
+  margin-left: auto;
+  padding: 5px 9px;
+  border-radius: 5px;
+  background: #222a38;
+  font-size: 12px;
+  font-weight: 700;
+  color: #c6ccd8;
+}
+
+/* Narrow: stage first, controls below */
+@container (max-width: 760px) {
+  .coinflip {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      'stage'
+      'controls'
+      'toolbar';
+  }
+
+  .coinflip__stage {
+    padding: 12px;
+    border-radius: 6px 6px 0 0;
+  }
+
+  .coinflip__coin {
+    min-height: 300px;
+  }
+
+  .coinflip--theater .coinflip__coin {
+    min-height: 360px;
+  }
+
+  .coinflip__controls {
+    border-radius: 0;
+  }
+
+  .coinflip-history__slots {
+    gap: 3px;
+    padding: 4px;
+  }
+}
+
+@media (max-width: 600px) {
+  .coinflip-page {
+    padding: 16px 0 48px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .coinflip,
+  .coinflip-win,
+  .coinflip-history__icon {
+    animation: none;
+    transition: none;
+  }
+}
