@@ -13,8 +13,14 @@
   gap: clamp(5px, 1.54cqi, 12px);
 }
 
+/*
+ * Tiles animate only transform and opacity (GPU-composited), so picks stay
+ * smooth on phones. The picked colour is its own layer (::before) that fades
+ * and scales in and out; the pick flash is a fading overlay (::after).
+ */
 .keno-tile {
   position: relative;
+  isolation: isolate;
   aspect-ratio: 1;
   border-radius: clamp(5px, 1.03cqi, 8px);
   background: #3a465b;
@@ -22,16 +28,88 @@
   font-size: clamp(13px, 3.18cqi, 24.78px);
   font-weight: 700;
   color: #fff;
-  transition: transform 0.12s ease, background-color 0.12s ease, filter 0.12s ease;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  will-change: transform;
+  transition:
+    transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1),
+    background-color 0.2s ease,
+    color 0.2s ease;
 }
 
-.keno-tile:hover:not(:disabled) {
-  filter: brightness(1.12);
-  transform: translateY(-2px);
+.keno-tile::before,
+.keno-tile::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  pointer-events: none;
 }
 
-.keno-tile:active:not(:disabled) {
-  transform: translateY(1px);
+/* Picked colour layer */
+.keno-tile::before {
+  background: linear-gradient(to bottom, #decc2c, #9e9013);
+  box-shadow: 0 3px 0 0 #6c620d;
+  opacity: 0;
+  transform: scale(0.82);
+  transition:
+    opacity 0.2s ease,
+    transform 0.32s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.keno-tile--picked::before {
+  opacity: 1;
+  transform: none;
+}
+
+/* Pick flash */
+.keno-tile::after {
+  background: rgb(255 255 255 / 0.4);
+  opacity: 0;
+}
+
+.keno-tile--picked {
+  animation: keno-pick-pop 0.32s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.keno-tile--picked::after {
+  animation: keno-pick-flash 0.36s ease-out;
+}
+
+@keyframes keno-pick-pop {
+  0% {
+    transform: scale(0.92);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes keno-pick-flash {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* Hover only with a real pointer, so it never "sticks" after a tap on touch screens */
+@media (hover: hover) and (pointer: fine) {
+  .keno-tile:hover:not(:disabled):not([aria-disabled='true']) {
+    transform: translateY(-2px);
+  }
+
+  .keno-tile--idle:hover:not(:disabled):not([aria-disabled='true']) {
+    background: #44526a;
+  }
+}
+
+/* Press-in on tap or click */
+.keno-tile:active:not(:disabled):not([aria-disabled='true']) {
+  transform: scale(0.94);
+  transition-duration: 0.08s;
 }
 
 .keno-tile:disabled {
@@ -43,35 +121,12 @@
   outline-offset: 2px;
 }
 
-.keno-tile--picked {
-  background: linear-gradient(to bottom, #decc2c, #9e9013);
-  box-shadow: 0 3px 0 0 #6c620d;
-  animation: keno-pick-pop 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-/* A quick scale-and-flash as a tile is picked (by hand or by Random Pick) */
-@keyframes keno-pick-pop {
-  0% {
-    transform: scale(0.86);
-    filter: brightness(1.45);
-  }
-  100% {
-    transform: scale(1);
-    filter: brightness(1);
-  }
-}
-
-/* Selection full (10 picked): the tiles that can't be chosen dim and stop lifting */
+/* Selection full (10 picked): the tiles that can't be chosen dim */
 .keno-board--full .keno-tile--idle {
   background: #2a3240;
   box-shadow: 0 3px 0 0 #222936;
   color: #6b7689;
   cursor: not-allowed;
-}
-
-.keno-board--full .keno-tile--idle:hover {
-  filter: none;
-  transform: none;
 }
 
 /*
@@ -85,9 +140,12 @@
 }
 
 .keno-board--round .keno-tile--picked {
+  color: #0b2614;
+}
+
+.keno-board--round .keno-tile::before {
   background: linear-gradient(to bottom, #6ff59a, #3fdc78);
   box-shadow: 0 3px 0 0 #2a9e56;
-  color: #0b2614;
 }
 
 /* Drawn but not picked: sunk, with a red number */
@@ -116,7 +174,6 @@
   inset: 13%;
   width: 74%;
   height: 74%;
-  filter: drop-shadow(0 2px 4px rgb(0 0 0 / 0.45));
 }
 
 .keno-tile__number {
@@ -206,7 +263,9 @@
 
 @media (prefers-reduced-motion: reduce) {
   .keno-tile,
+  .keno-tile::before,
   .keno-tile--picked,
+  .keno-tile--picked::after,
   .keno-tile--drawn,
   .keno-tile--hit,
   .keno-tile__gem,

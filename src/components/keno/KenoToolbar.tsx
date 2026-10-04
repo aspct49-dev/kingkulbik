@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { memo, useEffect, useRef, useState } from 'react'
 import settingsIcon from '../../assets/keno/settings.svg'
 import statsIcon from '../../assets/keno/live-stats.svg'
 import shieldIcon from '../../assets/keno/fairness-shield.svg'
@@ -32,7 +32,7 @@ type KenoToolbarProps = {
 
 type Menu = 'settings' | 'stats' | null
 
-export default function KenoToolbar(props: KenoToolbarProps) {
+export default memo(function KenoToolbar(props: KenoToolbarProps) {
   const { instant, onInstantChange, sound, onSoundChange, theater, onTheaterChange, stats, onResetStats, risk } = props
   const [menu, setMenu] = useState<Menu>(null)
   const toolbarRef = useRef<HTMLDivElement>(null)
@@ -182,4 +182,4 @@ export default function KenoToolbar(props: KenoToolbarProps) {
       </dialog>
     </div>
   )
-}
+})

@@ -138,11 +138,28 @@
 
 /* Buttons */
 .keno-controls__secondary,
+.keno-controls__bet,
+.keno-bet__half,
+.keno-bet__double {
+  transition:
+    background-color 0.15s,
+    filter 0.15s,
+    transform 0.18s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.keno-controls__secondary,
 .keno-controls__bet {
   border-radius: 7px;
   font-weight: 700;
   color: #fff;
-  transition: background-color 0.15s, filter 0.15s;
+}
+
+.keno-controls__secondary:active:not(:disabled),
+.keno-controls__bet:active:not(:disabled),
+.keno-bet__half:active:not(:disabled),
+.keno-bet__double:active:not(:disabled) {
+  transform: scale(0.97);
+  transition-duration: 0.08s;
 }
 
 .keno-controls__secondary {

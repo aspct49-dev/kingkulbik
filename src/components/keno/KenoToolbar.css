@@ -75,6 +75,26 @@
   background: #151a24;
   box-shadow: 0 12px 32px rgb(0 0 0 / 0.45);
   font-size: 13px;
+  transform-origin: bottom left;
+  animation: keno-popover-in 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@keyframes keno-popover-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.97);
+  }
+}
+
+.keno-fairness[open] {
+  animation: keno-popover-in 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .keno-popover,
+  .keno-fairness[open] {
+    animation: none;
+  }
 }
 
 .keno-popover--stats {

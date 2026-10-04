@@ -19,6 +19,7 @@ import {
   setSoundEnabled,
 } from '../games/keno/sounds'
 import { useDemoPoints } from '../hooks/useDemoPoints'
+import { useStableCallback } from '../hooks/useStableCallback'
 import './KenoPage.css'
 
 const REVEAL_MS = 110
@@ -63,6 +64,12 @@ export default function KenoPage() {
   const [autoPicking, setAutoPicking] = useState(false)
   const autoPickTimers = useRef<number[]>([])
   useEffect(() => () => autoPickTimers.current.forEach(window.clearTimeout), [])
+
+  // Start the audio engine on the first tap, so the first sound never hitches
+  useEffect(() => {
+    document.addEventListener('pointerdown', preloadSounds, { once: true })
+    return () => document.removeEventListener('pointerdown', preloadSounds)
+  }, [])
 
   const drawing = !!round && round.revealed < DRAW_COUNT
   const busy = drawing || autoPicking
@@ -130,7 +137,7 @@ export default function KenoPage() {
     else playReveal(round.revealed - 1)
   }, [round])
 
-  const handleBet = () => {
+  const handleBet = useStableCallback(() => {
     if (!canBet) return
     preloadSounds()
     playBet()
@@ -144,9 +151,9 @@ export default function KenoPage() {
       revealed: 0,
       result: null,
     })
-  }
+  })
 
-  const togglePick = (tile: number) => {
+  const togglePick = useStableCallback((tile: number) => {
     if (busy) return
     const picking = !picks.includes(tile)
     if (picking && picks.length >= MAX_PICKS) return
@@ -160,9 +167,9 @@ export default function KenoPage() {
           ? [...current, tile]
           : current,
     )
-  }
+  })
 
-  const randomPick = () => {
+  const randomPick = useStableCallback(() => {
     if (busy) return
     preloadSounds()
     setRound(null)
@@ -181,7 +188,43 @@ export default function KenoPage() {
         if (i === chosen.length - 1) setAutoPicking(false)
       }, i * AUTO_PICK_MS),
     )
-  }
+  })
+
+  const onBetInputChange = useStableCallback((value: string) => setBetInput(value.replace(/[^\d.,]/g, '')))
+  const onBetBlur = useStableCallback(() =>
+    setBetInput(toBetInput(Number.isFinite(bet) ? Math.max(MIN_BET, bet) : MIN_BET)),
+  )
+  const onHalve = useStableCallback(() => {
+    playTick()
+    setBetInput(toBetInput(Math.max(MIN_BET, (Number.isFinite(bet) ? bet : MIN_BET) / 2)))
+  })
+  const onDouble = useStableCallback(() => {
+    playTick()
+    setBetInput(toBetInput(Math.max(MIN_BET, Math.min(balance, (Number.isFinite(bet) ? bet : MIN_BET) * 2))))
+  })
+  const onRiskChange = useStableCallback((next: Risk) => {
+    playTick()
+    setRisk(next)
+    setRound(null)
+  })
+  const onClear = useStableCallback(() => {
+    playTick()
+    setRound(null)
+    setPicks([])
+  })
+  const onInstantChange = useStableCallback((value: boolean) => {
+    setInstant(value)
+    try {
+      localStorage.setItem(INSTANT_KEY, value ? '1' : '0')
+    } catch {
+      // Not persisted; still applies for this visit
+    }
+  })
+  const onSoundChange = useStableCallback((value: boolean) => {
+    setSound(value)
+    setSoundEnabled(value)
+  })
+  const onResetStats = useStableCallback(() => setStats(EMPTY_STATS))
 
   const revealedTiles = round ? round.drawn.slice(0, round.revealed) : []
   const hitsSoFar = round ? round.picks.filter((tile) => revealedTiles.includes(tile)).length : null
@@ -195,28 +238,14 @@ export default function KenoPage() {
         <div className="keno__controls">
           <KenoControls
             betInput={betInput}
-            onBetInputChange={(value) => setBetInput(value.replace(/[^\d.,]/g, ''))}
-            onBetBlur={() => setBetInput(toBetInput(Number.isFinite(bet) ? Math.max(MIN_BET, bet) : MIN_BET))}
-            onHalve={() => {
-              playTick()
-              setBetInput(toBetInput(Math.max(MIN_BET, (Number.isFinite(bet) ? bet : MIN_BET) / 2)))
-            }}
-            onDouble={() => {
-              playTick()
-              setBetInput(toBetInput(Math.max(MIN_BET, Math.min(balance, (Number.isFinite(bet) ? bet : MIN_BET) * 2))))
-            }}
+            onBetInputChange={onBetInputChange}
+            onBetBlur={onBetBlur}
+            onHalve={onHalve}
+            onDouble={onDouble}
             risk={risk}
-            onRiskChange={(next) => {
-              playTick()
-              setRisk(next)
-              setRound(null)
-            }}
+            onRiskChange={onRiskChange}
             onRandomPick={randomPick}
-            onClear={() => {
-              playTick()
-              setRound(null)
-              setPicks([])
-            }}
+            onClear={onClear}
             onBet={handleBet}
             canBet={canBet}
             busy={busy}
@@ -243,23 +272,13 @@ export default function KenoPage() {
         <div className="keno__toolbar">
           <KenoToolbar
             instant={instant}
-            onInstantChange={(value) => {
-              setInstant(value)
-              try {
-                localStorage.setItem(INSTANT_KEY, value ? '1' : '0')
-              } catch {
-                // Not persisted; still applies for this visit
-              }
-            }}
+            onInstantChange={onInstantChange}
             sound={sound}
-            onSoundChange={(value) => {
-              setSound(value)
-              setSoundEnabled(value)
-            }}
+            onSoundChange={onSoundChange}
             theater={theater}
             onTheaterChange={setTheater}
             stats={stats}
-            onResetStats={() => setStats(EMPTY_STATS)}
+            onResetStats={onResetStats}
             risk={risk}
           />
         </div>

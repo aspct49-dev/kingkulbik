@@ -22,11 +22,13 @@ function Layout() {
       <Header className="app__header" menuOpen={menuOpen} onMenuToggle={() => setMenuOpen((open) => !open)} />
       <Sidebar open={menuOpen} onClose={() => setMenuOpen(false)} />
       <main className="app__main">
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/leaderboard" element={<LeaderboardPage />} />
-          <Route path="/keno" element={<KenoPage />} />
-        </Routes>
+        <div className="page-transition" key={pathname}>
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/leaderboard" element={<LeaderboardPage />} />
+            <Route path="/keno" element={<KenoPage />} />
+          </Routes>
+        </div>
         <Footer />
       </main>
     </div>

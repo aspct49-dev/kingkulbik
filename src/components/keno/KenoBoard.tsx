@@ -1,8 +1,11 @@
+import { memo, useEffect } from 'react'
 import coinIcon from '../../assets/keno/coin.png'
 import gemIcon from '../../assets/keno/gem.svg'
 import { TILE_COUNT } from '../../games/keno/engine'
 import { formatMultiplier, formatPoints } from './format'
 import './KenoBoard.css'
+
+type TileState = 'idle' | 'picked' | 'drawn' | 'hit'
 
 type KenoBoardProps = {
   picks: number[]
@@ -13,6 +16,7 @@ type KenoBoardProps = {
   /** The maximum number of tiles is picked: the rest can't be chosen */
   full: boolean
   disabled: boolean
+  /** Must be stable (see useStableCallback) so unchanged tiles skip re-rendering */
   onToggle: (tile: number) => void
   /** Shown over the board after a winning round */
   win: { multiplier: number; payout: number } | null
@@ -20,7 +24,40 @@ type KenoBoardProps = {
 
 const tiles = Array.from({ length: TILE_COUNT }, (_, i) => i + 1)
 
+type TileProps = {
+  tile: number
+  state: TileState
+  unavailable: boolean
+  disabled: boolean
+  onToggle: (tile: number) => void
+}
+
+/** One tile; memoized so a pick only re-renders the tile that changed. */
+const Tile = memo(function Tile({ tile, state, unavailable, disabled, onToggle }: TileProps) {
+  return (
+    <button
+      type="button"
+      className={`keno-tile keno-tile--${state}`}
+      aria-pressed={state === 'picked' || state === 'hit'}
+      aria-disabled={unavailable || undefined}
+      aria-label={`${tile}${state === 'hit' ? ', hit' : state === 'drawn' ? ', drawn' : ''}`}
+      disabled={disabled}
+      onClick={() => onToggle(tile)}
+    >
+      {state === 'hit' && <img className="keno-tile__gem" src={gemIcon} alt="" />}
+      <span className="keno-tile__number">{tile}</span>
+    </button>
+  )
+})
+
 export default function KenoBoard({ picks, drawn, inRound, full, disabled, onToggle, win }: KenoBoardProps) {
+  // Decode the gem up front so the first hit doesn't stall on image decoding
+  useEffect(() => {
+    const img = new Image()
+    img.src = gemIcon
+    img.decode?.().catch(() => {})
+  }, [])
+
   const picked = new Set(picks)
   const revealed = new Set(drawn)
 
@@ -30,21 +67,16 @@ export default function KenoBoard({ picks, drawn, inRound, full, disabled, onTog
         {tiles.map((tile) => {
           const isPicked = picked.has(tile)
           const isDrawn = revealed.has(tile)
-          const state = isPicked && isDrawn ? 'hit' : isDrawn ? 'drawn' : isPicked ? 'picked' : 'idle'
+          const state: TileState = isPicked && isDrawn ? 'hit' : isDrawn ? 'drawn' : isPicked ? 'picked' : 'idle'
           return (
-            <button
+            <Tile
               key={tile}
-              type="button"
-              className={`keno-tile keno-tile--${state}`}
-              aria-pressed={isPicked}
-              aria-disabled={full && !inRound && !isPicked ? true : undefined}
-              aria-label={`${tile}${state === 'hit' ? ', hit' : state === 'drawn' ? ', drawn' : ''}`}
+              tile={tile}
+              state={state}
+              unavailable={full && !inRound && !isPicked}
               disabled={disabled}
-              onClick={() => onToggle(tile)}
-            >
-              {state === 'hit' && <img className="keno-tile__gem" src={gemIcon} alt="" />}
-              <span className="keno-tile__number">{tile}</span>
-            </button>
+              onToggle={onToggle}
+            />
           )
         })}
       </div>

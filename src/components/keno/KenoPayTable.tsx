@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import type { CSSProperties } from 'react'
 import multiplyIcon from '../../assets/keno/multiply.svg'
 import gemIcon from '../../assets/keno/gem.svg'
@@ -14,7 +15,7 @@ type KenoPayTableProps = {
 
 const Times = () => <img className="keno-pay__times" src={multiplyIcon} width={12} height={12} alt="" />
 
-export default function KenoPayTable({ payouts, hits }: KenoPayTableProps) {
+export default memo(function KenoPayTable({ payouts, hits }: KenoPayTableProps) {
   if (payouts.length === 0) {
     return (
       <div className="keno-pay keno-pay--empty">
@@ -48,4 +49,4 @@ export default function KenoPayTable({ payouts, hits }: KenoPayTableProps) {
       </div>
     </div>
   )
-}
+})

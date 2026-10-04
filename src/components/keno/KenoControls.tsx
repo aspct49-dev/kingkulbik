@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import coinIcon from '../../assets/keno/coin.png'
 import caretIcon from '../../assets/keno/caret.svg'
 import dividerLine from '../../assets/keno/divider.svg'
@@ -28,7 +29,7 @@ type KenoControlsProps = {
   onResetBalance: () => void
 }
 
-export default function KenoControls(props: KenoControlsProps) {
+export default memo(function KenoControls(props: KenoControlsProps) {
   const { busy } = props
 
   return (
@@ -109,4 +110,4 @@ export default function KenoControls(props: KenoControlsProps) {
       </div>
     </div>
   )
-}
+})
