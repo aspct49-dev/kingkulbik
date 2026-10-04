@@ -22,7 +22,9 @@ import { useDemoPoints } from '../hooks/useDemoPoints'
 import { useStableCallback } from '../hooks/useStableCallback'
 import './KenoPage.css'
 
-const REVEAL_MS = 110
+const REVEAL_MS = 125
+/** Pause after Bet so the gold → green crossfade settles before the first reveal */
+const REVEAL_LEAD_MS = 220
 const AUTO_PICK_MS = 80
 const INSTANT_KEY = 'kk:keno-instant'
 const HISTORY_LIMIT = 300
@@ -89,7 +91,7 @@ export default function KenoPage() {
     if (round.revealed < DRAW_COUNT) {
       const id = window.setTimeout(
         () => setRound((r) => (r && r.id === round.id ? { ...r, revealed: instant ? DRAW_COUNT : r.revealed + 1 } : r)),
-        instant ? 0 : REVEAL_MS,
+        instant ? 0 : round.revealed === 0 ? REVEAL_LEAD_MS : REVEAL_MS,
       )
       return () => window.clearTimeout(id)
     }

@@ -4,6 +4,7 @@ import caretIcon from '../../assets/keno/caret.svg'
 import dividerLine from '../../assets/keno/divider.svg'
 import { RISKS } from '../../games/keno/engine'
 import type { Risk } from '../../games/keno/engine'
+import AnimatedNumber from '../AnimatedNumber'
 import { formatPoints } from './format'
 import './KenoControls.css'
 
@@ -100,7 +101,7 @@ export default memo(function KenoControls(props: KenoControlsProps) {
         <span>Demo balance</span>
         <span className="keno-controls__balance-value">
           <img src={coinIcon} width={13} height={13} alt="" />
-          {formatPoints(props.balance)}
+          <AnimatedNumber value={props.balance} format={formatPoints} duration={500} />
         </span>
         {props.balance < MIN_BET && (
           <button type="button" className="keno-controls__reset" onClick={props.onResetBalance}>

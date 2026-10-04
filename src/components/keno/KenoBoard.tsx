@@ -2,6 +2,7 @@ import { memo, useEffect } from 'react'
 import coinIcon from '../../assets/keno/coin.png'
 import gemIcon from '../../assets/keno/gem.svg'
 import { TILE_COUNT } from '../../games/keno/engine'
+import AnimatedNumber from '../AnimatedNumber'
 import { formatMultiplier, formatPoints } from './format'
 import './KenoBoard.css'
 
@@ -44,8 +45,19 @@ const Tile = memo(function Tile({ tile, state, unavailable, disabled, onToggle }
       disabled={disabled}
       onClick={() => onToggle(tile)}
     >
-      {state === 'hit' && <img className="keno-tile__gem" src={gemIcon} alt="" />}
+      {/* Each visual is its own layer so it can fade/scale independently (GPU-friendly) */}
+      <span className="keno-tile__fill keno-tile__fill--gold" aria-hidden />
+      <span className="keno-tile__fill keno-tile__fill--green" aria-hidden />
+      <span className="keno-tile__flash" aria-hidden />
+      {/* Only hits carry the ring and gem: 40 hidden copies would be repainted on every change */}
+      {state === 'hit' && (
+        <>
+          <span className="keno-tile__ring" aria-hidden />
+          <img className="keno-tile__gem" src={gemIcon} alt="" aria-hidden />
+        </>
+      )}
       <span className="keno-tile__number">{tile}</span>
+      <span className="keno-tile__dim" aria-hidden />
     </button>
   )
 })
@@ -81,16 +93,21 @@ export default function KenoBoard({ picks, drawn, inRound, full, disabled, onTog
         })}
       </div>
 
-      {win && (
-        <div className="keno-board__win" role="status">
-          <span className="keno-board__win-multiplier">{formatMultiplier(win.multiplier)}×</span>
-          <span className="keno-board__win-divider" />
-          <span className="keno-board__win-payout">
-            <img src={coinIcon} width={14} height={14} alt="" />
-            {formatPoints(win.payout)}
-          </span>
-        </div>
-      )}
+      {win && <WinCard multiplier={win.multiplier} payout={win.payout} />}
+    </div>
+  )
+}
+
+/** Win card: springs in while the payout counts up from 0 */
+function WinCard({ multiplier, payout }: { multiplier: number; payout: number }) {
+  return (
+    <div className="keno-board__win" role="status" aria-label={`Won ${formatPoints(payout)} points`}>
+      <span className="keno-board__win-multiplier">{formatMultiplier(multiplier)}×</span>
+      <span className="keno-board__win-divider" />
+      <span className="keno-board__win-payout">
+        <img src={coinIcon} width={14} height={14} alt="" />
+        <AnimatedNumber value={payout} format={formatPoints} duration={550} from={0} />
+      </span>
     </div>
   )
 }

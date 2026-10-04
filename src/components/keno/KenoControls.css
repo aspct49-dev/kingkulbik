@@ -214,6 +214,7 @@
 }
 
 .keno-controls__balance-value {
+  font-variant-numeric: tabular-nums;
   display: flex;
   align-items: center;
   gap: 5px;

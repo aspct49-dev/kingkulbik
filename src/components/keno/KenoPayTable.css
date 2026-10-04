@@ -29,15 +29,32 @@
 }
 
 .keno-pay__cell {
+  position: relative;
+  isolation: isolate;
   height: 50px;
   border-radius: 4px;
   background: #27303f;
-  transition: background-color 0.15s, color 0.15s;
 }
 
-.keno-pay__cell--active {
+/* Active highlight is its own layer, so it crossfades without restarting the cell's animation */
+.keno-pay__cell::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
   background: var(--color-accent-button);
   box-shadow: inset 0 1px 0 0 #e2db70;
+  opacity: 0;
+  transform: scale(0.88);
+  transition:
+    opacity 0.2s ease,
+    transform 0.34s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.keno-pay__cell--active::before {
+  opacity: 1;
+  transform: none;
 }
 
 .keno-pay__hits {
@@ -45,6 +62,10 @@
   align-items: center;
   border-radius: 4px;
   background: #27303f;
+}
+
+.keno-pay__hit {
+  transition: color 0.2s ease;
 }
 
 .keno-pay__hit--active {
@@ -84,6 +105,38 @@
 
 .keno-pay__compact {
   display: none;
+}
+
+/* Motion: the table fades in, new columns slide in, the active hit cell pulses */
+.keno-pay {
+  animation: keno-pay-in 0.26s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.keno-pay__cell,
+.keno-pay__hit {
+  animation: keno-pay-cell-in 0.24s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+}
+
+@keyframes keno-pay-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes keno-pay-cell-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .keno-pay,
+  .keno-pay__cell,
+  .keno-pay__hit,
+  .keno-pay__cell::before {
+    animation: none;
+    transition: none;
+  }
 }
 
 /* Narrower boards (tablets, small laptops): tighter cells, smaller numbers */
