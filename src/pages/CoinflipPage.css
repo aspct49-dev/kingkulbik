@@ -37,27 +37,10 @@
   gap: 16px;
   min-width: 0;
   padding: 16px;
-  position: relative;
-  isolation: isolate;
   border-radius: 0 6px 0 0;
   background:
     radial-gradient(ellipse 55% 45% at 50% 45%, rgb(50 106 189 / 0.16), transparent 70%),
     linear-gradient(to top, #11151d 0.4%, #191f2a 99.6%);
-}
-
-/* Faint topographic contours over the stage, fading out towards the edges */
-.coinflip__stage::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  border-radius: inherit;
-  background: url('../assets/topography.webp') center / cover no-repeat;
-  opacity: 0.07;
-  mix-blend-mode: screen;
-  -webkit-mask-image: radial-gradient(ellipse 85% 80% at 50% 45%, #000 40%, transparent 100%);
-  mask-image: radial-gradient(ellipse 85% 80% at 50% 45%, #000 40%, transparent 100%);
-  pointer-events: none;
 }
 
 .coinflip__coin {
