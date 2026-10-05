@@ -1,0 +1,47 @@
+/* Dark pill; size and font size come from the caller's class */
+.copy-code {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  border-radius: var(--radius-md);
+  background: var(--nav-item-from);
+  box-shadow: inset 0 1px 0 0 #364151;
+  font-weight: 700;
+  white-space: nowrap;
+  color: #efefef;
+  transition:
+    background-color 0.15s ease,
+    box-shadow 0.15s ease,
+    transform 0.15s ease;
+}
+
+.copy-code img {
+  flex: none;
+}
+
+.copy-code__code {
+  color: var(--color-accent);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .copy-code:hover {
+    background: #2c3647;
+  }
+}
+
+.copy-code:active {
+  transform: translateY(1px);
+}
+
+.copy-code:focus-visible {
+  outline: 2px solid #e6d218;
+  outline-offset: 2px;
+}
+
+/* Copied: a gold ring for a moment */
+.copy-code--copied {
+  box-shadow:
+    inset 0 1px 0 0 #364151,
+    0 0 0 1px var(--color-accent);
+}

@@ -1,0 +1,17 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="64" height="86" viewBox="0 0 64 86" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Gold Badge / line">
+<line id="Line 9" x1="32" y1="63" x2="32" y2="86" stroke="#293241" stroke-width="2"/>
+<g id="Gold Badge">
+<circle id="Ellipse 13" cx="32" cy="32" r="31" fill="#171F2C" stroke="#293241" stroke-width="2"/>
+<g id="Gold 2">
+<path id="Vector" fill-rule="evenodd" clip-rule="evenodd" d="M39.762 23.2379L50.3749 26.5903L43.6717 35.5278L44.7897 48.375L32.4999 43.9063L20.2116 48.375L21.328 35.5278L14.6249 26.5903L25.2377 23.2363L32.4999 12.625L39.762 23.2379ZM27.4721 26.0313L20.769 28.8246L25.2377 34.9688V42.2309L32.4999 39.9965L39.762 42.2309V34.9688L44.2307 28.8246L37.5276 26.0313L32.4999 20.4461L27.4721 26.0313Z" fill="#FFB947"/>
+<path id="Vector_2" d="M32.5 12.625L39.7621 23.2379L50.375 26.5903L44.2309 28.8246L37.5277 26.0313L32.5 20.4461V12.625Z" fill="white" fill-opacity="0.3"/>
+<path id="Vector_3" d="M50.3749 26.5902L44.2307 28.8246L39.762 34.9687V42.2309L44.7881 48.375L43.6717 35.5277L50.3749 26.5902Z" fill="white" fill-opacity="0.1"/>
+<path id="Vector_4" d="M39.7623 42.2309L32.5002 39.9965L25.238 42.2309L20.2119 48.375L32.5002 43.9062L44.79 48.375L39.7623 42.2309Z" fill="black" fill-opacity="0.4"/>
+<path id="Vector_5" d="M14.6249 26.5902L20.769 28.8246L25.2377 34.9687V42.2309L20.2116 48.375L21.328 35.5277L14.6249 26.5902Z" fill="white" fill-opacity="0.1"/>
+<path id="Vector_6" d="M32.4999 12.625L25.2377 23.2379L14.6249 26.5903L20.769 28.8246L27.4721 26.0313L32.4999 20.4461V12.625Z" fill="white"/>
+<path id="Vector_7" d="M20.769 28.8246L32.4999 33.8524L44.2307 28.8246L50.3749 26.5903L39.762 23.2363L32.4999 12.625L25.2377 23.2379L14.6249 26.5903L20.769 28.8246Z" fill="white" fill-opacity="0.2"/>
+</g>
+</g>
+</g>
+</svg>

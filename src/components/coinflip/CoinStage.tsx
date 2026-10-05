@@ -55,11 +55,24 @@ function crownPath(g: CanvasRenderingContext2D) {
   }
 }
 
+type FaceStyle = {
+  /** Paints the shape with the current fill (and stroke, if the shape uses one) */
+  paint: (g: CanvasRenderingContext2D) => void
+  /** Vertical gradient for the shape, top to bottom */
+  colors: [string, string]
+  /** Pale edge drawn around the shape, if any */
+  edge?: string
+  /** three.js reads roughness from G and metalness from B */
+  metalRough: string
+  /** The heads centre's UVs are laid out for a side-to-side flip; ours turns end over end */
+  rotate?: boolean
+}
+
 /**
- * The tails centre: a blue crown (matching the tails ring) on the same navy as the heads emblem,
- * embossed the same way. Returns colour, bump and metal/roughness maps.
+ * A raised shape on the coin's navy centre (1024px canvas, the same UV layout as the
+ * model's centre texture). Returns colour, bump and metal/roughness maps.
  */
-function makeCrownMaps() {
+function makeFaceMaps({ paint, colors, edge, metalRough, rotate = false }: FaceStyle) {
   const size = 1024
   const canvas = (background: string, draw: (g: CanvasRenderingContext2D) => void) => {
     const c = document.createElement('canvas')
@@ -67,58 +80,96 @@ function makeCrownMaps() {
     const g = c.getContext('2d')!
     g.fillStyle = background
     g.fillRect(0, 0, size, size)
-    // Centre the crown on the face and size it to the heads emblem
-    g.translate(size / 2, size / 2)
-    g.scale(CROWN_SCALE, CROWN_SCALE)
-    g.translate(-512, -489)
     draw(g)
     const texture = new THREE.CanvasTexture(c)
     texture.flipY = false // glTF UV convention, like the model's own textures
+    if (rotate) {
+      texture.center.set(0.5, 0.5)
+      texture.rotation = Math.PI
+    }
     texture.anisotropy = 8
     return texture
   }
-
-  const map = canvas('#070d1e', (g) => {
-    const blue = g.createLinearGradient(0, 260, 0, 740)
-    blue.addColorStop(0, '#4a70e8')
-    blue.addColorStop(1, '#1d3896')
-    g.fillStyle = blue
-    g.strokeStyle = '#8eaaf5'
+  const solid = (g: CanvasRenderingContext2D, color: string) => {
+    g.fillStyle = color
+    g.strokeStyle = color
     g.lineWidth = 6
     g.lineJoin = 'round'
-    crownPath(g)
-    g.fill()
-    g.stroke()
-    // Silver gems, like the white "KING"
-    g.fillStyle = '#dcdcdc'
-    for (const [x, y] of [[402, 590], [512, 590], [622, 590], [402, 701], [512, 701], [622, 701]]) {
-      g.beginPath()
-      g.arc(x, y, y > 650 ? 16 : 22, 0, TAU)
-      g.fill()
-    }
+    paint(g)
+  }
+
+  const map = canvas('#070d1e', (g) => {
+    const gradient = g.createLinearGradient(0, 240, 0, 780)
+    gradient.addColorStop(0, colors[0])
+    gradient.addColorStop(1, colors[1])
+    g.fillStyle = gradient
+    g.strokeStyle = edge ?? gradient
+    g.lineWidth = 6
+    g.lineJoin = 'round'
+    paint(g)
   })
   map.colorSpace = THREE.SRGBColorSpace
 
-  // Raised crown with soft edges, like the emblem's lettering
+  // Raised with soft edges, like the original emblem's lettering
   const bump = canvas('#000', (g) => {
     g.filter = 'blur(7px)'
-    g.fillStyle = '#fff'
-    g.strokeStyle = '#fff'
-    g.lineWidth = 6
-    g.lineJoin = 'round'
-    crownPath(g)
-    g.fill()
-    g.stroke()
+    solid(g, '#fff')
   })
+  const metalness = canvas('rgb(0, 150, 0)', (g) => solid(g, metalRough))
 
-  // three.js reads roughness from G and metalness from B: satin navy, a glossy, lightly metallic blue
-  const metalRough = canvas('rgb(0, 150, 0)', (g) => {
-    g.fillStyle = 'rgb(0, 115, 40)'
-    crownPath(g)
-    g.fill()
+  return { map, bump, metalRough: metalness }
+}
+
+/** A material for one of those faces */
+function faceMaterial(maps: ReturnType<typeof makeFaceMaps>) {
+  return new THREE.MeshStandardMaterial({
+    map: maps.map,
+    bumpMap: maps.bump,
+    bumpScale: 6,
+    metalnessMap: maps.metalRough,
+    roughnessMap: maps.metalRough,
+    metalness: 1,
+    roughness: 1,
   })
+}
 
-  return { map, bump, metalRough }
+/** Tails: a blue crown, matching the tails ring (glossy, lightly metallic) */
+function makeCrownMaps() {
+  return makeFaceMaps({
+    paint: (g) => {
+      g.save()
+      // Centred on the face and sized to match the heads K
+      g.translate(512, 512)
+      g.scale(CROWN_SCALE, CROWN_SCALE)
+      g.translate(-512, -489)
+      crownPath(g)
+      g.fill()
+      g.stroke()
+      g.restore()
+    },
+    colors: ['#4a70e8', '#1d3896'],
+    edge: '#8eaaf5',
+    metalRough: 'rgb(0, 115, 40)',
+  })
+}
+
+/** Heads: a single Titan One "K" in the 2D coin's gold gradient (polished gold) */
+function makeKMaps() {
+  return makeFaceMaps({
+    paint: (g) => {
+      g.font = '400 720px "Titan One", sans-serif'
+      g.textAlign = 'center'
+      g.textBaseline = 'alphabetic'
+      // Centre on the glyph's own bounds, not the font's line box
+      const m = g.measureText('K')
+      const x = 512 - (m.actualBoundingBoxRight - m.actualBoundingBoxLeft) / 2
+      const y = 512 + (m.actualBoundingBoxAscent - m.actualBoundingBoxDescent) / 2
+      g.fillText('K', x, y)
+    },
+    colors: ['#f7d54e', '#c38f12'],
+    metalRough: 'rgb(0, 80, 230)',
+    rotate: true,
+  })
 }
 
 /** The heads side's gold (the gold coin model's KK_Gold, which the blue model replaces with blue) */
@@ -283,10 +334,15 @@ export default function CoinStage({ face, toss, onLanded, quick = false }: CoinS
     resize()
 
     let disposed = false
-    new GLTFLoader()
-      .loadAsync(MODEL_URL)
-      .then((gltf) => {
+    Promise.all([
+      new GLTFLoader().loadAsync(MODEL_URL),
+      // The heads K is drawn in Titan One, so the font must be ready first
+      document.fonts.load('400 100px "Titan One"').catch(() => undefined),
+    ])
+      .then(([gltf]) => {
         if (disposed) return
+        const k = makeKMaps()
+        disposables.push(k.map, k.bump, k.metalRough)
         const model = gltf.scene
         const gold = makeGold()
         // Each part is exported in a tilted "hero" pose; the flip needs it flat
@@ -297,8 +353,8 @@ export default function CoinStage({ face, toss, onLanded, quick = false }: CoinS
           const mesh = o as THREE.Mesh
           if (mesh.isMesh) {
             // The model is the blue coin, and both centres carry the emblem. Our tails is its
-            // +Y side (named Heads in the file): blue ring, crown. Our heads is its -Y side,
-            // turned gold here: gold ring, gold rim segments, emblem.
+            // +Y side (named Heads in the file): blue ring, blue crown. Our heads is its -Y side,
+            // turned gold here: gold ring, gold rim segments, a gold K.
             if (mesh.name === 'Inner_Ring_Tails') mesh.material = gold
             // The file's blue is near full brightness; under this scene's key light it clips to
             // pastel, so it is scaled down to read as the intended deep blue on screen
@@ -311,30 +367,8 @@ export default function CoinStage({ face, toss, onLanded, quick = false }: CoinS
               splitBySide(mesh.geometry)
               mesh.material = [gold, mesh.material as THREE.Material]
             }
-            if (mesh.name === 'Center_Tails') {
-              // Its UVs are laid out for a side-to-side flip; ours turns end over end
-              const emblem = (mesh.material as THREE.MeshStandardMaterial).clone()
-              for (const key of ['map', 'normalMap', 'metalnessMap', 'roughnessMap'] as const) {
-                const texture = emblem[key]?.clone()
-                if (!texture) continue
-                texture.center.set(0.5, 0.5)
-                texture.rotation = Math.PI
-                emblem[key] = texture
-                disposables.push(texture)
-              }
-              mesh.material = emblem
-            }
-            if (mesh.name === 'Center_Heads') {
-              mesh.material = new THREE.MeshStandardMaterial({
-                map: crown.map,
-                bumpMap: crown.bump,
-                bumpScale: 6,
-                metalnessMap: crown.metalRough,
-                roughnessMap: crown.metalRough,
-                metalness: 1,
-                roughness: 1,
-              })
-            }
+            if (mesh.name === 'Center_Tails') mesh.material = faceMaterial(k)
+            if (mesh.name === 'Center_Heads') mesh.material = faceMaterial(crown)
             // Keep the body behind the rings and centres where their faces meet
             if (mesh.name === 'Coin_Body') {
               const body = mesh.material as THREE.Material

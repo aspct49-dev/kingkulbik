@@ -1,0 +1,309 @@
+/* Page frame (.section-page) comes from ChallengesPage.css */
+.store {
+  display: flex;
+  flex-direction: column;
+  max-width: 1037px;
+  margin: 0 auto;
+}
+
+/* Four 253 × 73 summary tiles */
+.store-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin: 25px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.store-stat {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  height: 73px;
+  padding: 0 15px 0 22px;
+  border-radius: 7px;
+  background: #171f2c;
+  box-shadow: inset 0 1.5px 0 0 rgb(255 255 255 / 0.07);
+}
+
+.store-stat__text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.store-stat__label {
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 15px;
+  color: var(--color-text-muted);
+}
+
+.store-stat__value {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 1px;
+  overflow: hidden;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 18px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--color-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.store-stat__symbol {
+  position: relative;
+  flex: none;
+  width: 59px;
+  height: 59px;
+}
+
+.store-stat__symbol img {
+  position: absolute;
+}
+
+.store-stat__ring-outer {
+  left: 0;
+  top: 0;
+}
+
+.store-stat__ring-inner {
+  left: 3px;
+  top: 3px;
+}
+
+.store-stat__bag {
+  left: 15.6px;
+  top: 13.2px;
+}
+
+.store-stat__coin {
+  left: 6px;
+  top: 6px;
+}
+
+.store-stat__image {
+  object-fit: cover;
+}
+
+.store-stat__solid-bag {
+  left: 8px;
+  top: 7px;
+}
+
+/* Search + sort */
+.store__filter {
+  display: flex;
+  gap: 12px;
+  height: 38px;
+  margin-top: 16px;
+}
+
+.store__search {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+
+.store__search img {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.store__search input {
+  width: 100%;
+  height: 100%;
+  padding: 0 14px 0 41px;
+  border: 1px solid rgb(53 66 87 / 0.8);
+  border-radius: var(--radius-sm);
+  background: rgb(36 44 58 / 0.5);
+  outline: 0;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  color: #fff;
+  transition: border-color 0.15s ease;
+}
+
+.store__search input::placeholder {
+  color: var(--color-text-muted);
+}
+
+.store__search input:focus-visible {
+  border-color: #4a576e;
+}
+
+.store__sort {
+  width: 189px;
+  height: 38px;
+}
+
+/* 201 × 230 cards, five across with 8px gaps at the design's 1037px */
+.store__grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+  margin: 20px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.store__empty {
+  margin: 40px 0 0;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+/* Hover styles derive from --hover (see .hover-anim in index.css) */
+.store-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-bottom: 12px;
+  border-radius: 8px;
+  background: var(--color-surface);
+  box-shadow:
+    inset 0 1.5px 0 0 rgb(255 255 255 / 0.07),
+    0 calc(var(--hover) * 10px) calc(var(--hover) * 24px) rgb(0 0 0 / calc(var(--hover) * 0.4));
+  transform: translateY(calc(var(--hover) * var(--motion) * -3px));
+}
+
+/* Top area (positions are the design's, measured from the 201px card's centre): the tier glow, ringed bag symbol and the product photo (which can rise past the card's top) */
+.store-card__stage {
+  position: relative;
+  width: 100%;
+  height: 118px;
+}
+
+.store-card__glow {
+  position: absolute;
+  inset: 0;
+  border-radius: 8px 8px 0 0;
+  overflow: hidden;
+}
+
+.store-card__glow img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.store-card__stage > img {
+  position: absolute;
+}
+
+.store-card__ring-outer {
+  left: calc(50% - 48.5px);
+  top: 10px;
+}
+
+.store-card__ring-inner {
+  left: calc(50% - 43.5px);
+  top: 15px;
+}
+
+.store-card__bag {
+  left: calc(50% - 22.6px);
+  top: 32px;
+}
+
+.store-card__product {
+  object-fit: contain;
+  transform:
+    translateY(calc(var(--hover) * var(--motion) * -4px))
+    scale(calc(1 + var(--hover) * var(--motion) * 0.05));
+}
+
+.store-card__name {
+  width: calc(100% - 46px);
+  margin: 10px 0 0;
+  overflow: hidden;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--color-text);
+}
+
+.store-card__price {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  width: calc(100% - 46px);
+  height: 24px;
+  margin: 10px 0 0;
+  border-radius: 6px;
+  background: #252d3c;
+  box-shadow: inset 0 1.5px 0 0 rgb(255 255 255 / 0.07);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.store-card__buy {
+  width: calc(100% - 46px);
+  height: 26px;
+  margin-top: 12px;
+  font-size: 12px;
+}
+
+/* Narrower main column: fewer cards per row, stats two by two */
+@container (max-width: 1000px) {
+  .store__grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .store-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@container (max-width: 780px) {
+  .store__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@container (max-width: 600px) {
+  .store__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .store__filter {
+    flex-direction: column;
+    height: auto;
+  }
+
+  .store__search,
+  .store__sort {
+    flex: none;
+    width: 100%;
+    height: 38px;
+  }
+
+  .store-stat {
+    padding: 0 10px 0 14px;
+  }
+}
+
+@container (max-width: 420px) {
+  .store-stats {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

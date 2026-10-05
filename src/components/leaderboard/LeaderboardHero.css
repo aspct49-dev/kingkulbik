@@ -116,7 +116,6 @@
   gap: 4px;
 }
 
-.lb-hero__code,
 .lb-hero__visit {
   height: 40px;
   border-radius: var(--radius-md);
@@ -131,59 +130,23 @@
     box-shadow 0.15s ease;
 }
 
-.lb-hero__code:active,
 .lb-hero__visit:active {
   transform: translateY(1px);
 }
 
-/* Copied: a gold ring for a moment */
-.lb-hero__code.lb-hero__code--copied {
-  box-shadow:
-    inset 0 1px 0 0 #364151,
-    0 0 0 1px var(--color-accent);
+/* Gold button: darkens on hover, like every gold button on the site */
+@media (hover: hover) and (pointer: fine) {
+  .lb-hero__visit:hover {
+    background: linear-gradient(to right, #7a6200, #a6a11f);
+  }
 }
 
-/* Confirmation toast, rising from the bottom of the screen */
-.lb-toast {
-  position: fixed;
-  left: 50%;
-  bottom: 32px;
-  z-index: 50;
-  padding: 10px 18px;
-  border-radius: 8px;
-  background: var(--nav-item-from);
-  box-shadow:
-    inset 0 1px 0 0 #364151,
-    0 10px 30px rgb(0 0 0 / 0.45);
-  font-size: 14px;
-  font-weight: 600;
-  color: #efefef;
-  white-space: nowrap;
-  opacity: 0;
-  transform: translate(-50%, 12px);
-  transition:
-    opacity 0.2s ease,
-    transform 0.2s ease;
-  pointer-events: none;
-}
-
-.lb-toast--visible {
-  opacity: 1;
-  transform: translate(-50%, 0);
-}
-
-.lb-hero__code:hover,
-.lb-hero__visit:hover {
-  filter: brightness(1.12);
-}
-
+/* Size only; the look comes from the shared CopyCodeButton */
 .lb-hero__code {
   width: 218px;
+  height: 40px;
   gap: 16px;
-  background: var(--nav-item-from);
-  box-shadow: inset 0 1px 0 0 #364151;
-  font-weight: 700;
-  color: #efefef;
+  font-size: 16px;
 }
 
 .lb-hero__visit {

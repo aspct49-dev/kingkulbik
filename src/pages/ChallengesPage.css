@@ -1,0 +1,222 @@
+/* Shared by the section pages (Challenges, Item Store) */
+.section-page {
+  padding: 34px 0 64px;
+  container-type: inline-size;
+}
+
+@media (max-width: 600px) {
+  .section-page {
+    padding: 16px 0 48px;
+  }
+}
+
+.challenges {
+  display: flex;
+  flex-direction: column;
+  max-width: 1087px;
+  margin: 0 auto;
+}
+
+/* Filter bar: FILTER + sort on the left, the code on the right */
+.challenges__filter {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  height: 50px;
+  margin-top: 25px;
+  padding: 0 8px 0 24px;
+  border-radius: 10px;
+  background: var(--color-surface);
+}
+
+.challenges__filter-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.challenges__sort {
+  width: 180px;
+  height: 34px;
+}
+
+.challenges__code {
+  height: 34px;
+  margin-left: auto;
+  padding: 0 14px;
+  gap: 8px;
+  font-size: 13px;
+}
+
+/* 357 × 206 cards, three across with 8px gaps at the design's 1087px */
+.challenges__grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Hover styles derive from --hover (see .hover-anim in index.css) */
+.challenge-card {
+  display: flex;
+  gap: 8px;
+  padding: 10px;
+  border-radius: 8px;
+  background: var(--color-surface);
+  box-shadow:
+    inset 0 1.5px 0 0 rgb(255 255 255 / 0.07),
+    0 calc(var(--hover) * 10px) calc(var(--hover) * 24px) rgb(0 0 0 / calc(var(--hover) * 0.4));
+  transform: translateY(calc(var(--hover) * var(--motion) * -3px));
+}
+
+.challenge-card__art {
+  position: relative;
+  flex: none;
+  width: 139px;
+  height: 186px;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.challenge-card__art img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scale(calc(1 + var(--hover) * var(--motion) * 0.05));
+}
+
+.challenge-card__art::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 1.5px 0 0 rgb(255 255 255 / 0.07);
+  pointer-events: none;
+}
+
+.challenge-card__body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  padding: 5px 8px 9px;
+  border-radius: 6px;
+  background: #1a202b;
+  box-shadow: inset 0 1.5px 0 0 rgb(255 255 255 / 0.07);
+  text-align: center;
+}
+
+.challenge-card__game {
+  margin: 0;
+  overflow: hidden;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 18px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--color-text);
+}
+
+/* Uses the body's full width, like the design (the rows below keep their 8px inset) */
+.challenge-card__goal {
+  margin: 0 -8px;
+  overflow: hidden;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 16px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--color-text-muted);
+}
+
+.challenge-card__rows {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin: 10px 0 0;
+}
+
+.challenge-card__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 25px;
+  padding: 0 9px;
+  border-radius: 6px;
+  background: #252d3c;
+  box-shadow: inset 0 1.5px 0 0 rgb(255 255 255 / 0.07);
+  font-size: 12px;
+  color: var(--color-text);
+}
+
+.challenge-card__row dt {
+  font-weight: 600;
+}
+
+.challenge-card__row dd {
+  margin: 0;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The prize row glows gold from the left */
+.challenge-card__row--reward {
+  margin-top: 5px;
+  background: linear-gradient(to left, #1d1d19, #59531b);
+  box-shadow:
+    inset 0 1px 0 0 rgb(255 255 255 / 0.15),
+    inset 0 1.5px 0 0 rgb(255 255 255 / 0.07);
+}
+
+.challenge-card__accent {
+  color: var(--color-accent);
+}
+
+.challenge-card__claim {
+  height: 26px;
+  margin-top: 8px;
+  font-size: 12px;
+}
+
+/* Narrower main column: two across, then one */
+@container (max-width: 1060px) {
+  .challenges__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@container (max-width: 700px) {
+  .challenges__grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .challenges__filter {
+    flex-wrap: wrap;
+    gap: 10px 16px;
+    height: auto;
+    padding: 8px 8px 8px 16px;
+  }
+
+  .challenges__sort {
+    flex: 1;
+    width: auto;
+  }
+
+  .challenges__code {
+    width: 100%;
+    margin-left: 0;
+  }
+}
+
+@container (max-width: 380px) {
+  .challenge-card__art {
+    width: 112px;
+    height: auto;
+  }
+}

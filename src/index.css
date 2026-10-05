@@ -149,6 +149,53 @@ h3 {
   }
 }
 
+/*
+ * Solid action buttons (Claim Reward, Purchase, …). Gold by default, with the
+ * store's purple and blue tiers. Hover darkens the fill (no glow), only with a
+ * real pointer; gold focus ring; slight press.
+ */
+.kk-button {
+  --kk-button-fill: var(--color-accent-button);
+  --kk-button-hover: var(--color-accent-button-hover);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border-radius: var(--radius-sm);
+  background: var(--kk-button-fill);
+  box-shadow: inset 0 1px 0 0 rgb(255 255 255 / 0.36);
+  font-weight: 700;
+  color: var(--color-text);
+  transition:
+    background-color 0.25s ease,
+    transform 0.15s ease;
+}
+
+.kk-button--purple {
+  --kk-button-fill: #5e15ac;
+  --kk-button-hover: #470f83;
+}
+
+.kk-button--blue {
+  --kk-button-fill: #155bac;
+  --kk-button-hover: #0f4483;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .kk-button:hover:not(:disabled) {
+    background: var(--kk-button-hover);
+  }
+}
+
+.kk-button:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.kk-button:focus-visible {
+  outline: 2px solid #e6d218;
+  outline-offset: 2px;
+}
+
 .visually-hidden {
   position: absolute;
   width: 1px;

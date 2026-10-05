@@ -7,6 +7,10 @@ import HomePage from './pages/HomePage'
 import LeaderboardPage from './pages/LeaderboardPage'
 import KenoPage from './pages/KenoPage'
 import ComingSoonPage from './pages/ComingSoonPage'
+import ChallengesPage from './pages/ChallengesPage'
+import ItemStorePage from './pages/ItemStorePage'
+import ReferralPage from './pages/ReferralPage'
+import RewardsPage from './pages/RewardsPage'
 import bonusHuntArt from './assets/games/bonus-hunt-art.webp'
 import guessTheBalanceArt from './assets/games/guess-the-balance-art.webp'
 
@@ -35,6 +39,10 @@ function Layout() {
               <Route path="/leaderboard" element={<LeaderboardPage />} />
               <Route path="/keno" element={<KenoPage />} />
               <Route path="/coinflip" element={<CoinflipPage />} />
+              <Route path="/rewards" element={<RewardsPage />} />
+              <Route path="/challenges" element={<ChallengesPage />} />
+              <Route path="/item-store" element={<ItemStorePage />} />
+              <Route path="/referral" element={<ReferralPage />} />
               <Route
                 path="/bonus-hunt"
                 element={

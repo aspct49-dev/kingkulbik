@@ -1,0 +1,44 @@
+.page-heading {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.page-heading__icon {
+  flex: none;
+}
+
+.page-heading__title {
+  margin: 0;
+  font-family: var(--font-logo);
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 21px;
+}
+
+.page-heading__gold,
+.page-heading__silver {
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+.page-heading__gold {
+  background-image: linear-gradient(0deg, #a88600, #e4de2c);
+}
+
+.page-heading__silver {
+  background-image: linear-gradient(90deg, #e3e3e3, #c5c5c5);
+}
+
+.page-heading__subtitle {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 18px;
+  color: var(--color-text-muted);
+}
+
+.page-heading__accent {
+  color: var(--color-accent);
+}

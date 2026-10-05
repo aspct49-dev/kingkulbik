@@ -1,0 +1,240 @@
+/* Full-bleed like the leaderboard: the stage light sits behind the hero */
+.referral-page {
+  position: relative;
+  margin: 0 calc(-1 * var(--page-gutter));
+  min-height: 820px;
+  padding: 0 var(--page-gutter) 96px;
+  /* Keeps the glow behind the hero, never over the footer */
+  overflow: clip;
+  /* The headline scales with the main column's width */
+  container-type: inline-size;
+}
+
+/*
+ * The design's 1669 × 962 backdrop starts 93px above the content, so its top
+ * 93px are hidden. Kept at design size and centred; edges fade out.
+ */
+.referral-page__bg {
+  position: absolute;
+  top: 0;
+  left: calc(50% - 834.5px);
+  width: 1669px;
+  height: 100%;
+  background-repeat: no-repeat;
+  background-position: center -93px;
+  background-size: 1669px 962px;
+  pointer-events: none;
+  mask-image:
+    linear-gradient(to bottom, #000 88%, transparent),
+    linear-gradient(to right, transparent, #000 12%, #000 88%, transparent);
+  mask-composite: intersect;
+  -webkit-mask-image:
+    linear-gradient(to bottom, #000 88%, transparent),
+    linear-gradient(to right, transparent, #000 12%, #000 88%, transparent);
+  -webkit-mask-composite: source-in;
+}
+
+/* Vertical rhythm and positions are the design's (offsets from the content centre) */
+.referral {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 138px;
+  text-align: center;
+}
+
+.referral__symbol--reveal {
+  left: calc(50% - 448.8px - 32.7px);
+  top: calc(162.1px - 34.5px);
+  width: 65.445px;
+  height: 68.986px;
+}
+
+.referral__symbol--k {
+  left: calc(50% + 435.4px - 54.6px);
+  top: calc(172.9px - 54.6px);
+  width: 109.187px;
+  height: 109.187px;
+}
+
+.referral__symbol--cowboy {
+  left: calc(50% - 531.2px - 60.9px);
+  top: calc(529.1px - 65.8px);
+  width: 121.734px;
+  height: 131.538px;
+  opacity: 0.25;
+}
+
+.referral__symbol--chip {
+  left: calc(50% + 555.1px - 79px);
+  top: calc(524.6px - 79px);
+  width: 158px;
+  height: 158px;
+  opacity: 0.92;
+}
+
+.referral__title {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0;
+  font-weight: 400;
+}
+
+.referral__kicker,
+.referral__amount,
+.referral__word {
+  white-space: nowrap;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+.referral__kicker {
+  font-family: var(--font-body);
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 31px;
+  background-image: linear-gradient(90deg, #6d7a96, #6d7a96);
+}
+
+.referral__amount {
+  margin-top: -15px;
+  font-family: var(--font-logo);
+  font-size: clamp(76px, 15cqi, 150px);
+  line-height: 1.147;
+  background-image: linear-gradient(0deg, #a88600, #e4de2c);
+}
+
+.referral__comma {
+  font-size: 0.853em;
+  letter-spacing: -0.07em;
+}
+
+.referral__word {
+  margin-top: -9px;
+  font-family: var(--font-logo);
+  font-size: clamp(38px, 7cqi, 70px);
+  line-height: 1.143;
+  background-image: linear-gradient(180deg, #f9f9f9, #aaa);
+}
+
+.referral__subtitle {
+  margin: 27px 0 0;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 20px;
+  color: var(--color-text-subtle);
+}
+
+.referral__accent {
+  color: var(--color-accent);
+}
+
+.referral__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px;
+  margin-top: 36px;
+}
+
+.referral__button,
+.referral__code {
+  height: 40px;
+  border-radius: var(--radius-md);
+  font-size: 16px;
+  line-height: 20px;
+}
+
+.referral__button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 188px;
+  font-weight: 700;
+  transition: transform 0.15s ease;
+}
+
+/* Gold gradient, like the leaderboard's Visit button */
+.referral__button--gold {
+  background: linear-gradient(to right, #a88600, #e4de2c);
+  box-shadow: inset 0 1px 0 0 #eedb4a;
+  color: #0e1218;
+}
+
+.referral__button--discord {
+  background: linear-gradient(to right, #3e54a2, #6981d5);
+  box-shadow: inset 0 1px 0 0 #7385c4;
+  color: var(--color-text);
+}
+
+/* Hover darkens the fill, as on every button on the site */
+@media (hover: hover) and (pointer: fine) {
+  .referral__button--gold:hover {
+    background: linear-gradient(to right, #7a6200, #a6a11f);
+  }
+
+  .referral__button--discord:hover {
+    background: linear-gradient(to right, #2e3f7a, #4f63a8);
+  }
+}
+
+.referral__button:active {
+  transform: translateY(1px);
+}
+
+.referral__button:focus-visible {
+  outline: 2px solid #e6d218;
+  outline-offset: 2px;
+}
+
+.referral__code {
+  width: 218px;
+  gap: 16px;
+}
+
+/* The symbols sit far out to the sides; there is no room on narrow screens */
+@media (max-width: 1100px) {
+  .referral__symbol {
+    display: none;
+  }
+}
+
+@media (max-width: 600px) {
+  .referral-page {
+    min-height: 600px;
+  }
+
+  .referral {
+    padding-top: 48px;
+  }
+
+  .referral__kicker {
+    font-size: 18px;
+  }
+
+  .referral__subtitle {
+    max-width: 320px;
+    font-size: 14px;
+  }
+
+  .referral__subtitle br {
+    display: none;
+  }
+
+  .referral__actions {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+    max-width: 320px;
+    gap: 8px;
+  }
+
+  .referral__button,
+  .referral__code {
+    width: 100%;
+  }
+}

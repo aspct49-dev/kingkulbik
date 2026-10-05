@@ -1,0 +1,127 @@
+/* Size comes from the caller's class (width/height) */
+.sort-select {
+  position: relative;
+  flex: none;
+}
+
+.sort-select__button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  height: 100%;
+  padding: 0 13px 0 12px;
+  border-radius: var(--radius-sm);
+  background: var(--nav-item-from);
+  box-shadow: inset 0 1px 0 0 #2f384a;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  color: #fff;
+  transition: background-color 0.15s ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .sort-select__button:hover {
+    background: #2c3647;
+  }
+}
+
+.sort-select--open .sort-select__button {
+  background: #2c3647;
+}
+
+.sort-select__button:focus-visible {
+  outline: 2px solid #e6d218;
+  outline-offset: 2px;
+}
+
+.sort-select__value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* The design's arrow points up; turned to point down, and flips up while open */
+.sort-select__arrow {
+  flex: none;
+  transform: rotate(180deg);
+  transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.sort-select--open .sort-select__arrow {
+  transform: none;
+}
+
+.sort-select__list {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  z-index: 20;
+  min-width: max-content;
+  margin: 0;
+  padding: 4px;
+  border-radius: var(--radius-md);
+  background: #1d2430;
+  box-shadow:
+    inset 0 1px 0 0 #2f384a,
+    0 12px 28px rgb(0 0 0 / 0.45);
+  list-style: none;
+  animation: sort-select-in 0.16s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.sort-select__list[hidden] {
+  display: none;
+}
+
+@keyframes sort-select-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+.sort-select__option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  height: 34px;
+  padding: 0 10px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  color: var(--color-text-subtle);
+  cursor: pointer;
+  transition:
+    background-color 0.12s ease,
+    color 0.12s ease;
+}
+
+.sort-select__option--active {
+  background: #2a3445;
+  color: #fff;
+}
+
+.sort-select__option[aria-selected='true'] {
+  color: var(--color-accent);
+}
+
+/* Small gold check beside the current choice */
+.sort-select__tick {
+  width: 10px;
+  height: 6px;
+  border-left: 2px solid var(--color-accent);
+  border-bottom: 2px solid var(--color-accent);
+  transform: translateY(-2px) rotate(-45deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sort-select__list,
+  .sort-select__arrow {
+    animation: none;
+    transition: none;
+  }
+}

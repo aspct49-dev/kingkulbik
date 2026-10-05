@@ -5,6 +5,35 @@
   justify-content: center;
 }
 
+.floating-symbol__bob {
+  display: flex;
+  flex: none;
+}
+
+/* Idle bob on its own layer, so it adds to the hover motion on the image */
+.floating-symbol--idle .floating-symbol__bob {
+  animation: floating-symbol-idle 4.6s ease-in-out infinite;
+  animation-delay: var(--idle-delay);
+}
+
+@keyframes floating-symbol-idle {
+  0%,
+  100% {
+    translate: 0 0;
+    rotate: 0deg;
+  }
+  50% {
+    translate: 0 -9px;
+    rotate: 3deg;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .floating-symbol--idle .floating-symbol__bob {
+    animation: none;
+  }
+}
+
 .floating-symbol img {
   flex: none;
   object-fit: cover;

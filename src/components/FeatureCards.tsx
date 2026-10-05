@@ -24,14 +24,14 @@ const features: Feature[] = [
     kicker: 'CLAIM YOUR',
     title: 'BONUSES',
     cta: 'REWARDS',
-    href: '#rewards',
+    href: '/rewards',
     art: <img className="feature-card__gift" src={giftImg} alt="" />,
   },
   {
     kicker: 'TURN POINTS',
     title: 'INTO ITEMS',
     cta: 'ITEM STORE',
-    href: '#item-store',
+    href: '/item-store',
     art: (
       <div className="feature-card__cart">
         <div className="feature-card__cart-frame">

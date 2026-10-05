@@ -1,0 +1,24 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="31" height="31" viewBox="0 0 31 31" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Swords 1" clip-path="url(#clip0_0_4)">
+<path id="Vector" d="M5.8125 0L12.76 6.94747L6.94747 12.76L0 5.8125V0H5.8125Z" fill="url(#paint0_linear_0_4)"/>
+<path id="Vector_2" d="M12.995 23.8175L15.9013 26.7237L13.1612 29.4638L8.71875 25.0213L5.80806 27.932C5.81101 27.9854 5.8125 28.0395 5.8125 28.0938C5.8125 29.6988 4.51133 31 2.90625 31C1.30117 31 0 29.6988 0 28.0938C0 26.4887 1.30117 25.1875 2.90625 25.1875C2.96054 25.1875 3.01448 25.1891 3.06803 25.192L5.97872 22.2812L1.53623 17.8388L4.27628 15.0987L7.18253 18.005L25.1875 0H31V5.8125L12.995 23.8175Z" fill="url(#paint1_linear_0_4)"/>
+<path id="Vector_3" d="M28.094 31C26.489 31 25.1878 29.6988 25.1878 28.0937C25.1878 28.0395 25.1893 27.9854 25.1922 27.9319L19.5415 22.2812L26.724 15.0987L29.464 17.8388L25.0215 22.2812L27.9322 25.1919C27.9857 25.189 28.0398 25.1875 28.094 25.1875C29.699 25.1875 31.0003 26.4887 31.0003 28.0937C31.0003 29.6988 29.699 31 28.094 31Z" fill="url(#paint2_linear_0_4)"/>
+</g>
+<defs>
+<linearGradient id="paint0_linear_0_4" x1="6.37998" y1="12.76" x2="6.37998" y2="0" gradientUnits="userSpaceOnUse">
+<stop stop-color="#A88600"/>
+<stop offset="1" stop-color="#E4DE2C"/>
+</linearGradient>
+<linearGradient id="paint1_linear_0_4" x1="15.5" y1="31" x2="15.5" y2="0" gradientUnits="userSpaceOnUse">
+<stop stop-color="#A88600"/>
+<stop offset="1" stop-color="#E4DE2C"/>
+</linearGradient>
+<linearGradient id="paint2_linear_0_4" x1="25.2709" y1="31" x2="25.2709" y2="15.0987" gradientUnits="userSpaceOnUse">
+<stop stop-color="#A88600"/>
+<stop offset="1" stop-color="#E4DE2C"/>
+</linearGradient>
+<clipPath id="clip0_0_4">
+<rect width="31" height="31" fill="white"/>
+</clipPath>
+</defs>
+</svg>

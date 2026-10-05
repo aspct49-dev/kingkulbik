@@ -9,6 +9,7 @@ import rewardsIcon from '../assets/sidebar/rewards.svg'
 import challengesIcon from '../assets/sidebar/challenges.svg'
 import rafflesIcon from '../assets/sidebar/raffles.svg'
 import itemStoreIcon from '../assets/sidebar/item-store.svg'
+import referralIcon from '../assets/sidebar/referral.svg'
 import bonusHuntIcon from '../assets/sidebar/bonus-hunt.svg'
 import coinflipIcon from '../assets/sidebar/coinflip.svg'
 import videocamIcon from '../assets/sidebar/videocam.svg'
@@ -57,10 +58,11 @@ const sections: NavSection[] = [
   {
     title: 'VIP Program',
     items: [
-      { label: 'Rewards', href: '#rewards', icon: svgIcon(rewardsIcon, 21, 21) },
-      { label: 'Challenges', href: '#challenges', icon: svgIcon(challengesIcon, 16, 16) },
+      { label: 'Rewards', href: '/rewards', icon: svgIcon(rewardsIcon, 21, 21) },
+      { label: 'Challenges', href: '/challenges', icon: svgIcon(challengesIcon, 16, 16) },
       { label: 'Raffles', href: '#raffles', icon: svgIcon(rafflesIcon, 16, 16) },
-      { label: 'Item Store', href: '#item-store', icon: svgIcon(itemStoreIcon, 16, 16) },
+      { label: 'Item Store', href: '/item-store', icon: svgIcon(itemStoreIcon, 16, 16) },
+      { label: '1K Referral', href: '/referral', icon: svgIcon(referralIcon, 16, 16) },
     ],
   },
   {
