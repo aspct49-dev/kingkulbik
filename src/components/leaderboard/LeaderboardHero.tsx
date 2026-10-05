@@ -20,6 +20,25 @@ type LeaderboardHeroProps = {
   onBoardChange: (board: BoardId) => void
 }
 
+/**
+ * The selected board's monthly prize pool, summed from its prize table (so the
+ * title can't drift from the prizes). A two-digit-thousands figure like
+ * $30,000 keeps the design's kerning around the zero and the comma.
+ */
+function PrizePool({ amount }: { amount: number }) {
+  const text = amount.toLocaleString('en-US')
+  const kerned = /^(\d)(\d),(\d{3})$/.exec(text)
+  if (!kerned) return <span className="lb-hero__gold">${text}</span>
+  return (
+    <>
+      <span className="lb-hero__gold">${kerned[1]}</span>
+      <span className="lb-hero__gold lb-hero__kern-zero">{kerned[2]}</span>
+      <span className="lb-hero__gold lb-hero__kern-comma">,</span>
+      <span className="lb-hero__gold">{kerned[3]}</span>
+    </>
+  )
+}
+
 export default function LeaderboardHero({ board, onBoardChange }: LeaderboardHeroProps) {
   return (
     <section className="lb-hero">
@@ -59,10 +78,7 @@ export default function LeaderboardHero({ board, onBoardChange }: LeaderboardHer
 
       <h1 className="lb-hero__title">
         <span className="lb-hero__title-line lb-hero__title-line--top">
-          <span className="lb-hero__gold">$4</span>
-          <span className="lb-hero__gold lb-hero__kern-zero">0</span>
-          <span className="lb-hero__gold lb-hero__kern-comma">,</span>
-          <span className="lb-hero__gold">000</span>{' '}
+          <PrizePool amount={BOARDS[board].prizes.reduce((sum, prize) => sum + prize, 0)} />{' '}
           <span className="lb-hero__silver">MONTHLY</span>
         </span>
         <span className="lb-hero__title-line lb-hero__title-line--main lb-hero__gold">LEADERBOARD</span>

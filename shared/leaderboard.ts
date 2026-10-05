@@ -3,7 +3,7 @@
  * Plain TypeScript with no Node or DOM dependencies, so both sides can import it.
  *
  * Mirrors the live race on kingkulbik.com/leaderboards: two boards under code
- * KINGKULBIK, $40,000 a month in total, each race running from the 29th
+ * KINGKULBIK ($30,000 weighted + $10,000 Stake-exclusive a month), each race running from the 29th
  * through the 28th (UTC).
  */
 
