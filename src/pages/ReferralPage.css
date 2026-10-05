@@ -12,7 +12,9 @@
 
 /*
  * The design's 1669 × 962 backdrop starts 93px above the content, so its top
- * 93px are hidden. Kept at design size and centred; edges fade out.
+ * 93px are hidden. Kept at design size and centred. Its sides already match the
+ * page colour, so only the bottom fades (a side fade over this dark gradient
+ * shows as faint vertical bands).
  */
 .referral-page__bg {
   position: absolute;
@@ -24,14 +26,8 @@
   background-position: center -93px;
   background-size: 1669px 962px;
   pointer-events: none;
-  mask-image:
-    linear-gradient(to bottom, #000 88%, transparent),
-    linear-gradient(to right, transparent, #000 12%, #000 88%, transparent);
-  mask-composite: intersect;
-  -webkit-mask-image:
-    linear-gradient(to bottom, #000 88%, transparent),
-    linear-gradient(to right, transparent, #000 12%, #000 88%, transparent);
-  -webkit-mask-composite: source-in;
+  mask-image: linear-gradient(to bottom, #000 88%, transparent);
+  -webkit-mask-image: linear-gradient(to bottom, #000 88%, transparent);
 }
 
 /* Vertical rhythm and positions are the design's (offsets from the content centre) */
