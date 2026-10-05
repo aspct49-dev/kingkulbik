@@ -26,10 +26,28 @@
   transition: background-color 0.15s;
 }
 
-.game-toolbar__icon:hover,
 .game-toolbar__icon[aria-expanded='true'],
 .game-toolbar__icon--active {
   background: #222a38;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .game-toolbar__icon:hover {
+    background: #222a38;
+  }
+
+  .game-toolbar__fairness:hover {
+    background: #313c4f;
+  }
+
+  .game-popover__reset:hover {
+    color: #fff;
+  }
+}
+
+.game-toolbar button:focus-visible {
+  outline: 2px solid #e6d218;
+  outline-offset: 2px;
 }
 
 /* Theater mode glyph: an outlined screen, as in the design */
@@ -59,9 +77,6 @@
   transition: background-color 0.15s;
 }
 
-.game-toolbar__fairness:hover {
-  background: #313c4f;
-}
 
 /* Popovers open upwards from the toolbar */
 .game-popover {
@@ -114,9 +129,6 @@
   color: var(--color-text-muted);
 }
 
-.game-popover__reset:hover {
-  color: #fff;
-}
 
 .game-popover__title {
   margin-bottom: 10px;

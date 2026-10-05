@@ -66,8 +66,10 @@
     transform 0.18s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-.coinflip-side:hover:not(:disabled) {
-  background: #35415a;
+@media (hover: hover) and (pointer: fine) {
+  .coinflip-side:hover:not(:disabled) {
+    background: #35415a;
+  }
 }
 
 .coinflip-side--active {

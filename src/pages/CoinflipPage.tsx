@@ -4,6 +4,7 @@ import CoinflipControls, { MIN_BET } from '../components/coinflip/CoinflipContro
 import CoinStage, { QUICK_TOSS_SECONDS, TOSS_SECONDS } from '../components/coinflip/CoinStage'
 import type { Toss } from '../components/coinflip/CoinStage'
 import GameTitleBar from '../components/GameTitleBar'
+import WinCard from '../components/WinCard'
 import GameToolbar, { EMPTY_STATS, recordBet } from '../components/GameToolbar'
 import type { SessionStats } from '../components/GameToolbar'
 import AnimatedNumber from '../components/AnimatedNumber'
@@ -186,14 +187,12 @@ export default function CoinflipPage() {
             <CoinStage face="heads" toss={toss} onLanded={onLanded} quick={instant} />
 
             {win && (
-              <div key={win.id} className="coinflip-win" role="status">
-                <span className="coinflip-win__multiplier">{formatMultiplier(win.multiplier)}×</span>
-                <span className="coinflip-win__divider" />
-                <span className="coinflip-win__payout">
-                  <img src={coinIcon} width={14} height={14} alt="" />
-                  <AnimatedNumber value={win.payout} format={formatPoints} duration={650} from={0} />
-                </span>
-              </div>
+              <WinCard
+                key={win.id}
+                className="coinflip__win"
+                multiplier={formatMultiplier(win.multiplier)}
+                payout={win.payout}
+              />
             )}
           </div>
 

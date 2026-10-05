@@ -1,0 +1,64 @@
+/* Shared by every original. Centred on the point given by left/top (set per game). */
+.win-card {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  min-width: 150px;
+  padding: 16px 22px;
+  border: 3px solid var(--color-accent-button);
+  border-radius: 12px;
+  background: rgb(21 26 36 / 0.96);
+  box-shadow:
+    0 12px 32px rgb(0 0 0 / 0.5),
+    0 0 26px -6px rgb(230 210 24 / 0.6);
+  transform: translate(-50%, -50%);
+  animation: win-card-in 0.42s cubic-bezier(0.34, 1.56, 0.64, 1);
+  pointer-events: none;
+}
+
+.win-card__multiplier {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--color-accent);
+}
+
+.win-card__divider {
+  width: 44px;
+  height: 2px;
+  border-radius: 2px;
+  background: #2b3546;
+}
+
+.win-card__payout {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.win-card__payout img {
+  object-fit: contain;
+}
+
+@keyframes win-card-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, calc(-50% + 10px)) scale(0.82);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .win-card {
+    animation: none;
+  }
+}

@@ -100,8 +100,11 @@
   font-size: 15px;
 }
 
-.bet-field__actions button:hover:not(:disabled) {
-  background: #35415a;
+/* Hover only with a real pointer, so it never sticks after a tap (as on the Keno tiles) */
+@media (hover: hover) and (pointer: fine) {
+  .bet-field__actions button:hover:not(:disabled) {
+    background: #35415a;
+  }
 }
 
 .bet-field__actions button:disabled {
@@ -136,7 +139,8 @@
 
 .bet-select select:focus-visible {
   border-color: #4a576e;
-  outline: 0;
+  outline: 2px solid #e6d218;
+  outline-offset: 2px;
 }
 
 .bet-select select:disabled {
@@ -178,8 +182,10 @@
   font-variant-numeric: tabular-nums;
 }
 
-.bet-panel__bet:hover:not(:disabled) {
-  filter: brightness(1.1);
+@media (hover: hover) and (pointer: fine) {
+  .bet-panel__bet:hover:not(:disabled) {
+    filter: brightness(1.1);
+  }
 }
 
 .bet-panel__secondary {
@@ -189,8 +195,16 @@
   font-size: 13.88px;
 }
 
-.bet-panel__secondary:hover:not(:disabled) {
-  background: #35415a;
+@media (hover: hover) and (pointer: fine) {
+  .bet-panel__secondary:hover:not(:disabled) {
+    background: #35415a;
+  }
+}
+
+/* Keyboard focus: the same gold ring as the Keno tiles */
+.bet-panel button:focus-visible {
+  outline: 2px solid #e6d218;
+  outline-offset: 2px;
 }
 
 .bet-panel button:active:not(:disabled) {

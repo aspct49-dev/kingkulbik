@@ -13,8 +13,10 @@
     'toolbar toolbar';
   max-width: 1200px;
   margin: 0 auto;
+  transition: max-width 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
+/* Theatre mode: a wider panel and a bigger board (same easing as Coinflip) */
 .keno--theater {
   max-width: 1520px;
 }
@@ -43,7 +45,10 @@
   min-width: 0;
   padding: 16px;
   border-radius: 0 6px 0 0;
-  background: linear-gradient(to top, #11151d 0.4%, #191f2a 99.6%);
+  /* Same stage light as Coinflip */
+  background:
+    radial-gradient(ellipse 55% 45% at 50% 45%, rgb(50 106 189 / 0.16), transparent 70%),
+    linear-gradient(to top, #11151d 0.4%, #191f2a 99.6%);
   container-type: inline-size;
 }
 
@@ -75,5 +80,12 @@
 @media (max-width: 600px) {
   .keno-page {
     padding: 16px 0 48px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .keno,
+  .keno-board {
+    transition: none;
   }
 }

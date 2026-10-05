@@ -4,6 +4,8 @@
   max-width: 780px;
   margin: 0 auto;
   container-type: inline-size;
+  /* Grows with theatre mode on the same easing as the panel */
+  transition: max-width 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 /* 8 × 5 tiles, 87px with 12px gaps at the design's 780px width */
@@ -258,68 +260,9 @@
 }
 
 /* Win card over the board */
-.keno-board__win {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  min-width: 150px;
-  padding: 16px 22px;
-  border: 2px solid var(--color-accent-button);
-  border-radius: 10px;
-  background: rgb(21 26 36 / 0.96);
-  box-shadow: 0 12px 32px rgb(0 0 0 / 0.5);
-  transform: translate(-50%, -50%);
-  animation: keno-win-in 0.42s cubic-bezier(0.34, 1.56, 0.64, 1);
-  pointer-events: none;
-}
-
-.keno-board__win-multiplier {
-  font-family: var(--font-display);
-  font-size: 30px;
-  font-weight: 700;
-  line-height: 1;
-  color: var(--color-accent);
-}
-
-.keno-board__win-divider {
-  width: 40px;
-  height: 2px;
-  border-radius: 2px;
-  background: #2b3546;
-}
-
-.keno-board__win-payout {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 15px;
-  font-weight: 700;
-  color: #fff;
-}
-
-.keno-board__win-payout img {
-  object-fit: contain;
-}
-
-@keyframes keno-win-in {
-  from {
-    opacity: 0;
-    transform: translate(-50%, calc(-50% + 10px)) scale(0.82);
-  }
-}
-
-.keno-board__win-payout {
-  font-variant-numeric: tabular-nums;
-}
-
 @media (prefers-reduced-motion: reduce) {
   .keno-tile,
-  .keno-tile *,
-  .keno-board__win {
+  .keno-tile * {
     animation: none !important;
     transition: none !important;
   }

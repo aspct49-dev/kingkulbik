@@ -1,9 +1,8 @@
 import { memo, useEffect } from 'react'
-import coinIcon from '../../assets/coin.svg'
 import gemIcon from '../../assets/keno/gem.svg'
 import { TILE_COUNT } from '../../games/keno/engine'
-import AnimatedNumber from '../AnimatedNumber'
-import { formatMultiplier, formatPoints } from './format'
+import { formatMultiplier } from './format'
+import WinCard from '../WinCard'
 import './KenoBoard.css'
 
 type TileState = 'idle' | 'picked' | 'drawn' | 'hit'
@@ -93,21 +92,9 @@ export default function KenoBoard({ picks, drawn, inRound, full, disabled, onTog
         })}
       </div>
 
-      {win && <WinCard multiplier={win.multiplier} payout={win.payout} />}
+      {win && <WinCard multiplier={formatMultiplier(win.multiplier)} payout={win.payout} />}
     </div>
   )
 }
 
 /** Win card: springs in while the payout counts up from 0 */
-function WinCard({ multiplier, payout }: { multiplier: number; payout: number }) {
-  return (
-    <div className="keno-board__win" role="status" aria-label={`Won ${formatPoints(payout)} points`}>
-      <span className="keno-board__win-multiplier">{formatMultiplier(multiplier)}×</span>
-      <span className="keno-board__win-divider" />
-      <span className="keno-board__win-payout">
-        <img src={coinIcon} width={14} height={14} alt="" />
-        <AnimatedNumber value={payout} format={formatPoints} duration={550} from={0} />
-      </span>
-    </div>
-  )
-}
