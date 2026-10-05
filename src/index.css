@@ -9,7 +9,9 @@
   --color-accent: #e6d218;
   --color-accent-button: #ac9d15;
   --color-accent-button-highlight: #cdc152;
-  --color-accent-button-hover: #c7b61b;
+  /* Hovered gold buttons darken while a glow builds around them */
+  --color-accent-button-hover: #857a0e;
+  --color-accent-glow: rgb(230 210 24 / 0.45);
 
   --nav-item-from: #242c3a;
   --nav-item-to: #1d2430;

@@ -165,7 +165,11 @@
   width: 177px;
   height: 33px;
   border-radius: var(--radius-md);
-  box-shadow: inset 0 1px 0 0 var(--color-accent-button-highlight);
+  /* On hover the fill darkens and a soft gold glow builds around the button */
+  box-shadow:
+    inset 0 1px 0 0 var(--color-accent-button-highlight),
+    0 0 calc(var(--hover) * 22px) calc(var(--hover) * 2px)
+      color-mix(in srgb, var(--color-accent-glow) calc(var(--hover) * 100%), transparent);
   display: flex;
   align-items: center;
   justify-content: center;
