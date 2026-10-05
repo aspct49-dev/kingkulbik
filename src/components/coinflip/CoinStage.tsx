@@ -56,7 +56,7 @@ function crownPath(g: CanvasRenderingContext2D) {
 }
 
 /**
- * The tails centre: a gold crown on the same navy as the heads emblem,
+ * The tails centre: a blue crown (matching the tails ring) on the same navy as the heads emblem,
  * embossed the same way. Returns colour, bump and metal/roughness maps.
  */
 function makeCrownMaps() {
@@ -79,11 +79,11 @@ function makeCrownMaps() {
   }
 
   const map = canvas('#070d1e', (g) => {
-    const gold = g.createLinearGradient(0, 260, 0, 740)
-    gold.addColorStop(0, '#e4d83a')
-    gold.addColorStop(1, '#b38d08')
-    g.fillStyle = gold
-    g.strokeStyle = '#f3ea7c'
+    const blue = g.createLinearGradient(0, 260, 0, 740)
+    blue.addColorStop(0, '#4a70e8')
+    blue.addColorStop(1, '#1d3896')
+    g.fillStyle = blue
+    g.strokeStyle = '#8eaaf5'
     g.lineWidth = 6
     g.lineJoin = 'round'
     crownPath(g)
@@ -111,9 +111,9 @@ function makeCrownMaps() {
     g.stroke()
   })
 
-  // three.js reads roughness from G and metalness from B: satin navy, polished gold
+  // three.js reads roughness from G and metalness from B: satin navy, a glossy, lightly metallic blue
   const metalRough = canvas('rgb(0, 150, 0)', (g) => {
-    g.fillStyle = 'rgb(0, 80, 230)'
+    g.fillStyle = 'rgb(0, 115, 40)'
     crownPath(g)
     g.fill()
   })

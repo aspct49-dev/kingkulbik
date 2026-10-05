@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import stakeLogo from '../../assets/leaderboard/stake-logo.svg'
 import stakeLogoMuted from '../../assets/leaderboard/stake-logo-muted.svg'
 import stakeLogoDark from '../../assets/leaderboard/stake-logo-dark.svg'
@@ -22,17 +22,51 @@ type LeaderboardHeroProps = {
   onBoardChange: (board: BoardId) => void
 }
 
+/** Clipboard API where allowed, else the old hidden-textarea copy (e.g. on plain http) */
+function copyText(text: string): Promise<void> {
+  if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(text)
+  return new Promise((resolve, reject) => {
+    const area = document.createElement('textarea')
+    area.value = text
+    area.setAttribute('readonly', '')
+    area.style.position = 'fixed'
+    area.style.opacity = '0'
+    document.body.appendChild(area)
+    area.select()
+    try {
+      if (document.execCommand('copy')) resolve()
+      else reject(new Error('copy refused'))
+    } catch (err) {
+      reject(err)
+    } finally {
+      area.remove()
+    }
+  })
+}
+
+type Toast = { ok: boolean; key: number }
+
 export default function LeaderboardHero({ board, onBoardChange }: LeaderboardHeroProps) {
   const [copied, setCopied] = useState(false)
+  const [toast, setToast] = useState<Toast | null>(null)
+  const timers = useRef<number[]>([])
 
-  const copyCode = async () => {
-    try {
-      await navigator.clipboard.writeText(AFFILIATE_CODE)
-      setCopied(true)
-      window.setTimeout(() => setCopied(false), 1500)
-    } catch {
-      // Clipboard can be unavailable (e.g. insecure context); the code stays visible.
-    }
+  useEffect(() => () => timers.current.forEach(clearTimeout), [])
+
+  // As on the Rekoj site: the button keeps its label and lights a gold ring, and a toast confirms
+  const copyCode = () => {
+    timers.current.forEach(clearTimeout)
+    copyText(AFFILIATE_CODE).then(
+      () => {
+        setCopied(true)
+        setToast({ ok: true, key: Date.now() })
+        timers.current = [window.setTimeout(() => setCopied(false), 1200), window.setTimeout(() => setToast(null), 1800)]
+      },
+      () => {
+        setToast({ ok: false, key: Date.now() })
+        timers.current = [window.setTimeout(() => setToast(null), 1800)]
+      },
+    )
   }
 
   return (
@@ -88,21 +122,35 @@ export default function LeaderboardHero({ board, onBoardChange }: LeaderboardHer
       </p>
 
       <div className="lb-hero__actions">
-        <button type="button" className="lb-hero__code" onClick={copyCode} aria-label={`Copy code ${AFFILIATE_CODE}`}>
+        <button
+          type="button"
+          className={`lb-hero__code${copied ? ' lb-hero__code--copied' : ''}`}
+          onClick={copyCode}
+          aria-label={`Copy code ${AFFILIATE_CODE}`}
+        >
           <img src={clipboardIcon} width={17.0974} height={17.9511} alt="" />
-          {copied ? (
-            <span className="lb-hero__accent">Copied!</span>
-          ) : (
-            <span>
-              Code: <span className="lb-hero__accent">{AFFILIATE_CODE}</span>
-            </span>
-          )}
+          <span>
+            Code: <span className="lb-hero__accent">{AFFILIATE_CODE}</span>
+          </span>
         </button>
         <a className="lb-hero__visit" href={STAKE_URL} target="_blank" rel="noopener noreferrer">
           Visit
           <img src={stakeLogoDark} width={35} height={17} alt="Stake" />
         </a>
       </div>
+
+      <p className={`lb-toast${toast ? ' lb-toast--visible' : ''}`} role="status" aria-live="polite">
+        {toast?.ok && (
+          <>
+            Code <span className="lb-hero__accent">{AFFILIATE_CODE}</span> copied to clipboard
+          </>
+        )}
+        {toast && !toast.ok && (
+          <>
+            Couldn't copy. The code is <span className="lb-hero__accent">{AFFILIATE_CODE}</span>
+          </>
+        )}
+      </p>
     </section>
   )
 }

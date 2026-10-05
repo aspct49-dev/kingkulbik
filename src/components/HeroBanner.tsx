@@ -53,7 +53,7 @@ export default function HeroBanner() {
             <BannerPill key={pill.label} {...pill} />
           ))}
         </div>
-        <Wordmark className="hero-banner__logo" />
+        <Wordmark className="hero-banner__logo" outline={false} />
         <div className="hero-banner__pills hero-banner__pills--right">
           {rightPills.map((pill) => (
             <BannerPill key={pill.label} {...pill} />
