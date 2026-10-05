@@ -76,7 +76,29 @@
   justify-content: center;
 }
 
+.sidebar__glyph {
+  display: block;
+  flex: none;
+  background: var(--color-text-muted);
+  mask-size: 100% 100%;
+  mask-repeat: no-repeat;
+  -webkit-mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat;
+  transition: background-color 0.15s;
+}
+
+/* The current page's icon turns gold */
+.sidebar__item--active .sidebar__glyph,
+.sidebar__item--active .sidebar__number-icon {
+  background: var(--color-accent);
+}
+
+.sidebar__item--active .sidebar__question-icon {
+  color: var(--color-accent);
+}
+
 .sidebar__number-icon {
+  transition: background-color 0.15s;
   width: 16px;
   height: 16px;
   border-radius: 3px;
@@ -89,6 +111,7 @@
 }
 
 .sidebar__question-icon {
+  transition: color 0.15s;
   font-size: 20px;
   font-weight: 900;
   line-height: 1;

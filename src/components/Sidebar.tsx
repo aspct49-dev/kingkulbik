@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import type { ReactNode } from 'react'
+import type { CSSProperties, ReactNode } from 'react'
 import { NavLink } from 'react-router'
 import homeActiveIcon from '../assets/sidebar/home.svg'
 import homeIcon from '../assets/sidebar/home-inactive.svg'
@@ -32,8 +32,16 @@ type NavSection = {
   items: NavItem[]
 }
 
+/**
+ * The icon's shape filled with a CSS colour (grey, gold on the current page).
+ * The sidebar icons are single-colour SVGs, so a mask keeps them exact.
+ */
 const svgIcon = (src: string, width: number, height: number) => (
-  <img src={src} width={width} height={height} alt="" />
+  <span
+    className="sidebar__glyph"
+    style={{ width, height, maskImage: `url("${src}")`, WebkitMaskImage: `url("${src}")` } as CSSProperties}
+    aria-hidden
+  />
 )
 
 const numberIcon = <span className="sidebar__number-icon">3</span>
