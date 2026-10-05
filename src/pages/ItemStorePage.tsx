@@ -54,6 +54,7 @@ function StatSymbol({ variant, image }: { variant: 'bag' | 'coin'; image?: { src
   return (
     <span className="store-stat__symbol" aria-hidden>
       <img className="store-stat__ring-outer" src={coin ? ringOuterStatCoin : ringOuterStat} width={59} height={59} alt="" />
+      <span className="store-stat__ring-fill" />
       <img
         className="store-stat__ring-inner"
         src={coin ? ringInnerStatCoin : ringInnerStat}
@@ -92,6 +93,7 @@ function StoreCard({ item, onPurchase }: { item: StoreItem; onPurchase: () => vo
           <img src={art.bg} width={201} height={118} alt="" />
         </div>
         <img className="store-card__ring-outer" src={art.outer} width={98} height={98} alt="" />
+        <span className="store-card__ring-fill" />
         <img className="store-card__ring-inner" src={art.inner} width={88} height={88} alt="" />
         <img className="store-card__bag" src={art.bag} width={46.2515} height={50.6999} alt="" />
         {image && (

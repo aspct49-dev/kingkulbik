@@ -77,6 +77,13 @@
   top: 3px;
 }
 
+.store-stat__ring-fill {
+  left: 3.5px;
+  top: 3.5px;
+  width: 52px;
+  height: 52px;
+}
+
 .store-stat__bag {
   left: 15.6px;
   top: 13.2px;
@@ -210,6 +217,25 @@
 .store-card__ring-inner {
   left: calc(50% - 43.5px);
   top: 15px;
+}
+
+/* The ring's fill is a 16% grey in Overlay mode (as in Figma), so it lifts the
+   glow behind it instead of greying it out. Lives outside the SVG because
+   blend modes inside an <img> only blend with the image itself. */
+.store-card__ring-fill,
+.store-stat__ring-fill {
+  position: absolute;
+  border-radius: 50%;
+  background: rgb(217 217 217 / 0.16);
+  mix-blend-mode: overlay;
+  pointer-events: none;
+}
+
+.store-card__ring-fill {
+  left: calc(50% - 43px);
+  top: 15.5px;
+  width: 87px;
+  height: 87px;
 }
 
 .store-card__bag {
