@@ -159,10 +159,10 @@
   font-weight: 600;
 }
 
+/* Normal (proportional) digits, as in the design: tabular ones pad narrow digits like "1" */
 .challenge-card__row dd {
   margin: 0;
   font-weight: 700;
-  font-variant-numeric: tabular-nums;
 }
 
 /* The prize row glows gold from the left */
