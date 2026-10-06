@@ -184,7 +184,8 @@
 
 .ev-how--compact .ev-how__steps {
   grid-template-columns: minmax(0, 1fr);
-  gap: 10px;
+  gap: 16px;
+  margin-top: 16px;
 }
 
 .ev-how__step {
@@ -198,6 +199,11 @@
 .ev-how--compact .ev-how__step {
   padding: 0;
   background: none;
+}
+
+/* The title's 18px line sits centred on the 28px badge */
+.ev-how--compact .ev-how__step > span:last-child {
+  padding-top: 5px;
 }
 
 /* Numbered like the leaderboard's places, in gold */
@@ -218,12 +224,13 @@
   display: block;
   font-size: 14px;
   font-weight: 700;
+  line-height: 18px;
   color: var(--color-text);
 }
 
 .ev-how__text {
   display: block;
-  margin-top: 1px;
+  margin-top: 3px;
   font-size: 13px;
   font-weight: 500;
   line-height: 18px;
