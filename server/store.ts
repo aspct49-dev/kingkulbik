@@ -26,7 +26,8 @@ import type { Challenge, StoreItem } from '../shared/content.js'
 import { DEFAULT_RULES, sanitizeRules } from '../shared/originals.js'
 import type { FeedBet, OriginalsRules } from '../shared/originals.js'
 import type { Giveaway, GuessRound, Hunt, RaffleWin, Tournament } from '../shared/events.js'
-import type { PlayerBet, PlayerProfile, Redemption } from '../shared/profiles.js'
+import { DEFAULT_SHOP_SETTINGS } from '../shared/profiles.js'
+import type { PlayerBet, PlayerProfile, PointsLogEntry, Redemption, ShopSettings } from '../shared/profiles.js'
 import type { Raffle } from '../shared/raffles.js'
 
 type Tables = {
@@ -45,6 +46,9 @@ type Tables = {
   raffles: Raffle[]
   /** Watch-time raffle: each viewer's all-time BotRix minutes when a month was first counted */
   watchBaselines: { month: string; takenAt: number; minutes: Record<string, number> }[]
+  /** Every BotRix points change made from the site (newest first) */
+  pointsLog: PointsLogEntry[]
+  shopSettings: ShopSettings
 }
 
 const DEFAULTS: Tables = {
@@ -62,6 +66,8 @@ const DEFAULTS: Tables = {
   redemptions: [],
   raffles: [],
   watchBaselines: [],
+  pointsLog: [],
+  shopSettings: DEFAULT_SHOP_SETTINGS,
 }
 
 export class StoreError extends Error {

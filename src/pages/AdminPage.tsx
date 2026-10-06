@@ -19,6 +19,7 @@ import GuessAdmin from './admin/GuessAdmin'
 import HuntAdmin from './admin/HuntAdmin'
 import OverlaysAdmin from './admin/OverlaysAdmin'
 import PlayersAdmin from './admin/PlayersAdmin'
+import PointsAdmin from './admin/PointsAdmin'
 import RafflesAdmin from './admin/RafflesAdmin'
 import RedemptionsAdmin from './admin/RedemptionsAdmin'
 import RulesAdmin from './admin/RulesAdmin'
@@ -32,6 +33,7 @@ type Tab =
   | 'overview'
   | 'players'
   | 'redemptions'
+  | 'points'
   | 'challenges'
   | 'store'
   | 'originals'
@@ -50,6 +52,7 @@ const GROUPS: { title: string; tabs: { id: Tab; label: string }[] }[] = [
       { id: 'overview', label: 'Overview' },
       { id: 'players', label: 'Players' },
       { id: 'redemptions', label: 'Redemptions' },
+      { id: 'points', label: 'King Points' },
       { id: 'challenges', label: 'Challenges' },
       { id: 'store', label: 'Item Store' },
     ],
@@ -170,7 +173,16 @@ export default function AdminPage() {
               {tab === 'players' && (
                 <PlayersAdmin
                   playerId={playerId}
+                  onPoints={(kick) => goTo('points', { kick })}
                   onOpen={(id) => (id ? goTo('players', { player: id }) : goTo('players'))}
+                  notify={show}
+                />
+              )}
+              {tab === 'points' && (
+                <PointsAdmin
+                  key={params.get('kick') ?? ''}
+                  initialName={params.get('kick')}
+                  onOpenPlayer={(id) => goTo('players', { player: id })}
                   notify={show}
                 />
               )}

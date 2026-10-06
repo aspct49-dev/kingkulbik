@@ -12,6 +12,7 @@ import type { AuthEnv, AuthRequest, AuthResponse } from './auth.js'
 import { handleOriginalsRequest } from './originals.js'
 import { handleProfileRequest, touchProfile } from './profiles.js'
 import { handleRaffleRequest } from './raffles.js'
+import { handleShopRequest } from './shop.js'
 
 /** Image uploads are base64 JSON (3 MB of image ≈ 4 MB of text); everything else is small */
 const bodyLimit = (url: string) => (url.startsWith('/api/admin/upload') ? 4_300_000 : 64_000)
@@ -27,6 +28,7 @@ export async function handleApiRequest(req: AuthRequest, env: AuthEnv): Promise<
       (await handleAuthRequest(req, env)) ??
       (await handleOriginalsRequest(req, env)) ??
       (await handleEventsRequest(req, env)) ??
+      (await handleShopRequest(req, env)) ??
       (await handleProfileRequest(req, env)) ??
       (await handleRaffleRequest(req, env)) ??
       (await handleAdminRequest(req, env))

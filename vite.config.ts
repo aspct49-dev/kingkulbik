@@ -45,8 +45,11 @@ function siteApi(env: AuthEnv): Plugin {
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
-  // server/store.ts reads these from process.env, as it does on Vercel
-  for (const key of ['DATABASE_URL', 'BLOB_READ_WRITE_TOKEN']) process.env[key] ??= env[key]
+  // server/store.ts reads these from process.env, as it does on Vercel. Only copy ones that are set:
+  // assigning undefined to process.env stores the string "undefined", which looks like a database URL
+  for (const key of ['DATABASE_URL', 'BLOB_READ_WRITE_TOKEN']) {
+    if (env[key] && !process.env[key]) process.env[key] = env[key]
+  }
   return {
     plugins: [react(), leaderboardApi(env.STAKE_API_TOKEN, env.STAKE_API_URL), siteApi(env)],
     // The Coinflip chunk carries three.js (~580 kB, loaded only on /coinflip)

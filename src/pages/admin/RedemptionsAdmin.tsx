@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react'
 import { RedemptionList } from '../../components/profile/ProfileSections'
-import type { Redemption } from '../../../shared/profiles'
+import type { Redemption, ShopSettings } from '../../../shared/profiles'
+import { adminPost } from './api'
 import RedemptionActions from './RedemptionActions'
+import { Input } from './ui'
 
 type Filter = 'pending' | 'all'
 
-/** Item Store requests: take the points off in BotRix, deliver, then mark it here */
+/** Item Store requests: points are taken at purchase; approve once delivered, or reject to refund */
 export default function RedemptionsAdmin({
   onOpenPlayer,
   onPending,
@@ -19,13 +21,28 @@ export default function RedemptionsAdmin({
   const [all, setAll] = useState<Redemption[] | null>(null)
   const [filter, setFilter] = useState<Filter>('pending')
   const [failed, setFailed] = useState(false)
+  const [cooldown, setCooldown] = useState<string | null>(null)
 
   useEffect(() => {
     fetch('/api/admin/redemptions', { credentials: 'same-origin' })
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
       .then((body: { redemptions: Redemption[] }) => setAll(body.redemptions))
       .catch(() => setFailed(true))
+    fetch('/api/admin/shop-settings', { credentials: 'same-origin' })
+      .then((r) => r.json())
+      .then((body: { settings: ShopSettings }) => setCooldown(String(body.settings.cooldownDays)))
+      .catch(() => undefined)
   }, [])
+
+  const saveCooldown = async () => {
+    try {
+      const res = await adminPost<{ settings: ShopSettings }>('shop-settings', { cooldownDays: Number(cooldown) })
+      setCooldown(String(res.settings.cooldownDays))
+      notify(res.settings.cooldownDays ? `One purchase every ${res.settings.cooldownDays} days` : 'No limit between purchases')
+    } catch (err) {
+      notify(err instanceof Error ? err.message : 'Could not save.')
+    }
+  }
 
   useEffect(() => {
     if (all) onPending(all.filter((r) => r.status === 'pending').length)
@@ -36,9 +53,32 @@ export default function RedemptionsAdmin({
   return (
     <div className="admin-stack">
       <p className="admin-intro">
-        Players request items with their King Points. Take the points off their Kick name in BotRix, send the item,
-        then mark it delivered. Rejecting puts the item back in stock.
+        The King Points come off in BotRix the moment a player buys. Send the item, then approve it. Rejecting gives
+        the points back and returns the item to stock; players can also cancel their own pending requests.
       </p>
+      <section className="admin-card">
+        <div className="admin-actions admin-actions--split">
+          <div>
+            <h2 className="admin-card__title">Purchase limit</h2>
+            <p className="admin-note">Days a player waits between purchases (0 for no limit). Rejected and cancelled ones don’t count; admins aren’t limited.</p>
+          </div>
+          <form
+            className="admin-row__actions"
+            onSubmit={(e) => {
+              e.preventDefault()
+              void saveCooldown()
+            }}
+          >
+            <span className="admin-short-field">
+              <Input value={cooldown ?? ''} onChange={(v) => setCooldown(v.replace(/\D/g, ''))} inputMode="numeric" />
+            </span>
+            <span className="admin-note">days</span>
+            <button type="submit" className="admin-button" disabled={cooldown === null}>
+              Save
+            </button>
+          </form>
+        </div>
+      </section>
       <section className="admin-card">
         <div className="admin-card__head">
           <h2 className="admin-card__title">

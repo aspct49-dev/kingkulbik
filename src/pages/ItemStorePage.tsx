@@ -28,7 +28,7 @@ import type { ItemTier, StoreItem } from '../../shared/content'
 import { DEFAULT_STAT_IMAGE_BOX, STAT_IMAGE_BOX } from '../data/itemStore'
 import Toast, { useToast } from '../components/Toast'
 import { useProfile } from '../hooks/useProfile'
-import { linkKickUrl, refreshPoints, signInUrl, useAuth, usePoints } from '../hooks/useAuth'
+import { linkKickUrl, refreshPoints, setPointsBalance, signInUrl, useAuth, usePoints } from '../hooks/useAuth'
 import { useStoreItems } from '../hooks/useContent'
 import { useHoverAnimation } from '../hooks/useHoverAnimation'
 import './ChallengesPage.css'
@@ -163,9 +163,6 @@ export default function ItemStorePage() {
   const { toast, show } = useToast(3200)
   const [buying, setBuying] = useState<StoreItem | null>(null)
 
-  // Points held by requests an admin hasn't delivered yet
-  const pending = (profile.view?.redemptions ?? []).filter((r) => r.status === 'pending').reduce((sum, r) => sum + r.price, 0)
-
   const items = useMemo(() => {
     const q = query.trim().toLowerCase()
     const found = q ? all.filter((item) => item.name.toLowerCase().includes(q)) : all
@@ -175,7 +172,7 @@ export default function ItemStorePage() {
 
   const buyState = (item: StoreItem): BuyState => {
     if (item.stock === 0) return { kind: 'sold-out' }
-    const have = balance.data ? balance.data.points - pending : undefined
+    const have = balance.data?.points
     return have !== undefined && have < item.price ? { kind: 'short', missing: item.price - have } : { kind: 'buy' }
   }
 
@@ -280,13 +277,15 @@ export default function ItemStorePage() {
       </div>
       <RedeemDialog
         item={buying}
-        available={balance.data ? balance.data.points - pending : null}
+        available={balance.data?.points ?? null}
         onClose={() => setBuying(null)}
-        onDone={(message) => {
+        onDone={(message, left) => {
           setBuying(null)
           show(message)
           profile.refresh()
-          refreshPoints()
+          // BotRix's leaderboard can lag: show the new balance now, then re-read it shortly after
+          if (left !== null) setPointsBalance(left)
+          window.setTimeout(refreshPoints, 15_000)
           refreshStoreStats()
         }}
       />
@@ -336,7 +335,7 @@ function RedeemDialog({
   item: StoreItem | null
   available: number | null
   onClose: () => void
-  onDone: (message: string) => void
+  onDone: (message: string, pointsLeft: number | null) => void
 }) {
   const ref = useRef<HTMLDialogElement>(null)
   const [busy, setBusy] = useState(false)
@@ -363,9 +362,9 @@ function RedeemDialog({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ itemId: item.id }),
       })
-      const body = (await res.json().catch(() => ({}))) as { error?: string }
+      const body = (await res.json().catch(() => ({}))) as { error?: string; points?: number }
       if (!res.ok) setError(body.error ?? 'Could not send the request. Please try again.')
-      else onDone(`${item.name} requested! Track it on your account page.`)
+      else onDone(`${item.name} requested! Track it on your account page.`, typeof body.points === 'number' ? body.points : null)
     } catch {
       setError('Could not reach the server. Please try again.')
     } finally {
@@ -385,9 +384,9 @@ function RedeemDialog({
         <div className="game-fairness__body">
           <h2>Redeem {item.name}?</h2>
           <p>
-            This uses <strong>{points(item.price)} King Points</strong>
-            {available !== null && <> of your {points(available)}</>}. We'll deliver it and take the points off your
-            BotRix balance, usually within a day. Watch for a message in the Discord.
+            This takes <strong>{points(item.price)} King Points</strong>
+            {available !== null && <> of your {points(available)}</>} now. We'll deliver it, usually within a day:
+            watch for a message in the Discord. If we can't, or you cancel while it's pending, the points come back.
           </p>
           {error && (
             <p className="store-redeem__error" role="alert">

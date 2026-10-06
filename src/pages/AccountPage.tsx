@@ -9,7 +9,7 @@ import stakeLogo from '../assets/leaderboard/stake-logo.svg'
 import PageHeading from '../components/PageHeading'
 import Toast, { useToast } from '../components/Toast'
 import { BetHistory, MilestoneStatus, ProfileHeader, RedemptionList } from '../components/profile/ProfileSections'
-import { linkKickUrl, linkStake, signInUrl, signOut, useAuth, usePoints, useStakeProgress } from '../hooks/useAuth'
+import { linkKickUrl, linkStake, setPointsBalance, signInUrl, signOut, useAuth, usePoints, useStakeProgress } from '../hooks/useAuth'
 import { useProfile } from '../hooks/useProfile'
 import './ChallengesPage.css'
 import './AccountPage.css'
@@ -97,6 +97,46 @@ function StakeLink() {
         </form>
       )}
     </li>
+  )
+}
+
+/** Cancel a pending Item Store request: the King Points come back */
+function CancelRedemption({ id, onDone }: { id: string; onDone: (message: string, points: number | null) => void }) {
+  const [asking, setAsking] = useState(false)
+  const [busy, setBusy] = useState(false)
+
+  const cancel = async () => {
+    setBusy(true)
+    try {
+      const res = await fetch(`/api/shop/redemptions/${id}/cancel`, { method: 'POST', credentials: 'same-origin' })
+      const body = (await res.json().catch(() => ({}))) as { error?: string; points?: number | null }
+      if (!res.ok) onDone(body.error ?? 'Could not cancel it. Please try again.', null)
+      else onDone('Cancelled. Your King Points are back.', typeof body.points === 'number' ? body.points : null)
+    } catch {
+      onDone('Could not reach the server. Please try again.', null)
+    } finally {
+      setBusy(false)
+      setAsking(false)
+    }
+  }
+
+  if (!asking) {
+    return (
+      <button type="button" className="profile-action" onClick={() => setAsking(true)}>
+        Cancel
+      </button>
+    )
+  }
+  return (
+    <span className="profile-confirm" role="group" aria-label="Cancel and get your points back?">
+      <span className="profile-confirm__text">Get your points back?</span>
+      <button type="button" className="profile-action profile-action--danger" disabled={busy} onClick={() => void cancel()}>
+        {busy ? 'Cancelling…' : 'Yes, cancel'}
+      </button>
+      <button type="button" className="profile-action profile-action--quiet" disabled={busy} onClick={() => setAsking(false)}>
+        Keep it
+      </button>
+    </span>
   )
 }
 
@@ -234,7 +274,22 @@ export default function AccountPage() {
 
             <h2 className="account-section">Item Store redemptions</h2>
             {profile.view ? (
-              <RedemptionList redemptions={profile.view.redemptions} own />
+              <RedemptionList
+                redemptions={profile.view.redemptions}
+                own
+                actions={(r) =>
+                  r.status === 'pending' && r.charged ? (
+                    <CancelRedemption
+                      id={r.id}
+                      onDone={(message, points) => {
+                        show(message)
+                        profile.refresh()
+                        if (points !== null) setPointsBalance(points)
+                      }}
+                    />
+                  ) : null
+                }
+              />
             ) : (
               <p className="account-note">{profile.status === 'error' ? "Couldn't load your redemptions." : 'Loading…'}</p>
             )}

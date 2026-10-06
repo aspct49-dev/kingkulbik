@@ -320,6 +320,76 @@
   color: #e5736f;
 }
 
+/* Row actions (the account page's dark button, small), e.g. cancelling a request */
+.profile-action {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  height: 30px;
+  padding: 0 12px;
+  border-radius: var(--radius-sm);
+  background: var(--nav-item-from);
+  box-shadow: inset 0 1px 0 0 #364151;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  color: #efefef;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease,
+    transform 0.15s ease;
+}
+
+.profile-action--danger {
+  color: #e5736f;
+}
+
+.profile-action--quiet {
+  background: none;
+  box-shadow: none;
+  color: var(--color-text-muted);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .profile-action:hover:not(:disabled) {
+    background: #2c3647;
+  }
+
+  .profile-action--quiet:hover:not(:disabled) {
+    background: none;
+    color: var(--color-text);
+  }
+}
+
+.profile-action:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.profile-action:focus-visible {
+  outline: 2px solid #e6d218;
+  outline-offset: 2px;
+}
+
+.profile-action:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.profile-confirm {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+}
+
+.profile-confirm__text {
+  margin-right: 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
 /* ---------------------------------------------------------------- bet history (the live feed's rows) */
 
 .profile-bets {

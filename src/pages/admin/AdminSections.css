@@ -300,6 +300,74 @@
   box-shadow: inset 0 1px 0 0 rgb(255 255 255 / 0.03);
 }
 
+/* ---------------------------------------------------------------- king points */
+
+.admin-points-search {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+}
+
+.admin-points-search .admin-submit {
+  height: 38px;
+}
+
+.admin-points-player {
+  gap: 8px;
+}
+
+.admin-stats--three {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.admin-points-form {
+  display: grid;
+  grid-template-columns: 200px minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: end;
+}
+
+.admin-points-buttons {
+  display: flex;
+  gap: 6px;
+  min-height: 38px;
+  align-items: center;
+}
+
+.admin-points-buttons .admin-button {
+  height: 38px;
+  padding: 0 16px;
+}
+
+.admin-points-row {
+  min-height: 54px;
+}
+
+.admin-points-row--failed {
+  box-shadow: inset 0 0 0 1px rgb(229 115 111 / 0.35);
+}
+
+.admin-points-delta {
+  flex: none;
+  min-width: 84px;
+  font-size: 15px;
+  font-weight: 800;
+  color: #e5736f;
+}
+
+.admin-points-delta--up {
+  color: #7ee25a;
+}
+
+.admin-points-error {
+  font-size: 12px;
+}
+
+/* A short field beside a button (the purchase limit) */
+.admin-short-field {
+  width: 72px;
+}
+
 /* ---------------------------------------------------------------- raffles */
 
 .admin-raffle-machine .raffle-machine {
@@ -505,6 +573,14 @@
 }
 
 @container (max-width: 760px) {
+  .admin-points-form {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .admin-stats--three {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
   .admin-overview--two,
   .admin-hunt-add {
     grid-template-columns: minmax(0, 1fr);

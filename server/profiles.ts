@@ -1,26 +1,20 @@
 /*
- * Player profiles, originals bet history and Item Store redemptions.
+ * Player profiles and originals bet history.
  *
  * A profile is written when someone signs in or links an account, and kept
  * fresh as they use the site. Bets are recorded by server/originals.ts for
- * signed-in players (guests stay anonymous). Redemptions are requests: points
- * still come off by hand in BotRix until the Premium API key is set, so an
- * admin fulfils (or rejects) each one.
+ * signed-in players (guests stay anonymous). The Item Store and King Points
+ * are in server/shop.ts.
  *
  *   GET  /api/profile                    your profile, bets and redemptions
- *   POST /api/shop/redeem                { itemId }
- *   GET  /api/shop/stats                 most redeemed, points spent, items sold
  *   GET  /api/admin/players?q=           players, most recently seen first
  *   GET  /api/admin/players/<id>         one player's profile, bets and redemptions
- *   GET  /api/admin/redemptions          every redemption, newest first
- *   POST /api/admin/redemptions/<id>     { status: 'fulfilled' | 'rejected', note? }
  */
 
 import { randomBytes } from 'node:crypto'
-import type { PlayerBet, PlayerProfile, ProfileView, Redemption } from '../shared/profiles.js'
+import type { PlayerBet, PlayerProfile, ProfileView } from '../shared/profiles.js'
 import { isAdmin, json, readSession } from './auth.js'
 import type { AuthEnv, AuthRequest, AuthResponse, SessionUser } from './auth.js'
-import { getBotrixViewer } from './botrix.js'
 import { lookupStakePlayer } from './stakeLink.js'
 import { read, StoreError, update } from './store.js'
 
@@ -105,90 +99,16 @@ async function view(id: string, betLimit: number, env: AuthEnv): Promise<Profile
 export async function handleProfileRequest(req: AuthRequest, env: AuthEnv): Promise<AuthResponse | null> {
   const url = new URL(req.url, 'http://localhost')
   const path = url.pathname
-  const mine = path === '/api/profile' || path.startsWith('/api/shop/')
-  const adminRoute = /^\/api\/admin\/(players|redemptions)(\/|$)/.test(path)
+  const mine = path === '/api/profile'
+  const adminRoute = /^\/api\/admin\/players(\/|$)/.test(path)
   if (!mine && !adminRoute) return null
   const user = readSession(req, env)
 
   try {
-    if (path === '/api/shop/stats') {
-      const done = (await read('redemptions')).filter((r) => r.status === 'fulfilled')
-      const counts = new Map<string, { name: string; image?: string; count: number }>()
-      for (const r of done) {
-        const c = counts.get(r.itemId) ?? { name: r.itemName, image: r.itemImage, count: 0 }
-        c.count += 1
-        counts.set(r.itemId, c)
-      }
-      const most = [...counts.values()].sort((a, b) => b.count - a.count)[0] ?? null
-      const biggest = done.reduce<Redemption | null>((top, r) => (!top || r.price > top.price ? r : top), null)
-      return json(200, {
-        mostRedeemed: most ? { name: most.name, image: most.image ?? null } : null,
-        biggestPurchase: biggest ? { name: biggest.itemName, image: biggest.itemImage ?? null } : null,
-        totalSpent: done.reduce((s, r) => s + r.price, 0),
-        itemsSold: done.length,
-      })
-    }
-
     if (path === '/api/profile') {
       if (!user) return json(200, { view: null })
       await touchProfile(user)
       return json(200, { view: await view(user.discord.id, 100, env) })
-    }
-
-    if (path === '/api/shop/redeem') {
-      if (req.method !== 'POST') return json(405, { error: 'Use POST.' })
-      if (!user) return json(401, { error: 'Sign in with Discord first.' })
-      if (!user.kick) return json(403, { error: 'Link your Kick account first: King Points live there.' })
-      let itemId = ''
-      try {
-        itemId = String((JSON.parse(req.body || '{}') as { itemId?: unknown }).itemId ?? '')
-      } catch {
-        throw new InputError('Pick an item.')
-      }
-      const item = (await read('shop')).find((i) => i.id === itemId && !i.hidden)
-      if (!item) throw new InputError('That item is no longer in the store.')
-      if (item.stock === 0) throw new InputError(`${item.name} is sold out.`)
-
-      // Points still waiting on an admin count as spent
-      const pending = (await read('redemptions'))
-        .filter((r) => r.userId === user.discord.id && r.status === 'pending')
-        .reduce((s, r) => s + r.price, 0)
-      const viewer = await getBotrixViewer(user.kick.username).catch(() => {
-        throw new InputError('Could not reach BotRix to check your points. Please try again.')
-      })
-      const available = (viewer?.points ?? 0) - pending
-      if (available < item.price) {
-        throw new InputError(
-          pending
-            ? `You need ${item.price.toLocaleString('en-US')} King Points; ${Math.max(0, available).toLocaleString('en-US')} are free after your pending requests.`
-            : `You need ${(item.price - available).toLocaleString('en-US')} more King Points.`,
-        )
-      }
-
-      // Hold one from stock until an admin decides
-      await update('shop', (list) => {
-        const it = list.find((i) => i.id === item.id)
-        if (!it || it.stock === 0) throw new InputError(`${item.name} is sold out.`)
-        if (it.stock !== null) it.stock -= 1
-        return list
-      })
-      await touchProfile(user)
-      const redemption: Redemption = {
-        id: randomBytes(6).toString('hex'),
-        userId: user.discord.id,
-        player: user.discord.name,
-        kick: user.kick.username,
-        itemId: item.id,
-        itemName: item.name,
-        ...(item.image ? { itemImage: item.image } : {}),
-        tier: item.tier,
-        price: item.price,
-        status: 'pending',
-        at: Date.now(),
-        decidedAt: null,
-      }
-      await update('redemptions', (list) => [redemption, ...list])
-      return json(200, { redemption })
     }
 
     // ---- admin
@@ -211,44 +131,6 @@ export async function handleProfileRequest(req: AuthRequest, env: AuthEnv): Prom
     if (one) {
       const v = await view(one[1], 500, env)
       return v ? json(200, { view: v }) : json(404, { error: 'No player with that id.' })
-    }
-
-    if (path === '/api/admin/redemptions') return json(200, { redemptions: await read('redemptions') })
-
-    const decide = path.match(/^\/api\/admin\/redemptions\/([\w-]+)$/)
-    if (decide) {
-      if (req.method !== 'POST') return json(405, { error: 'Use POST.' })
-      let body: { status?: unknown; note?: unknown } = {}
-      try {
-        body = JSON.parse(req.body || '{}')
-      } catch {
-        throw new InputError('Send a JSON object.')
-      }
-      const status = body.status
-      if (status !== 'fulfilled' && status !== 'rejected' && status !== 'pending') {
-        throw new InputError('Status is fulfilled, rejected or pending.')
-      }
-      let before: Redemption | undefined
-      const redemptions = await update('redemptions', (list) => {
-        const r = list.find((x) => x.id === decide[1])
-        if (!r) throw new InputError('That redemption no longer exists.')
-        before = { ...r }
-        r.status = status
-        r.decidedAt = status === 'pending' ? null : Date.now()
-        const note = String(body.note ?? '').trim().slice(0, 200)
-        if (note) r.note = note
-        else delete r.note
-        return list
-      })
-      // A rejected request gives its stock back (and takes it again if reopened)
-      const wasHeld = before!.status !== 'rejected'
-      const isHeld = status !== 'rejected'
-      if (wasHeld !== isHeld) {
-        await update('shop', (list) =>
-          list.map((i) => (i.id === before!.itemId && i.stock !== null ? { ...i, stock: Math.max(0, i.stock + (isHeld ? -1 : 1)) } : i)),
-        )
-      }
-      return json(200, { redemptions, shop: await read('shop') })
     }
 
     return json(404, { error: 'Not found.' })

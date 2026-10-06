@@ -149,6 +149,7 @@ const STATUS_LABEL: Record<Redemption['status'], string> = {
   pending: 'Pending',
   fulfilled: 'Delivered',
   rejected: 'Rejected',
+  cancelled: 'Cancelled',
 }
 
 export function RedemptionList({
@@ -192,6 +193,12 @@ export function RedemptionList({
               {!own && <> · {r.player} (kick: {r.kick})</>}
             </span>
             {r.note && <span className="profile-row__note">“{r.note}”</span>}
+            {r.refunded && <span className="profile-row__note">{r.price.toLocaleString('en-US')} King Points refunded</span>}
+            {!own && r.handledBy && (
+              <span className="profile-row__note">
+                {r.status === 'fulfilled' ? 'Approved' : 'Rejected'} by {r.handledBy}
+              </span>
+            )}
           </span>
           <span className={`profile-chip profile-chip--${r.status}`}>{STATUS_LABEL[r.status]}</span>
           {actions?.(r)}

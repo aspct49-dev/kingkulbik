@@ -4,7 +4,11 @@ import type { Redemption } from '../../../shared/profiles'
 import { setStoreItems } from '../../hooks/useContent'
 import { adminPost } from './api'
 
-/** Deliver / reject / reopen one redemption (rejecting asks for an optional note) */
+/**
+ * Approve or reject one pending request. The points were taken when the
+ * player bought it: approving just marks it delivered; rejecting refunds the
+ * points in BotRix and returns the stock (the reason is shown to the player).
+ */
 export default function RedemptionActions({
   redemption: r,
   onChange,
@@ -15,21 +19,29 @@ export default function RedemptionActions({
   notify: (message: string) => void
 }) {
   const [rejecting, setRejecting] = useState(false)
-  const [note, setNote] = useState('')
+  const [reason, setReason] = useState('')
   const [busy, setBusy] = useState(false)
 
-  const set = async (status: Redemption['status'], message: string, withNote = '') => {
+  if (r.status !== 'pending') return null
+
+  const decide = async (action: 'approve' | 'reject') => {
     setBusy(true)
     try {
       const res = await adminPost<{ redemptions: Redemption[]; shop: StoreItem[] }>(`redemptions/${r.id}`, {
-        status,
-        note: withNote,
+        action,
+        reason: reason.trim(),
       })
       onChange(res.redemptions)
       setStoreItems(res.shop)
-      notify(message)
+      notify(
+        action === 'approve'
+          ? `Approved: ${r.itemName} for ${r.player}`
+          : r.charged
+            ? `Rejected and refunded ${r.price.toLocaleString('en-US')} King Points`
+            : 'Rejected',
+      )
       setRejecting(false)
-      setNote('')
+      setReason('')
     } catch (err) {
       notify(err instanceof Error ? err.message : 'Could not save.')
     } finally {
@@ -43,13 +55,13 @@ export default function RedemptionActions({
         className="admin-row__actions"
         onSubmit={(e) => {
           e.preventDefault()
-          void set('rejected', 'Redemption rejected', note.trim())
+          void decide('reject')
         }}
       >
         <span className="admin-input admin-input--small">
           <input
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
             placeholder="Reason (shown to them)"
             maxLength={200}
             aria-label="Reason"
@@ -57,9 +69,9 @@ export default function RedemptionActions({
           />
         </span>
         <button type="submit" className="admin-button admin-button--danger" disabled={busy}>
-          Reject
+          {busy ? 'Refunding…' : r.charged ? 'Reject & refund' : 'Reject'}
         </button>
-        <button type="button" className="admin-button admin-button--quiet" onClick={() => setRejecting(false)}>
+        <button type="button" className="admin-button admin-button--quiet" disabled={busy} onClick={() => setRejecting(false)}>
           Cancel
         </button>
       </form>
@@ -68,25 +80,12 @@ export default function RedemptionActions({
 
   return (
     <div className="admin-row__actions">
-      {r.status === 'pending' ? (
-        <>
-          <button
-            type="button"
-            className="admin-button admin-button--gold"
-            disabled={busy}
-            onClick={() => void set('fulfilled', 'Marked as delivered')}
-          >
-            Delivered
-          </button>
-          <button type="button" className="admin-button admin-button--danger" disabled={busy} onClick={() => setRejecting(true)}>
-            Reject
-          </button>
-        </>
-      ) : (
-        <button type="button" className="admin-button" disabled={busy} onClick={() => void set('pending', 'Back to pending')}>
-          Reopen
-        </button>
-      )}
+      <button type="button" className="admin-button admin-button--gold" disabled={busy} onClick={() => void decide('approve')}>
+        Approve
+      </button>
+      <button type="button" className="admin-button admin-button--danger" disabled={busy} onClick={() => setRejecting(true)}>
+        Reject
+      </button>
     </div>
   )
 }

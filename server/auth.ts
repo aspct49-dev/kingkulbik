@@ -39,6 +39,8 @@ export type AuthEnv = {
   STAKE_API_BASE?: string
   /** Discord user ids allowed into the admin panel (comma or space separated) */
   ADMIN_DISCORD_IDS?: string
+  /** BotRix bid token: adds and takes King Points (server/botrix.ts) */
+  BOTRIX_BID?: string
 }
 
 export type SessionUser = {

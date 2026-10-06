@@ -85,6 +85,12 @@ export function refreshPoints() {
     .catch(() => setPoints({ status: 'error', data: null, forKick: kick }))
 }
 
+/** After a purchase or refund: show the new balance now (BotRix's leaderboard can lag behind) */
+export function setPointsBalance(points: number) {
+  if (!pointsState.data) return
+  setPoints({ ...pointsState, status: 'ready', data: { ...pointsState.data, points } })
+}
+
 function subscribePoints(listener: () => void) {
   pointsListeners.add(listener)
   return () => pointsListeners.delete(listener)

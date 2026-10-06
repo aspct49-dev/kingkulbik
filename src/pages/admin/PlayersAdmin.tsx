@@ -19,14 +19,17 @@ const ago = (at: number) => {
 export default function PlayersAdmin({
   playerId,
   onOpen,
+  onPoints,
   notify,
 }: {
   playerId: string | null
   onOpen: (id: string | null) => void
+  /** Open the King Points panel for a Kick name */
+  onPoints: (kick: string) => void
   notify: (message: string) => void
 }) {
   return playerId ? (
-    <PlayerDetail id={playerId} onBack={() => onOpen(null)} notify={notify} />
+    <PlayerDetail id={playerId} onBack={() => onOpen(null)} onPoints={onPoints} notify={notify} />
   ) : (
     <PlayerList onOpen={onOpen} />
   )
@@ -109,7 +112,17 @@ function PlayerList({ onOpen }: { onOpen: (id: string) => void }) {
   )
 }
 
-function PlayerDetail({ id, onBack, notify }: { id: string; onBack: () => void; notify: (message: string) => void }) {
+function PlayerDetail({
+  id,
+  onBack,
+  onPoints,
+  notify,
+}: {
+  id: string
+  onBack: () => void
+  onPoints: (kick: string) => void
+  notify: (message: string) => void
+}) {
   const [view, setView] = useState<ProfileView | null>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -141,7 +154,14 @@ function PlayerDetail({ id, onBack, notify }: { id: string; onBack: () => void; 
         <>
           <ProfileHeader profile={view.profile} admin />
           <section className="admin-card">
-            <h2 className="admin-card__title">Linked accounts</h2>
+            <div className="admin-card__head">
+              <h2 className="admin-card__title">Linked accounts</h2>
+              {view.profile.kick && (
+                <button type="button" className="admin-button" onClick={() => onPoints(view.profile.kick!.username)}>
+                  King Points
+                </button>
+              )}
+            </div>
             <p className="admin-note">
               Discord <strong className="admin-strong">@{view.profile.username}</strong> · Kick{' '}
               <strong className="admin-strong">{view.profile.kick?.username ?? 'not linked'}</strong> · Stake{' '}

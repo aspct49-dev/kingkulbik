@@ -41,7 +41,8 @@ export type PlayerBet = {
   detail: { picks?: number[]; drawn?: number[]; risk?: string; calls?: string[]; results?: string[] }
 }
 
-export type RedemptionStatus = 'pending' | 'fulfilled' | 'rejected'
+/** pending: points taken, waiting on an admin · fulfilled: delivered · rejected / cancelled: points refunded */
+export type RedemptionStatus = 'pending' | 'fulfilled' | 'rejected' | 'cancelled'
 
 export type Redemption = {
   id: string
@@ -59,7 +60,36 @@ export type Redemption = {
   note?: string
   at: number
   decidedAt: number | null
+  /** The points were taken in BotRix when it was requested (older requests were charged by hand) */
+  charged?: boolean
+  /** Points given back in BotRix (rejected or cancelled) */
+  refunded?: boolean
+  /** Admin who approved or rejected it */
+  handledBy?: string
 }
+
+/** One change to a viewer's BotRix points made from the site */
+export type PointsLogEntry = {
+  id: string
+  at: number
+  /** Kick name the points belong to */
+  kick: string
+  /** Positive: added. Negative: taken */
+  delta: number
+  kind: 'admin' | 'redeem' | 'refund'
+  reason: string
+  /** Admin's name, or the player's for their own purchases */
+  by: string
+  ok: boolean
+  error?: string
+}
+
+export type ShopSettings = {
+  /** Days between a player's purchases (0: no limit). Rejected or cancelled ones don't count */
+  cooldownDays: number
+}
+
+export const DEFAULT_SHOP_SETTINGS: ShopSettings = { cooldownDays: 7 }
 
 /** Everything the account page (and the admin's view of a player) shows */
 export type ProfileView = {
