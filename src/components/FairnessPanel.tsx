@@ -3,6 +3,7 @@ import type { FormEvent, ReactNode } from 'react'
 import { coinflipSide, kenoDraw, sha256Hex } from '../../shared/originals'
 import type { GameId, GameRules } from '../../shared/originals'
 import { rotateSeed, useFairness } from '../games/originals'
+import { useAuth } from '../hooks/useAuth'
 import { formatPoints } from './keno/format'
 import './FairnessPanel.css'
 
@@ -74,6 +75,7 @@ function Field({ label, value }: { label: string; value: string }) {
 
 function Seeds({ onVerify }: { onVerify: (input: Omit<VerifyInput, 'game'>) => void }) {
   const fairness = useFairness()
+  const { status, user } = useAuth()
   const [clientSeed, setClientSeed] = useState('')
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState<{ error: boolean; text: string } | null>(null)
@@ -92,6 +94,15 @@ function Seeds({ onVerify }: { onVerify: (input: Omit<VerifyInput, 'game'>) => v
     if (!error) setClientSeed('')
   }
 
+  // Seeds are each player's own, kept on the server
+  if (status === 'ready' && !user?.kick) {
+    return (
+      <p className="fair__loading">
+        {user ? 'Link your Kick account to play' : 'Sign in to play'}, and your own seed pair shows here. You can still
+        check any revealed seed under Verify.
+      </p>
+    )
+  }
   if (!fairness) return <p className="fair__loading">Loading seeds…</p>
   const previous = fairness.previous
 

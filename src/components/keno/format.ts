@@ -1,5 +1,5 @@
-export const formatPoints = (value: number) =>
-  value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+/** King Points: whole numbers as BotRix keeps them (137 → "137"); older fractional amounts keep up to 2 decimals */
+export const formatPoints = (value: number) => value.toLocaleString('en-US', { maximumFractionDigits: 2 })
 
 /** Pay-table style: 0.00, 1.60, 26.00, 100.0, 1,000 — at most 5 characters as in the design */
 export function formatMultiplier(value: number) {

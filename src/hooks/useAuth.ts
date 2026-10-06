@@ -85,10 +85,14 @@ export function refreshPoints() {
     .catch(() => setPoints({ status: 'error', data: null, forKick: kick }))
 }
 
-/** After a purchase or refund: show the new balance now (BotRix's leaderboard can lag behind) */
-export function setPointsBalance(points: number) {
+/**
+ * After a purchase, refund, bet or win: show the new balance now (BotRix's
+ * leaderboard can lag behind). Takes a number or a function of the current one.
+ */
+export function setPointsBalance(points: number | ((current: number) => number)) {
   if (!pointsState.data) return
-  setPoints({ ...pointsState, status: 'ready', data: { ...pointsState.data, points } })
+  const next = typeof points === 'function' ? points(pointsState.data.points) : points
+  setPoints({ ...pointsState, status: 'ready', data: { ...pointsState.data, points: Math.max(0, next) } })
 }
 
 function subscribePoints(listener: () => void) {

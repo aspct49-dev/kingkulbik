@@ -11,7 +11,7 @@ import FairnessPanel from '../components/FairnessPanel'
 import LiveBets from '../components/LiveBets'
 import { DRAW_COUNT, MAX_PICKS, RISKS, TILE_COUNT, drawTiles } from '../games/keno/engine'
 import type { Risk } from '../games/keno/engine'
-import { postOriginals } from '../games/originals'
+import { formatKingPoints, postOriginals, usePlayBalance } from '../games/originals'
 import { kenoPayouts } from '../../shared/originals'
 import type { GameRules } from '../../shared/originals'
 import { useOriginalsRules } from '../hooks/useContent'
@@ -27,7 +27,6 @@ import {
   preloadSounds,
   setSoundEnabled,
 } from '../games/keno/sounds'
-import { useDemoPoints } from '../hooks/useDemoPoints'
 import { useStableCallback } from '../hooks/useStableCallback'
 import './KenoPage.css'
 
@@ -51,8 +50,9 @@ type Round = {
 
 type KenoResponse = { drawn: number[]; hits: number; multiplier: number; payout: number }
 
+// Bets are whole King Points
 const parseBet = (input: string) => Number(input.replace(/,/g, ''))
-const toBetInput = (value: number) => (Math.floor(value * 100) / 100).toFixed(2)
+const toBetInput = (value: number) => String(Math.max(0, Math.floor(value)))
 
 function readInstant() {
   try {
@@ -63,7 +63,7 @@ function readInstant() {
 }
 
 export default function KenoPage() {
-  const { balance, setBalance, reset } = useDemoPoints()
+  const { balance, setBalance, gate, ready } = usePlayBalance('/keno')
   const rules = useOriginalsRules().keno
   const { minBet, maxBet } = rules
   const [picks, setPicks] = useState<number[]>([])
@@ -93,16 +93,18 @@ export default function KenoPage() {
   const busy = drawing || autoPicking
   const bet = parseBet(betInput)
 
-  const error = !rules.enabled
-    ? 'Keno is closed right now.'
-    : !Number.isFinite(bet) || bet < minBet
-      ? `Minimum bet is ${formatPoints(minBet)} points.`
-      : bet > maxBet
-        ? `Maximum bet is ${formatPoints(maxBet)} points.`
-        : bet > balance
-          ? 'Not enough points for this bet.'
-          : null
-  const canBet = !busy && picks.length > 0 && !error
+  const error = gate
+    ? gate.reason
+    : !rules.enabled
+      ? 'Keno is closed right now.'
+      : !Number.isInteger(bet) || bet < minBet
+        ? `Bets are whole King Points, at least ${formatKingPoints(minBet)}.`
+        : bet > maxBet
+          ? `Maximum bet is ${formatKingPoints(maxBet)} King Points.`
+          : ready && bet > balance
+            ? 'Not enough King Points for this bet.'
+            : null
+  const canBet = ready && !busy && picks.length > 0 && !error
 
   // Reveal the draw one tile at a time, then settle the round once
   useEffect(() => {
@@ -216,7 +218,7 @@ export default function KenoPage() {
   const clampBet = (value: number) => Math.min(maxBet, Math.max(minBet, Number.isFinite(value) ? value : minBet))
   const onBetInputChange = useStableCallback((value: string) => {
     setServerError(null)
-    setBetInput(value.replace(/[^\d.,]/g, ''))
+    setBetInput(value.replace(/[^\d,]/g, ''))
   })
   const onBetBlur = useStableCallback(() => setBetInput(toBetInput(clampBet(bet))))
   const onHalve = useStableCallback(() => {
@@ -277,9 +279,8 @@ export default function KenoPage() {
             busy={busy}
             drawing={drawing}
             error={serverError ?? (picks.length > 0 ? error : null)}
-            minBet={minBet}
             balance={balance}
-            onResetBalance={reset}
+            gate={gate}
           />
         </div>
 
@@ -340,8 +341,8 @@ function KenoFairness({ risk, rules }: { risk: Risk; rules: GameRules }) {
         the multiplier for how many of your picks were hit, up to the max win.
       </p>
       <p>
-        <strong>Demo balance:</strong> results are settled on the server, but the points are a demo balance on this
-        device until King Points can be spent here.
+        <strong>King Points:</strong> your bet comes off your BotRix balance when you play and wins are paid back
+        to it. Bets are whole points and wins are rounded down.
       </p>
       <h3>{riskLabel} payouts</h3>
       <div className="game-fairness__table-wrap">

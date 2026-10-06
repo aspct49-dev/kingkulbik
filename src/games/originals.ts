@@ -1,10 +1,12 @@
 import { useEffect, useSyncExternalStore } from 'react'
 import type { FairnessState } from '../../shared/originals'
+import { linkKickUrl, setPointsBalance, signInUrl, useAuth, usePoints } from '../hooks/useAuth'
 
 /*
  * Talking to the originals on the server: every bet is settled there from the
- * provably fair seeds. The seed state is one shared copy for Keno and
- * Coinflip (they use the same seed pair and nonce, like on Stake).
+ * provably fair seeds and paid in King Points (BotRix). The seed state is the
+ * player's own, kept on the server and shared by Keno and Coinflip (one seed
+ * pair and nonce, like on Stake).
  */
 
 let fairness: FairnessState | null = null
@@ -64,4 +66,29 @@ export async function postOriginals<T>(route: string, body: unknown): Promise<Ap
 export async function rotateSeed(clientSeed: string) {
   const result = await postOriginals<{ fairness: FairnessState }>('fairness/rotate', { clientSeed })
   return result.ok ? null : result.error
+}
+
+/** Whole King Points, as BotRix keeps them: 29440 → "29,440" */
+export const formatKingPoints = (value: number) => Math.floor(value).toLocaleString('en-US')
+
+export type PlayGate = { label: string; href: string; reason: string } | null
+
+/**
+ * The player's King Points for the originals (from BotRix), and what stands
+ * in the way of playing: signing in, linking Kick, or the balance loading.
+ */
+export function usePlayBalance(returnTo: string) {
+  const { status, user } = useAuth()
+  const points = usePoints()
+  let gate: PlayGate = null
+  if (status === 'ready' && !user) gate = { label: 'Sign in to play', href: signInUrl(returnTo), reason: 'Sign in with Discord to play with your King Points.' }
+  else if (user && !user.kick) gate = { label: 'Link Kick to play', href: linkKickUrl(returnTo), reason: 'King Points live on Kick: link your Kick account to play.' }
+  const ready = status === 'ready' && Boolean(user?.kick) && points.status === 'ready' && points.data !== null
+  return {
+    balance: points.data?.points ?? 0,
+    /** Adjust the shown balance as bets are taken and wins paid */
+    setBalance: setPointsBalance,
+    gate,
+    ready,
+  }
 }

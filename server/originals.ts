@@ -1,32 +1,29 @@
 /*
- * King Kulbik Originals on the server: every result is decided here from the
- * provably fair seeds, under the house rules, and every settled bet goes to
- * the live feed.
+ * King Kulbik Originals on the server, played with King Points (BotRix).
  *
- * The seed pair, the nonce and any Coinflip game in progress live in an
- * encrypted cookie (AES-256-GCM, key derived from SESSION_SECRET): the player
- * holds it but can't read the server seed or change anything in it. Guests
- * get one too, so the games work signed out.
+ * Every result is decided here from the provably fair seeds, under the house
+ * rules, and every settled bet goes to the live feed and the player's history.
  *
- * A cookie can be saved and put back, which would replay a bet whose result
- * is already known. The server remembers the next nonce of every seed it has
- * seen and refuses anything older. That memory lives in this process, so it
- * fully covers one server (local, a VPS); on serverless it moves to the
- * database together with the balances.
+ * Points: a bet is taken from the player's BotRix balance before the result
+ * is drawn (BotRix refuses it if they're short), and a win is paid back to it.
+ * A win BotRix can't pay at that moment is kept as owed and paid on the
+ * player's next request, so nothing is lost. BotRix points are whole numbers:
+ * bets are whole points and wins are rounded down.
  *
- * Balances are still the demo points in the browser: King Points live in
- * BotRix, and changing them needs the BotRix management API. When that lands,
- * the server deducts the bet and credits the payout here.
+ * State: each player's seed pair, bet counter and Coinflip game live in the
+ * database, keyed by their Discord id, so no copy kept in the browser can
+ * replay a bet or cash out a game twice. Every bet claims its nonce in one
+ * atomic update before the result is worked out.
  *
  *   GET  /api/originals/rules
+ *   GET  /api/originals/feed
  *   GET  /api/originals/fairness
  *   POST /api/originals/fairness/rotate   { clientSeed? }
  *   POST /api/originals/keno              { picks, risk, bet }
  *   POST /api/originals/coinflip          { action: 'start', bet } | { action: 'flip', side } | { action: 'cashout' } | { action: 'state' }
- *   GET  /api/originals/feed
  */
 
-import { createCipheriv, createDecipheriv, createHash, randomBytes } from 'node:crypto'
+import { randomBytes } from 'node:crypto'
 import { RISKS, TILE_COUNT, MAX_PICKS } from '../shared/kenoTables.js'
 import type { Risk } from '../shared/kenoTables.js'
 import {
@@ -37,51 +34,49 @@ import {
   kenoPayouts,
   sha256Hex,
 } from '../shared/originals.js'
-import type { FairnessState, FeedBet, GameId } from '../shared/originals.js'
-import { cookie, json, origin, parseCookies, readSession } from './auth.js'
-import type { AuthEnv, AuthRequest, AuthResponse } from './auth.js'
+import type { FairnessState, FeedBet, OwedPayout, PfState } from '../shared/originals.js'
+import type { PointsLogEntry } from '../shared/profiles.js'
+import { json, readSession } from './auth.js'
+import type { AuthEnv, AuthRequest, AuthResponse, SessionUser } from './auth.js'
+import { adjustBotrixPoints, BotrixError } from './botrix.js'
 import { recordPlayerBet } from './profiles.js'
-import { read, update } from './store.js'
+import { read, StoreError, update } from './store.js'
 
-const PF_COOKIE = 'kk_pf'
 const FEED_SIZE = 40
 /** Matches the Coinflip page's ladder */
 const MAX_STREAK = 20
 
-type PfState = {
-  serverSeed: string
-  clientSeed: string
-  nonce: number
-  previous: { serverSeed: string; clientSeed: string; nonce: number } | null
-  coinflip: { id: string; bet: number; streak: number; calls: string[]; results: string[]; nonces: number[] } | null
-}
+type Player = SessionUser & { kick: { id: string; username: string } }
 
-// ---------------------------------------------------------------- the cookie
-
-const keyFor = (secret: string) => createHash('sha256').update(`${secret}:provably-fair`).digest()
-
-function encrypt(state: PfState, secret: string) {
-  const iv = randomBytes(12)
-  const cipher = createCipheriv('aes-256-gcm', keyFor(secret), iv)
-  const data = Buffer.concat([cipher.update(JSON.stringify(state), 'utf8'), cipher.final()])
-  return Buffer.concat([iv, cipher.getAuthTag(), data]).toString('base64url')
-}
-
-function decrypt(token: string | undefined, secret: string): PfState | null {
-  if (!token) return null
-  try {
-    const raw = Buffer.from(token, 'base64url')
-    const decipher = createDecipheriv('aes-256-gcm', keyFor(secret), raw.subarray(0, 12))
-    decipher.setAuthTag(raw.subarray(12, 28))
-    const text = Buffer.concat([decipher.update(raw.subarray(28)), decipher.final()]).toString('utf8')
-    return JSON.parse(text) as PfState
-  } catch {
-    return null
+class GameError extends Error {
+  constructor(
+    message: string,
+    readonly status = 400,
+    readonly extra: Record<string, unknown> = {},
+  ) {
+    super(message)
   }
 }
 
+// ---------------------------------------------------------------- state
+
 const newSeed = () => randomBytes(32).toString('hex')
 const newClientSeed = () => randomBytes(8).toString('hex')
+const freshState = (): PfState => ({ serverSeed: newSeed(), clientSeed: newClientSeed(), nonce: 0, previous: null, coinflip: null })
+
+/** Read-modify-write one player's state atomically; `fn` may throw to cancel */
+async function withState<T>(userId: string, fn: (state: PfState) => T): Promise<{ result: T; state: PfState }> {
+  let result!: T
+  let state!: PfState
+  await update('pfStates', (all) => {
+    const s = all[userId] ?? freshState()
+    result = fn(s)
+    all[userId] = s
+    state = s
+    return all
+  })
+  return { result, state }
+}
 
 async function fairness(state: PfState): Promise<FairnessState> {
   return {
@@ -94,35 +89,75 @@ async function fairness(state: PfState): Promise<FairnessState> {
   }
 }
 
-// ---------------------------------------------------------------- helpers
+// ---------------------------------------------------------------- points
 
-/** Next allowed nonce per server seed (bounded; oldest seeds drop out first) */
-const nextNonce = new Map<string, number>()
-const NONCE_MEMORY = 50_000
+async function logPoints(entry: Omit<PointsLogEntry, 'id' | 'at'>) {
+  const row: PointsLogEntry = { ...entry, id: randomBytes(6).toString('hex'), at: Date.now() }
+  await update('pointsLog', (list) => [row, ...list].slice(0, 2000)).catch(() => undefined)
+}
 
-function claimNonce(state: PfState) {
-  const seen = nextNonce.get(state.serverSeed) ?? 0
-  // An old copy of the cookie: its nonce was already played. Move it on to
-  // the next unplayed nonce (its result is unknown, so nothing is gained)
-  if (state.nonce < seen) {
-    state.nonce = seen
+/** Take a bet. Throws a GameError a player can read (short on points, BotRix down) */
+async function takeBet(user: Player, bet: number, env: AuthEnv) {
+  try {
+    await adjustBotrixPoints(user.kick.username, -bet, env.BOTRIX_BID)
+  } catch (err) {
+    if (err instanceof BotrixError && err.code === 'insufficient') throw new GameError('Not enough King Points for this bet.', 402)
+    if (err instanceof BotrixError && err.code === 'user_not_found') {
+      throw new GameError('BotRix hasn’t seen your Kick name in chat yet, so you have no King Points to play with.', 402)
+    }
+    throw new GameError(err instanceof Error ? err.message : 'Could not take the bet. Please try again.', 502)
+  }
+}
+
+/** Give a bet back when the game couldn't go ahead after it was taken */
+async function returnBet(user: Player, bet: number, env: AuthEnv) {
+  await adjustBotrixPoints(user.kick.username, bet, env.BOTRIX_BID).catch((err) =>
+    logPoints({ kick: user.kick.username, delta: bet, kind: 'originals', reason: 'Bet returned', by: user.discord.name, ok: false, error: err instanceof Error ? err.message : 'Failed' }),
+  )
+}
+
+/** Pay a win; if BotRix can't right now, keep it as owed (paid on the next request) */
+async function payWin(user: Player, amount: number, reason: string, env: AuthEnv) {
+  if (amount <= 0) return true
+  try {
+    await adjustBotrixPoints(user.kick.username, amount, env.BOTRIX_BID)
+    return true
+  } catch (err) {
+    const owed: OwedPayout = { id: randomBytes(6).toString('hex'), userId: user.discord.id, kick: user.kick.username, amount, reason, at: Date.now(), attempts: 1 }
+    await update('owedPayouts', (list) => [...list, owed]).catch(() => undefined)
+    await logPoints({
+      kick: user.kick.username,
+      delta: amount,
+      kind: 'originals',
+      reason: `${reason} (owed, will retry)`,
+      by: user.discord.name,
+      ok: false,
+      error: err instanceof Error ? err.message : 'Payout failed',
+    })
     return false
   }
-  nextNonce.delete(state.serverSeed)
-  nextNonce.set(state.serverSeed, state.nonce + 1)
-  if (nextNonce.size > NONCE_MEMORY) nextNonce.delete(nextNonce.keys().next().value as string)
-  return true
 }
 
-/** Coinflip games already settled (a restored cookie can't cash one out twice) */
-const settledGames = new Set<string>()
-
-function markSettled(id: string) {
-  settledGames.add(id)
-  if (settledGames.size > NONCE_MEMORY) settledGames.delete(settledGames.values().next().value as string)
+/** Pay anything still owed to this player (claimed first, so two requests can't pay it twice) */
+async function settleOwed(user: Player, env: AuthEnv) {
+  const mine = (await read('owedPayouts')).filter((o) => o.userId === user.discord.id)
+  for (const o of mine) {
+    let claimed = false
+    await update('owedPayouts', (list) => {
+      claimed = list.some((x) => x.id === o.id)
+      return list.filter((x) => x.id !== o.id)
+    }).catch(() => undefined)
+    if (!claimed) continue
+    try {
+      await adjustBotrixPoints(o.kick, o.amount, env.BOTRIX_BID)
+      await logPoints({ kick: o.kick, delta: o.amount, kind: 'originals', reason: `${o.reason} (owed win paid)`, by: user.discord.name, ok: true })
+    } catch {
+      await update('owedPayouts', (list) => [...list, { ...o, attempts: o.attempts + 1 }]).catch(() => undefined)
+    }
+  }
 }
 
-const REPLAYED = 'That bet was already played. Please try again.'
+// ---------------------------------------------------------------- helpers
 
 function parseBody<T>(body: string | undefined): T | null {
   try {
@@ -132,13 +167,24 @@ function parseBody<T>(body: string | undefined): T | null {
   }
 }
 
-const round2 = (n: number) => Math.round(n * 100) / 100
-
-async function recordBet(bet: Omit<FeedBet, 'id' | 'at'>) {
+async function recordFeed(bet: Omit<FeedBet, 'id' | 'at'>) {
   const entry: FeedBet = { ...bet, id: randomBytes(6).toString('hex'), at: Date.now() }
-  // The feed is best effort: a read-only host still settles the bet
+  // The feed is best effort: a busy or read-only store still settles the bet
   await update('feed', (feed) => [entry, ...feed].slice(0, FEED_SIZE)).catch(() => undefined)
 }
+
+/** Whole points between the game's limits */
+function wholeBet(raw: unknown, min: number, max: number) {
+  const bet = Number(raw)
+  if (!Number.isInteger(bet)) throw new GameError('Bets are whole King Points.')
+  if (!(bet >= min && bet <= max)) {
+    throw new GameError(`Bets are ${min.toLocaleString('en-US')} to ${max.toLocaleString('en-US')} King Points.`)
+  }
+  return bet
+}
+
+/** A win in whole points, capped at the game's max win */
+const winOf = (bet: number, multiplier: number, maxWin: number) => Math.floor(cappedPayout(bet, multiplier, maxWin))
 
 // ---------------------------------------------------------------- handler
 
@@ -147,159 +193,191 @@ export async function handleOriginalsRequest(req: AuthRequest, env: AuthEnv): Pr
   if (!url.pathname.startsWith('/api/originals/')) return null
   const route = url.pathname.slice('/api/originals/'.length)
 
-  if (route === 'rules') return json(200, { rules: await read('rules') })
-  if (route === 'feed') return json(200, { bets: await read('feed') })
+  try {
+    if (route === 'rules') return json(200, { rules: await read('rules') })
+    if (route === 'feed') return json(200, { bets: await read('feed') })
 
-  const secret = env.SESSION_SECRET
-  if (!secret || secret.length < 32) return json(500, { error: 'Games are not configured (SESSION_SECRET).' })
-  const secure = origin(req, env).startsWith('https://')
+    // Everything else is a player's own game: signed in, with Kick (where King Points live)
+    const session = readSession(req, env)
+    if (!session) throw new GameError('Sign in with Discord to play.', 401)
+    if (!session.kick) throw new GameError('Link your Kick account to play with King Points.', 403)
+    const user = session as Player
+    const player = user.discord.name
 
-  let state = decrypt(parseCookies(req.cookie)[PF_COOKIE], secret)
-  if (!state) state = { serverSeed: newSeed(), clientSeed: newClientSeed(), nonce: 0, previous: null, coinflip: null }
-  const save = () => cookie(PF_COOKIE, encrypt(state!, secret), 365 * 86400, secure)
+    await settleOwed(user, env)
 
-  const user = readSession(req, env)
-  const player = user?.discord.name ?? 'Guest'
-
-  if (route === 'fairness') return json(200, { fairness: await fairness(state) }, [save()])
-
-  if (req.method !== 'POST') return json(405, { error: 'Use POST.' })
-  const rules = await read('rules')
-
-  if (route === 'fairness/rotate') {
-    if (state.coinflip) return json(409, { error: 'Finish your Coinflip game before changing seeds.' })
-    const body = parseBody<{ clientSeed?: string }>(req.body)
-    const requested = String(body?.clientSeed ?? '').trim()
-    if (requested && !/^[\w-]{1,32}$/.test(requested)) {
-      return json(400, { error: 'Client seed: up to 32 letters, numbers, - or _.' })
+    if (route === 'fairness') {
+      const { state } = await withState(user.discord.id, () => undefined)
+      return json(200, { fairness: await fairness(state) })
     }
-    state = {
-      serverSeed: newSeed(),
-      clientSeed: requested || newClientSeed(),
-      nonce: 0,
-      previous: { serverSeed: state.serverSeed, clientSeed: state.clientSeed, nonce: state.nonce },
-      coinflip: null,
-    }
-    return json(200, { fairness: await fairness(state) }, [save()])
-  }
 
-  // ---- Keno: one request settles the round
-  if (route === 'keno') {
-    const r = rules.keno
-    if (!r.enabled) return json(403, { error: 'Keno is closed right now.' })
-    const body = parseBody<{ picks?: unknown; risk?: unknown; bet?: unknown }>(req.body)
-    const picks = Array.isArray(body?.picks) ? [...new Set(body.picks.map(Number))] : []
-    const risk = String(body?.risk) as Risk
-    const bet = round2(Number(body?.bet))
-    if (!picks.length || picks.length > MAX_PICKS || picks.some((t) => !Number.isInteger(t) || t < 1 || t > TILE_COUNT)) {
-      return json(400, { error: `Pick 1 to ${MAX_PICKS} tiles.` })
-    }
-    if (!RISKS.some((x) => x.id === risk)) return json(400, { error: 'Unknown difficulty.' })
-    if (!(bet >= r.minBet && bet <= r.maxBet)) return json(400, { error: `Bets are ${r.minBet} to ${r.maxBet} points.` })
+    if (req.method !== 'POST') return json(405, { error: 'Use POST.' })
+    const rules = await read('rules')
 
-    if (!claimNonce(state)) return json(409, { error: REPLAYED, fairness: await fairness(state) }, [save()])
-    const nonce = state.nonce++
-    const drawn = await kenoDraw(state.serverSeed, state.clientSeed, nonce)
-    const hits = picks.filter((t) => drawn.includes(t)).length
-    const multiplier = kenoPayouts(risk, picks.length, r.houseEdge)[hits] ?? 0
-    const payout = cappedPayout(bet, multiplier, r.maxWin)
-    await recordBet({ game: 'keno', player, bet, multiplier, payout })
-    if (user) {
+    if (route === 'fairness/rotate') {
+      const body = parseBody<{ clientSeed?: string }>(req.body)
+      const requested = String(body?.clientSeed ?? '').trim()
+      if (requested && !/^[\w-]{1,32}$/.test(requested)) throw new GameError('Client seed: up to 32 letters, numbers, - or _.')
+      const { state } = await withState(user.discord.id, (s) => {
+        if (s.coinflip) throw new GameError('Finish your Coinflip game before changing seeds.', 409)
+        s.previous = { serverSeed: s.serverSeed, clientSeed: s.clientSeed, nonce: s.nonce }
+        s.serverSeed = newSeed()
+        s.clientSeed = requested || newClientSeed()
+        s.nonce = 0
+      })
+      return json(200, { fairness: await fairness(state) })
+    }
+
+    // ---- Keno: one request settles the round
+    if (route === 'keno') {
+      const r = rules.keno
+      if (!r.enabled) throw new GameError('Keno is closed right now.', 403)
+      const body = parseBody<{ picks?: unknown; risk?: unknown; bet?: unknown }>(req.body)
+      const picks = Array.isArray(body?.picks) ? [...new Set(body.picks.map(Number))] : []
+      const risk = String(body?.risk) as Risk
+      if (!picks.length || picks.length > MAX_PICKS || picks.some((t) => !Number.isInteger(t) || t < 1 || t > TILE_COUNT)) {
+        throw new GameError(`Pick 1 to ${MAX_PICKS} tiles.`)
+      }
+      if (!RISKS.some((x) => x.id === risk)) throw new GameError('Unknown difficulty.')
+      const bet = wholeBet(body?.bet, r.minBet, r.maxBet)
+
+      await takeBet(user, bet, env)
+      // Claim the nonce (and the seeds it's drawn with) before working out the result
+      let claim: { serverSeed: string; clientSeed: string; nonce: number }
+      let state: PfState
+      try {
+        ;({ result: claim, state } = await withState(user.discord.id, (s) => ({ serverSeed: s.serverSeed, clientSeed: s.clientSeed, nonce: s.nonce++ })))
+      } catch (err) {
+        await returnBet(user, bet, env)
+        throw err
+      }
+      const drawn = await kenoDraw(claim.serverSeed, claim.clientSeed, claim.nonce)
+      const hits = picks.filter((t) => drawn.includes(t)).length
+      const multiplier = kenoPayouts(risk, picks.length, r.houseEdge)[hits] ?? 0
+      const payout = winOf(bet, multiplier, r.maxWin)
+      const paid = await payWin(user, payout, `Keno win (${multiplier}×)`, env)
+
+      await recordFeed({ game: 'keno', player, bet, multiplier, payout })
       await recordPlayerBet(user, {
         game: 'keno',
         bet,
         multiplier,
         payout,
-        serverSeedHash: await sha256Hex(state.serverSeed),
-        clientSeed: state.clientSeed,
-        nonces: [nonce],
+        serverSeedHash: await sha256Hex(claim.serverSeed),
+        clientSeed: claim.clientSeed,
+        nonces: [claim.nonce],
         detail: { picks, drawn, risk },
       })
-    }
-    return json(200, { drawn, hits, multiplier, payout, nonce, fairness: await fairness(state) }, [save()])
-  }
-
-  // ---- Coinflip: a game is several requests (start, flips, cash out)
-  if (route === 'coinflip') {
-    const r = rules.coinflip
-    const body = parseBody<{ action?: string; bet?: unknown; side?: unknown }>(req.body)
-    const action = body?.action
-
-    if (action === 'start') {
-      if (!r.enabled) return json(403, { error: 'Coinflip is closed right now.' })
-      if (state.coinflip) return json(409, { error: 'You already have a game in progress.', game: state.coinflip })
-      const bet = round2(Number(body?.bet))
-      if (!(bet >= r.minBet && bet <= r.maxBet)) return json(400, { error: `Bets are ${r.minBet} to ${r.maxBet} points.` })
-      state.coinflip = { id: randomBytes(8).toString('hex'), bet, streak: 0, calls: [], results: [], nonces: [] }
-      return json(200, { game: state.coinflip }, [save()])
+      return json(200, { drawn, hits, multiplier, payout, paid, nonce: claim.nonce, fairness: await fairness(state) })
     }
 
-    // A game survives a reload: the page asks for it on load
-    if (action === 'state') return json(200, { game: state.coinflip }, [save()])
+    // ---- Coinflip: a game is several requests (start, flips, cash out)
+    if (route === 'coinflip') {
+      const r = rules.coinflip
+      const body = parseBody<{ action?: string; bet?: unknown; side?: unknown }>(req.body)
+      const action = body?.action
 
-    const game = state.coinflip
-    if (!game) return json(409, { error: 'Start a game first.' })
-    if (!game.id || settledGames.has(game.id)) {
-      state.coinflip = null
-      return json(409, { error: REPLAYED }, [save()])
-    }
+      if (action === 'state') {
+        const { state } = await withState(user.discord.id, () => undefined)
+        return json(200, { game: state.coinflip })
+      }
 
-    const settle = async (payout: number, multiplier: number) => {
-      state!.coinflip = null
-      markSettled(game.id)
-      await recordBet({ game: 'coinflip' as GameId, player, bet: game.bet, multiplier, payout })
-      if (user) {
+      if (action === 'start') {
+        if (!r.enabled) throw new GameError('Coinflip is closed right now.', 403)
+        const bet = wholeBet(body?.bet, r.minBet, r.maxBet)
+        const current = (await read('pfStates'))[user.discord.id]
+        if (current?.coinflip) throw new GameError('You already have a game in progress.', 409, { game: current.coinflip })
+        await takeBet(user, bet, env)
+        try {
+          const { result: game } = await withState(user.discord.id, (s) => {
+            if (s.coinflip) throw new GameError('You already have a game in progress.', 409, { game: s.coinflip })
+            s.coinflip = { id: randomBytes(8).toString('hex'), bet, streak: 0, calls: [], results: [], nonces: [] }
+            return s.coinflip
+          })
+          return json(200, { game })
+        } catch (err) {
+          // The game didn't start: the bet goes back
+          await returnBet(user, bet, env)
+          throw err
+        }
+      }
+
+      /** End the game (only if it's still the one we think) and pay what it won */
+      const settle = async (gameId: string, multiplier: number, final: { calls: string[]; results: string[]; nonces: number[] }) => {
+        const { result: game, state } = await withState(user.discord.id, (s) => {
+          if (!s.coinflip || s.coinflip.id !== gameId) throw new GameError('That game is already over.', 409)
+          const g = s.coinflip
+          s.coinflip = null
+          return g
+        })
+        const payout = multiplier > 0 ? winOf(game.bet, multiplier, r.maxWin) : 0
+        const paid = await payWin(user, payout, `Coinflip win (${multiplier}×)`, env)
+        await recordFeed({ game: 'coinflip', player, bet: game.bet, multiplier, payout })
         await recordPlayerBet(user, {
           game: 'coinflip',
           bet: game.bet,
           multiplier,
           payout,
-          serverSeedHash: await sha256Hex(state!.serverSeed),
-          clientSeed: state!.clientSeed,
-          nonces: game.nonces ?? [],
-          detail: { calls: game.calls ?? [], results: game.results ?? [] },
+          serverSeedHash: await sha256Hex(state.serverSeed),
+          clientSeed: state.clientSeed,
+          nonces: final.nonces,
+          detail: { calls: final.calls, results: final.results },
         })
+        return { payout, paid, state }
       }
+
+      if (action === 'flip') {
+        const side = body?.side
+        if (side !== 'heads' && side !== 'tails') throw new GameError('Call heads or tails.')
+        // Claim this flip's nonce on the game as it stands
+        const { result: claim } = await withState(user.discord.id, (s) => {
+          if (!s.coinflip) throw new GameError('Start a game first.', 409)
+          return { game: { ...s.coinflip }, serverSeed: s.serverSeed, clientSeed: s.clientSeed, nonce: s.nonce++ }
+        })
+        const result = await coinflipSide(claim.serverSeed, claim.clientSeed, claim.nonce)
+        const history = {
+          calls: [...claim.game.calls, side],
+          results: [...claim.game.results, result],
+          nonces: [...claim.game.nonces, claim.nonce],
+        }
+
+        if (result !== side) {
+          const { state } = await settle(claim.game.id, 0, history)
+          return json(200, { result, won: false, streak: claim.game.streak, payout: 0, nonce: claim.nonce, fairness: await fairness(state) })
+        }
+
+        const streak = claim.game.streak + 1
+        const multiplier = coinflipMultiplier(streak, r.houseEdge)
+        // Record the win on the game (if it's still this game at this streak)
+        const { state } = await withState(user.discord.id, (s) => {
+          const g = s.coinflip
+          if (!g || g.id !== claim.game.id || g.streak !== claim.game.streak) throw new GameError('That game moved on. Refresh to continue.', 409)
+          Object.assign(g, { streak }, history)
+        })
+        // At the streak limit or the max win, the game cashes out by itself
+        if (streak >= MAX_STREAK || winOf(claim.game.bet, multiplier, r.maxWin) >= r.maxWin) {
+          const done = await settle(claim.game.id, multiplier, history)
+          return json(200, { result, won: true, streak, multiplier, payout: done.payout, paid: done.paid, cashedOut: true, nonce: claim.nonce, fairness: await fairness(done.state) })
+        }
+        return json(200, { result, won: true, streak, multiplier, nonce: claim.nonce, fairness: await fairness(state) })
+      }
+
+      if (action === 'cashout') {
+        const current = (await read('pfStates'))[user.discord.id]?.coinflip
+        if (!current) throw new GameError('Start a game first.', 409)
+        if (current.streak < 1) throw new GameError('Win a call before cashing out.')
+        const multiplier = coinflipMultiplier(current.streak, r.houseEdge)
+        const done = await settle(current.id, multiplier, current)
+        return json(200, { payout: done.payout, paid: done.paid, multiplier, fairness: await fairness(done.state) })
+      }
+
+      throw new GameError('Unknown action.')
     }
 
-    if (action === 'flip') {
-      const side = body?.side
-      if (side !== 'heads' && side !== 'tails') return json(400, { error: 'Call heads or tails.' })
-      if (!claimNonce(state)) {
-        state.coinflip = null
-        return json(409, { error: REPLAYED, fairness: await fairness(state) }, [save()])
-      }
-      const nonce = state.nonce++
-      const result = await coinflipSide(state.serverSeed, state.clientSeed, nonce)
-      game.calls = [...(game.calls ?? []), side]
-      game.results = [...(game.results ?? []), result]
-      game.nonces = [...(game.nonces ?? []), nonce]
-      if (result !== side) {
-        await settle(0, 0)
-        return json(200, { result, won: false, streak: game.streak, payout: 0, nonce, fairness: await fairness(state) }, [save()])
-      }
-      game.streak += 1
-      const multiplier = coinflipMultiplier(game.streak, r.houseEdge)
-      const reachedCap = cappedPayout(game.bet, multiplier, r.maxWin) >= r.maxWin
-      // At the streak limit or the max win, the game cashes out by itself
-      if (game.streak >= MAX_STREAK || reachedCap) {
-        const payout = cappedPayout(game.bet, multiplier, r.maxWin)
-        await settle(payout, multiplier)
-        return json(200, { result, won: true, streak: game.streak, multiplier, payout, cashedOut: true, nonce, fairness: await fairness(state) }, [save()])
-      }
-      return json(200, { result, won: true, streak: game.streak, multiplier, nonce, fairness: await fairness(state) }, [save()])
-    }
-
-    if (action === 'cashout') {
-      if (game.streak < 1) return json(400, { error: 'Win a call before cashing out.' })
-      const multiplier = coinflipMultiplier(game.streak, r.houseEdge)
-      const payout = cappedPayout(game.bet, multiplier, r.maxWin)
-      await settle(payout, multiplier)
-      return json(200, { payout, multiplier, fairness: await fairness(state) }, [save()])
-    }
-
-    return json(400, { error: 'Unknown action.' })
+    return json(404, { error: 'Not found.' })
+  } catch (err) {
+    if (err instanceof GameError) return json(err.status, { error: err.message, ...err.extra })
+    if (err instanceof StoreError) return json(503, { error: err.message })
+    throw err
   }
-
-  return json(404, { error: 'Not found.' })
 }

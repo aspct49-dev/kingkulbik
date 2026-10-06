@@ -12,7 +12,7 @@ import LiveBets from '../components/LiveBets'
 import { formatPoints } from '../components/keno/format'
 import { MAX_STREAK, formatMultiplier, randomSide } from '../games/coinflip/engine'
 import type { Side } from '../games/coinflip/engine'
-import { postOriginals } from '../games/originals'
+import { formatKingPoints, postOriginals, usePlayBalance } from '../games/originals'
 import { coinflipMultiplier } from '../../shared/originals'
 import type { GameRules } from '../../shared/originals'
 import { useOriginalsRules } from '../hooks/useContent'
@@ -30,7 +30,6 @@ import {
   preloadSounds,
   setSoundEnabled,
 } from '../games/coinflip/sounds'
-import { useDemoPoints } from '../hooks/useDemoPoints'
 import { useStableCallback } from '../hooks/useStableCallback'
 import './CoinflipPage.css'
 
@@ -44,8 +43,9 @@ type FlipResponse = { result: Side; won: boolean; streak: number; multiplier?: n
 type HistoryEntry = { id: number; result: Side; correct: boolean }
 type Win = { id: number; multiplier: number; payout: number }
 
+// Bets are whole King Points
 const parseBet = (input: string) => Number(input.replace(/,/g, ''))
-const toBetInput = (value: number) => (Math.floor(value * 100) / 100).toFixed(2)
+const toBetInput = (value: number) => String(Math.max(0, Math.floor(value)))
 const sideLabel = (side: Side) => (side === 'heads' ? 'Heads' : 'Tails')
 
 function readInstant() {
@@ -57,7 +57,7 @@ function readInstant() {
 }
 
 export default function CoinflipPage() {
-  const { balance, setBalance, reset } = useDemoPoints()
+  const { balance, setBalance, gate, ready } = usePlayBalance('/coinflip')
   const rules = useOriginalsRules().coinflip
   const { minBet, maxBet } = rules
   const [betInput, setBetInput] = useState(toBetInput(minBet))
@@ -76,16 +76,18 @@ export default function CoinflipPage() {
 
   const flipping = !!flip || pending
   const bet = parseBet(betInput)
-  const error = !rules.enabled
-    ? 'Coinflip is closed right now.'
-    : !Number.isFinite(bet) || bet < minBet
-      ? `Minimum bet is ${formatPoints(minBet)} points.`
-      : bet > maxBet
-        ? `Maximum bet is ${formatPoints(maxBet)} points.`
-        : bet > balance
-          ? 'Not enough points for this bet.'
-          : null
-  const canBet = !game && !pending && !error
+  const error = gate
+    ? gate.reason
+    : !rules.enabled
+      ? 'Coinflip is closed right now.'
+      : !Number.isInteger(bet) || bet < minBet
+        ? `Bets are whole King Points, at least ${formatKingPoints(minBet)}.`
+        : bet > maxBet
+          ? `Maximum bet is ${formatKingPoints(maxBet)} King Points.`
+          : ready && bet > balance
+            ? 'Not enough King Points for this bet.'
+            : null
+  const canBet = ready && !game && !pending && !error
 
   // A game left running (reload, another tab) carries on: its bet was already taken
   useEffect(() => {
@@ -202,7 +204,7 @@ export default function CoinflipPage() {
             betInput={betInput}
             onBetInputChange={(value) => {
               setServerError(null)
-              setBetInput(value.replace(/[^\d.,]/g, ''))
+              setBetInput(value.replace(/[^\d,]/g, ''))
             }}
             onBetBlur={() => setBetInput(toBetInput(clampBet(safeBet)))}
             onHalve={() => {
@@ -224,7 +226,7 @@ export default function CoinflipPage() {
             canBet={canBet}
             error={serverError ?? (game ? null : error)}
             balance={balance}
-            onResetBalance={reset}
+            gate={gate}
           />
         </div>
 
@@ -318,8 +320,8 @@ function CoinflipFairness({ rules }: { rules: GameRules }) {
         and it cashes out by itself once it gets there.
       </p>
       <p>
-        <strong>Demo balance:</strong> results are settled on the server, but the points are a demo balance on this
-        device until King Points can be spent here.
+        <strong>King Points:</strong> your bet comes off your BotRix balance when the game starts and your cashout
+        is paid back to it. Bets are whole points and wins are rounded down.
       </p>
       <h3>Multiplier by correct calls</h3>
       <div className="game-fairness__table-wrap">

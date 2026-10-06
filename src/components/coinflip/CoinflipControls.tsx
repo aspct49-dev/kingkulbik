@@ -5,7 +5,8 @@ import type { Side } from '../../games/coinflip/engine'
 import { cappedPayout, coinflipMultiplier } from '../../../shared/originals'
 import type { GameRules } from '../../../shared/originals'
 import AnimatedNumber from '../AnimatedNumber'
-import { formatPoints } from '../keno/format'
+import { formatKingPoints } from '../../games/originals'
+import type { PlayGate } from '../../games/originals'
 import '../BetPanel.css'
 import './CoinflipControls.css'
 
@@ -28,7 +29,8 @@ type CoinflipControlsProps = {
   canBet: boolean
   error: string | null
   balance: number
-  onResetBalance: () => void
+  /** Signed out or no Kick: a link in place of the Bet button */
+  gate: PlayGate
 }
 
 function SideIcon({ side }: { side: Side }) {
@@ -41,7 +43,8 @@ export default memo(function CoinflipControls(props: CoinflipControlsProps) {
   const locked = playing || flipping
   const streak = game?.streak ?? 0
   const multiplier = coinflipMultiplier(streak, rules.houseEdge)
-  const cashout = game ? cappedPayout(game.bet, multiplier, rules.maxWin) : 0
+  // Wins are whole King Points, rounded down (as the server pays them)
+  const cashout = game ? Math.floor(cappedPayout(game.bet, multiplier, rules.maxWin)) : 0
   const canCall = playing && !flipping
 
   return (
@@ -53,7 +56,7 @@ export default memo(function CoinflipControls(props: CoinflipControlsProps) {
         <img src={coinIcon} width={14} height={14} alt="" />
         <input
           id="coinflip-bet"
-          inputMode="decimal"
+          inputMode="numeric"
           autoComplete="off"
           value={props.betInput}
           disabled={locked}
@@ -82,10 +85,14 @@ export default memo(function CoinflipControls(props: CoinflipControlsProps) {
           {streak > 0 && (
             <span className="bet-panel__bet-amount">
               <img src={coinIcon} width={15} height={15} alt="" />
-              <AnimatedNumber value={cashout} format={formatPoints} duration={450} />
+              <AnimatedNumber value={cashout} format={formatKingPoints} duration={450} />
             </span>
           )}
         </button>
+      ) : props.gate ? (
+        <a className="bet-panel__bet" href={props.gate.href}>
+          {props.gate.label}
+        </a>
       ) : (
         <button type="button" className="bet-panel__bet" onClick={props.onBet} disabled={!props.canBet}>
           Bet
@@ -116,7 +123,7 @@ export default memo(function CoinflipControls(props: CoinflipControlsProps) {
       </span>
       <div className="bet-field bet-field--readonly" aria-live="polite">
         <img src={coinIcon} width={14} height={14} alt="" />
-        <AnimatedNumber value={playing ? Math.max(0, cashout - game.bet) : 0} format={formatPoints} duration={450} />
+        <AnimatedNumber value={playing ? Math.max(0, cashout - game.bet) : 0} format={formatKingPoints} duration={450} />
       </div>
       {props.error && (
         <p className="bet-panel__error" role="alert">
@@ -125,16 +132,11 @@ export default memo(function CoinflipControls(props: CoinflipControlsProps) {
       )}
 
       <div className="bet-panel__balance">
-        <span>Demo balance</span>
+        <span>King Points</span>
         <span className="bet-panel__balance-value">
           <img src={coinIcon} width={13} height={13} alt="" />
-          <AnimatedNumber value={props.balance} format={formatPoints} duration={500} />
+          <AnimatedNumber value={props.balance} format={formatKingPoints} duration={500} />
         </span>
-        {props.balance < rules.minBet && !locked && (
-          <button type="button" className="bet-panel__reset" onClick={props.onResetBalance}>
-            Reset
-          </button>
-        )}
       </div>
     </div>
   )

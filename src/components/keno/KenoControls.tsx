@@ -4,7 +4,8 @@ import caretIcon from '../../assets/keno/caret.svg'
 import { RISKS } from '../../games/keno/engine'
 import type { Risk } from '../../games/keno/engine'
 import AnimatedNumber from '../AnimatedNumber'
-import { formatPoints } from './format'
+import { formatKingPoints } from '../../games/originals'
+import type { PlayGate } from '../../games/originals'
 import '../BetPanel.css'
 
 type KenoControlsProps = {
@@ -23,10 +24,9 @@ type KenoControlsProps = {
   busy: boolean
   drawing: boolean
   error: string | null
-  /** Below this the balance can be reset */
-  minBet: number
   balance: number
-  onResetBalance: () => void
+  /** Signed out or no Kick: a link in place of the Bet button */
+  gate: PlayGate
 }
 
 export default memo(function KenoControls(props: KenoControlsProps) {
@@ -41,7 +41,7 @@ export default memo(function KenoControls(props: KenoControlsProps) {
         <img src={coinIcon} width={14} height={14} alt="" />
         <input
           id="keno-bet"
-          inputMode="decimal"
+          inputMode="numeric"
           autoComplete="off"
           value={props.betInput}
           disabled={busy}
@@ -59,9 +59,15 @@ export default memo(function KenoControls(props: KenoControlsProps) {
         </div>
       </div>
 
-      <button type="button" className="bet-panel__bet" onClick={props.onBet} disabled={!props.canBet}>
-        {props.drawing ? 'Drawing…' : 'Bet'}
-      </button>
+      {props.gate ? (
+        <a className="bet-panel__bet" href={props.gate.href}>
+          {props.gate.label}
+        </a>
+      ) : (
+        <button type="button" className="bet-panel__bet" onClick={props.onBet} disabled={!props.canBet}>
+          {props.drawing ? 'Drawing…' : 'Bet'}
+        </button>
+      )}
 
       <button type="button" className="bet-panel__secondary" onClick={props.onRandomPick} disabled={busy}>
         Random Pick
@@ -95,16 +101,11 @@ export default memo(function KenoControls(props: KenoControlsProps) {
       )}
 
       <div className="bet-panel__balance">
-        <span>Demo balance</span>
+        <span>King Points</span>
         <span className="bet-panel__balance-value">
           <img src={coinIcon} width={13} height={13} alt="" />
-          <AnimatedNumber value={props.balance} format={formatPoints} duration={500} />
+          <AnimatedNumber value={props.balance} format={formatKingPoints} duration={500} />
         </span>
-        {props.balance < props.minBet && !busy && (
-          <button type="button" className="bet-panel__reset" onClick={props.onResetBalance}>
-            Reset
-          </button>
-        )}
       </div>
     </div>
   )
