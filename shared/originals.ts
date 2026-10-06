@@ -146,3 +146,17 @@ export type FeedBet = {
   payout: number
   at: number
 }
+
+// ------------------------------------------------------------ server-side state
+
+/** A player's seed pair, bet counter and any Coinflip game in progress (kept in the database) */
+export type PfState = {
+  serverSeed: string
+  clientSeed: string
+  nonce: number
+  previous: { serverSeed: string; clientSeed: string; nonce: number } | null
+  coinflip: { id: string; bet: number; streak: number; calls: string[]; results: string[]; nonces: number[] } | null
+}
+
+/** A win BotRix couldn't pay at the time; retried on the player's next request */
+export type OwedPayout = { id: string; userId: string; kick: string; amount: number; reason: string; at: number; attempts: number }

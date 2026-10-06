@@ -44,6 +44,8 @@ export type StoreItem = {
   stock: number | null
   /** Hidden items stay in the admin list but not in the store */
   hidden?: boolean
+  /** One line under the name in the purchase dialog (e.g. "Sent straight to your Stake balance") */
+  description?: string
   createdAt: number
 }
 

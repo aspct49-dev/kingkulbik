@@ -456,7 +456,7 @@
   color: #fff;
 }
 
-/* The item: photo on the tier's glow, then name and price */
+/* The item: photo on the tier's glow, then the name and its description */
 .store-confirm__item {
   display: flex;
   align-items: center;
@@ -472,7 +472,7 @@
   display: grid;
   flex: none;
   place-items: center;
-  width: 92px;
+  width: 104px;
   height: 64px;
   overflow: hidden;
   border-radius: 8px;
@@ -495,92 +495,85 @@
 .store-confirm__info {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
   min-width: 0;
 }
 
 .store-confirm__name {
   overflow: hidden;
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 700;
   white-space: nowrap;
   text-overflow: ellipsis;
   color: #fff;
 }
 
-.store-confirm__price {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--color-text);
+.store-confirm__description {
+  display: -webkit-box;
+  overflow: hidden;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 18px;
+  color: var(--color-text-muted);
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
-.store-confirm__note {
-  margin: 10px 2px 0;
-  font-size: 12px;
+/* Price and balance, one row each */
+.store-confirm__rows {
+  display: flex;
+  flex-direction: column;
+  margin: 8px 0 0;
+  padding: 4px 14px;
+  border-radius: 10px;
+  background: #1d2533;
+  box-shadow: inset 0 1.5px 0 0 rgb(255 255 255 / 0.05);
+}
+
+.store-confirm__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 36px;
+}
+
+.store-confirm__row + .store-confirm__row {
+  border-top: 1px solid #262f3f;
+}
+
+.store-confirm__row dt {
+  font-size: 14px;
   font-weight: 500;
-  line-height: 17px;
   color: var(--color-text-muted);
 }
 
-.store-confirm__note strong {
-  color: var(--color-text);
+.store-confirm__row dd {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: #fff;
 }
 
 .store-confirm__error {
-  margin: 8px 2px 0;
+  margin: 10px 2px 0;
   font-size: 13px;
   font-weight: 600;
   color: #e5736f;
 }
 
-.store-confirm__actions {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
-  margin-top: 14px;
+.store-confirm__purchase {
+  width: 100%;
+  height: 42px;
+  margin-top: 12px;
+  font-size: 15px;
 }
 
-.store-confirm__button {
-  height: 40px;
-  font-size: 14px;
-}
-
-.store-confirm__button:disabled {
+.store-confirm__purchase:disabled {
   opacity: 0.6;
   cursor: progress;
-}
-
-/* Close: the account page's dark button */
-.store-confirm__close {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--radius-sm);
-  background: var(--nav-item-from);
-  box-shadow: inset 0 1px 0 0 #364151;
-  font-weight: 700;
-  color: #efefef;
-  transition:
-    background-color 0.15s ease,
-    transform 0.15s ease;
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .store-confirm__close:hover:not(:disabled) {
-    background: #2c3647;
-  }
-}
-
-.store-confirm__close:active:not(:disabled) {
-  transform: translateY(1px);
-}
-
-.store-confirm__close:focus-visible {
-  outline: 2px solid #e6d218;
-  outline-offset: 2px;
 }
 
 @media (prefers-reduced-motion: reduce) {

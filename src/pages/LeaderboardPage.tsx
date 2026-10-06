@@ -11,7 +11,7 @@ import './LeaderboardPage.css'
 
 export default function LeaderboardPage() {
   // The design shows "Only on Stake" selected by default
-  const [board, setBoard] = useState<BoardId>('exclusive')
+  const [board, setBoard] = useState<BoardId>('weighted')
   const leaderboard = useLeaderboard(board)
 
   const prizes = BOARDS[board].prizes

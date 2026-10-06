@@ -118,6 +118,7 @@ function itemFields(body: Record<string, unknown>, current?: StoreItem): StoreIt
     stock = body.stock === null || body.stock === '' ? null : Math.round(number(body.stock, 'Stock', 0, 1_000_000))
   }
   const hidden = has('hidden') ? Boolean(body.hidden) : Boolean(current?.hidden)
+  const description = has('description') ? String(body.description ?? '').trim().slice(0, 120) : (current?.description ?? '')
   return {
     id: current?.id ?? '',
     name,
@@ -128,6 +129,7 @@ function itemFields(body: Record<string, unknown>, current?: StoreItem): StoreIt
     ...(img && current?.imageBox && img === current.image ? { imageBox: current.imageBox } : {}),
     stock,
     ...(hidden ? { hidden: true } : {}),
+    ...(description ? { description } : {}),
     createdAt: current?.createdAt ?? Date.now(),
   }
 }

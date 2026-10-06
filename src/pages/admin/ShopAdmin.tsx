@@ -6,9 +6,9 @@ import { StoreCard } from '../ItemStorePage'
 import { adminPost } from './api'
 import { ConfirmButton, Field, ImageField, Input, Toggle, num } from './ui'
 
-type Form = { name: string; price: string; tier: ItemTier; image: string; stock: string; hidden: boolean }
+type Form = { name: string; description: string; price: string; tier: ItemTier; image: string; stock: string; hidden: boolean }
 
-const EMPTY: Form = { name: '', price: '', tier: 'gold', image: '', stock: '', hidden: false }
+const EMPTY: Form = { name: '', description: '', price: '', tier: 'gold', image: '', stock: '', hidden: false }
 
 const TIERS: { id: ItemTier; label: string }[] = [
   { id: 'gold', label: 'Gold' },
@@ -20,6 +20,7 @@ const points = (value: number) => value.toLocaleString('en-US')
 
 const toForm = (item: StoreItem): Form => ({
   name: item.name,
+  description: item.description ?? '',
   price: String(item.price),
   tier: item.tier,
   image: item.image ?? '',
@@ -71,6 +72,7 @@ export default function ShopAdmin({ items, onChange, notify }: Props) {
     try {
       const res = await adminPost<{ shop: StoreItem[] }>(editing ? `shop/${editing.id}` : 'shop', {
         name: form.name.trim(),
+        description: form.description.trim(),
         price: Math.round(price),
         tier: form.tier,
         image: form.image,
@@ -123,6 +125,14 @@ export default function ShopAdmin({ items, onChange, notify }: Props) {
             <div className="admin-grid">
               <Field label="Name" wide>
                 <Input value={form.name} onChange={(v) => setForm((f) => ({ ...f, name: v }))} placeholder="PlayStation 5" maxLength={40} />
+              </Field>
+              <Field label="Description" hint="One line under the name when buying" wide>
+                <Input
+                  value={form.description}
+                  onChange={(v) => setForm((f) => ({ ...f, description: v }))}
+                  placeholder="Shipped to you, or sent to your Stake balance"
+                  maxLength={120}
+                />
               </Field>
               <Field label="Price">
                 <Input

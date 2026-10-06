@@ -13,7 +13,7 @@ type Lookup = { viewer: Viewer | null; player: PlayerProfile | null; history: Po
 const points = (n: number) => n.toLocaleString('en-US')
 const hours = (m: number) => `${Math.floor(m / 60).toLocaleString('en-US')}h ${m % 60}m`
 const when = (at: number) => new Date(at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
-const KIND = { admin: 'Admin', redeem: 'Purchase', refund: 'Refund' } as const
+const KIND = { admin: 'Admin', redeem: 'Purchase', refund: 'Refund', originals: 'Originals' } as const
 
 /** Look up a Kick viewer's King Points, add or take some (through BotRix), and see every change made from the site */
 export default function PointsAdmin({

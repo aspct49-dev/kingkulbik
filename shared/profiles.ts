@@ -76,7 +76,7 @@ export type PointsLogEntry = {
   kick: string
   /** Positive: added. Negative: taken */
   delta: number
-  kind: 'admin' | 'redeem' | 'refund'
+  kind: 'admin' | 'redeem' | 'refund' | 'originals'
   reason: string
   /** Admin's name, or the player's for their own purchases */
   by: string

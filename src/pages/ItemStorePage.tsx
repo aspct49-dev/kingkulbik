@@ -408,41 +408,41 @@ function RedeemDialog({
               <span className="store-confirm__name" title={item.name}>
                 {item.name}
               </span>
-              <span className="store-confirm__price">
-                <img src={coinIcon} width={14} height={14} alt="" />
-                {points(item.price)}
-                <span className="visually-hidden"> King Points</span>
-              </span>
+              {item.description && <span className="store-confirm__description">{item.description}</span>}
             </span>
           </div>
 
-          <p className="store-confirm__note">
-            {available !== null && (
-              <>
-                Balance after: <strong>{points(Math.max(0, available - item.price))}</strong>.{' '}
-              </>
-            )}
-            Points come off now and come back if it’s rejected or you cancel.
-          </p>
+          <dl className="store-confirm__rows">
+            <div className="store-confirm__row">
+              <dt>Price</dt>
+              <dd>
+                <img src={coinIcon} width={16} height={16} alt="" />
+                {points(item.price)}
+              </dd>
+            </div>
+            <div className="store-confirm__row">
+              <dt>Balance</dt>
+              <dd>
+                <img src={coinIcon} width={16} height={16} alt="" />
+                {available !== null ? points(available) : '—'}
+              </dd>
+            </div>
+          </dl>
+
           {error && (
             <p className="store-confirm__error" role="alert">
               {error}
             </p>
           )}
 
-          <div className="store-confirm__actions">
-            <button
-              type="button"
-              className={`kk-button kk-button--${item.tier} store-confirm__button`}
-              disabled={busy}
-              onClick={() => void confirm()}
-            >
-              {busy ? 'Purchasing…' : 'Purchase'}
-            </button>
-            <button type="button" className="store-confirm__button store-confirm__close" disabled={busy} onClick={close}>
-              Close
-            </button>
-          </div>
+          <button
+            type="button"
+            className={`kk-button kk-button--${item.tier} store-confirm__purchase`}
+            disabled={busy}
+            onClick={() => void confirm()}
+          >
+            {busy ? 'Purchasing…' : 'Purchase'}
+          </button>
         </div>
       )}
     </dialog>

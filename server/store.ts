@@ -24,7 +24,7 @@ import { put } from '@vercel/blob'
 import { DEFAULT_CHALLENGES, DEFAULT_STORE_ITEMS } from '../shared/content.js'
 import type { Challenge, StoreItem } from '../shared/content.js'
 import { DEFAULT_RULES, sanitizeRules } from '../shared/originals.js'
-import type { FeedBet, OriginalsRules } from '../shared/originals.js'
+import type { FeedBet, OriginalsRules, OwedPayout, PfState } from '../shared/originals.js'
 import type { Giveaway, GuessRound, Hunt, RaffleWin, Tournament } from '../shared/events.js'
 import { DEFAULT_SHOP_SETTINGS } from '../shared/profiles.js'
 import type { PlayerBet, PlayerProfile, PointsLogEntry, Redemption, ShopSettings } from '../shared/profiles.js'
@@ -49,6 +49,10 @@ type Tables = {
   /** Every BotRix points change made from the site (newest first) */
   pointsLog: PointsLogEntry[]
   shopSettings: ShopSettings
+  /** Originals: each player's seeds, bet counter and Coinflip game, by Discord id */
+  pfStates: Record<string, PfState>
+  /** Originals wins BotRix couldn't pay yet */
+  owedPayouts: OwedPayout[]
 }
 
 const DEFAULTS: Tables = {
@@ -68,6 +72,8 @@ const DEFAULTS: Tables = {
   watchBaselines: [],
   pointsLog: [],
   shopSettings: DEFAULT_SHOP_SETTINGS,
+  pfStates: {},
+  owedPayouts: [],
 }
 
 export class StoreError extends Error {
