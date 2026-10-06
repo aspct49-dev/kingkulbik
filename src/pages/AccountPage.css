@@ -1,0 +1,357 @@
+/* Page frame (.section-page) comes from ChallengesPage.css */
+.account {
+  display: flex;
+  flex-direction: column;
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+/* Signed out */
+.account-signin {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 25px;
+  padding: 24px;
+  border-radius: 10px;
+  background: var(--color-surface);
+  box-shadow: inset 0 1.5px 0 0 rgb(255 255 255 / 0.07);
+}
+
+.account-signin__title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.account-signin__text {
+  margin: 0 0 6px;
+  max-width: 440px;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 20px;
+  color: var(--color-text-muted);
+}
+
+/* Buttons (gold ones use the shared .kk-button) */
+.account-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  height: 40px;
+  padding: 0 20px;
+  border-radius: var(--radius-md);
+  font-size: 15px;
+  font-weight: 700;
+  transition:
+    background-color 0.15s ease,
+    transform 0.15s ease;
+}
+
+.account-button--discord {
+  background: linear-gradient(to right, #3e54a2, #6981d5);
+  box-shadow: inset 0 1px 0 0 #7385c4;
+  color: var(--color-text);
+}
+
+.account-button--dark {
+  background: var(--nav-item-from);
+  box-shadow: inset 0 1px 0 0 #364151;
+  color: #efefef;
+}
+
+/* Hover darkens, as on every button on the site */
+@media (hover: hover) and (pointer: fine) {
+  .account-button--discord:hover {
+    background: linear-gradient(to right, #2e3f7a, #4f63a8);
+  }
+
+  .account-button--dark:hover {
+    background: #2c3647;
+  }
+}
+
+.account-button:active {
+  transform: translateY(1px);
+}
+
+.account-button:focus-visible {
+  outline: 2px solid #e6d218;
+  outline-offset: 2px;
+}
+
+/* Points, watch time, level: the Item Store's stat tiles */
+.account-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 25px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.account-stat {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  height: 73px;
+  padding: 0 22px;
+  border-radius: 7px;
+  background: #171f2c;
+  box-shadow: inset 0 1.5px 0 0 rgb(255 255 255 / 0.07);
+}
+
+.account-stat__label {
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 15px;
+  color: var(--color-text-muted);
+}
+
+.account-stat__value {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 20px;
+  color: var(--color-text);
+}
+
+.account-note {
+  margin: 10px 0 0;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 18px;
+  color: var(--color-text-subtle);
+}
+
+.account-note strong {
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.account-note--quiet {
+  color: var(--color-text-muted);
+}
+
+.account-section {
+  margin: 28px 0 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+/* Linked accounts: rows like the rewards cards */
+.account-links {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.account-link {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 66px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  background: #171f2c;
+  box-shadow: inset 0 1.5px 0 0 rgb(255 255 255 / 0.07);
+}
+
+.account-link__icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--nav-item-from);
+}
+
+.account-glyph {
+  display: block;
+  background: var(--color-text);
+  mask-size: 100% 100%;
+  mask-repeat: no-repeat;
+  -webkit-mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat;
+}
+
+.account-link__icon--discord {
+  background: #5865f2;
+}
+
+.account-link__icon--kick {
+  background: #53fc18;
+}
+
+.account-link__icon--kick .account-glyph {
+  background: #0e1219;
+}
+
+.account-link__icon--stake {
+  background: #1a2c38;
+}
+
+.account-link__text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.account-link__name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.account-link__detail {
+  overflow: hidden;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--color-text-muted);
+}
+
+.account-link__status {
+  flex: none;
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--color-border);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-text-muted);
+}
+
+.account-link__status--on {
+  background: rgb(83 252 24 / 0.1);
+  color: #7ee25a;
+}
+
+.account-link__action {
+  flex: none;
+  width: 124px;
+  height: 34px;
+  font-size: 14px;
+}
+
+/* Username form under the Stake row (the store search field's style) */
+.account-link--stake {
+  flex-wrap: wrap;
+}
+
+.stake-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding-left: 54px;
+}
+
+.stake-form__input {
+  flex: 1;
+  min-width: 0;
+  height: 38px;
+  padding: 0 14px;
+  border: 1px solid rgb(53 66 87 / 0.8);
+  border-radius: var(--radius-sm);
+  background: rgb(36 44 58 / 0.5);
+  outline: 0;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  color: #fff;
+  transition: border-color 0.15s ease;
+}
+
+.stake-form__input::placeholder {
+  color: var(--color-text-muted);
+}
+
+.stake-form__input:focus-visible {
+  border-color: #4a576e;
+}
+
+.stake-form__submit {
+  width: 96px;
+  height: 38px;
+  font-size: 14px;
+}
+
+.stake-form__submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.stake-form__cancel {
+  height: 38px;
+  padding: 0 10px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  transition: color 0.15s ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .stake-form__cancel:hover {
+    color: var(--color-text);
+  }
+}
+
+.stake-form__cancel:focus-visible {
+  outline: 2px solid #e6d218;
+  outline-offset: 2px;
+}
+
+.stake-form__hint {
+  flex-basis: 100%;
+  margin: 0;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-text-muted);
+}
+
+.stake-form__hint--error {
+  color: #e5736f;
+}
+
+.account-signout {
+  align-self: flex-start;
+  margin-top: 24px;
+}
+
+@media (max-width: 600px) {
+  .account-stats {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .account-link {
+    flex-wrap: wrap;
+  }
+
+  .account-link__action {
+    width: 100%;
+  }
+
+  .stake-form {
+    padding-left: 0;
+  }
+}
+
+.account-link__icon--stake img {
+  width: 28px;
+  height: auto;
+}

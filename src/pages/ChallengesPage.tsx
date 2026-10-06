@@ -4,9 +4,10 @@ import filterIcon from '../assets/challenges/filter.svg'
 import CopyCodeButton from '../components/CopyCodeButton'
 import PageHeading from '../components/PageHeading'
 import SortSelect from '../components/SortSelect'
-import { CHALLENGES } from '../data/challenges'
+import { stakeGameUrl } from '../../shared/content'
+import type { Challenge } from '../../shared/content'
 import { socials } from '../data/links'
-import type { Challenge } from '../data/challenges'
+import { useChallenges } from '../hooks/useContent'
 import { useHoverAnimation } from '../hooks/useHoverAnimation'
 import './ChallengesPage.css'
 
@@ -22,14 +23,26 @@ const usd = (value: number) =>
 
 function ChallengeCard({ challenge }: { challenge: Challenge }) {
   const { phase, handlers } = useHoverAnimation()
-  const { game, image, multiplier, minBet, reward } = challenge
+  const { game, slug, image, multiplier, minBet, reward, status, completedBy } = challenge
   const target = `${multiplier.toLocaleString('en-US')}x`
+  const done = status === 'completed'
+  const art = <img src={image} width={139} height={186} alt={game} loading="lazy" />
 
   return (
-    <li className={`challenge-card hover-anim hover-anim--${phase}`} {...handlers}>
-      <div className="challenge-card__art">
-        <img src={image} width={139} height={186} alt={game} loading="lazy" />
-      </div>
+    <li className={`challenge-card hover-anim hover-anim--${phase}${done ? ' challenge-card--done' : ''}`} {...handlers}>
+      {slug ? (
+        <a
+          className="challenge-card__art"
+          href={stakeGameUrl(slug)}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label={`Play ${game} on Stake`}
+        >
+          {art}
+        </a>
+      ) : (
+        <div className="challenge-card__art">{art}</div>
+      )}
       <div className="challenge-card__body">
         <h2 className="challenge-card__game">{game}</h2>
         <p className="challenge-card__goal">
@@ -58,15 +71,21 @@ function ChallengeCard({ challenge }: { challenge: Challenge }) {
             </dd>
           </div>
         </dl>
-        {/* Claims are handled in the Discord */}
-        <a
-          className="kk-button challenge-card__claim"
-          href={socials.discord.url}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Claim Reward
-        </a>
+        {done ? (
+          <span className="challenge-card__claim challenge-card__claim--done" title={completedBy}>
+            {completedBy ? `Won by ${completedBy}` : 'Completed'}
+          </span>
+        ) : (
+          // Claims are handled in the Discord
+          <a
+            className="kk-button challenge-card__claim"
+            href={socials.discord.url}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Claim Reward
+          </a>
+        )}
       </div>
     </li>
   )
@@ -75,10 +94,17 @@ function ChallengeCard({ challenge }: { challenge: Challenge }) {
 /** Active slot challenges: hit the target multiplier at the minimum bet under the code to claim the prize */
 export default function ChallengesPage() {
   const [sort, setSort] = useState<Sort>('reward-asc')
+  const all = useChallenges()
 
+  // Open challenges first, then the ones already won
   const challenges = useMemo(
-    () => [...CHALLENGES].sort((a, b) => (sort === 'reward-asc' ? a.reward - b.reward : b.reward - a.reward)),
-    [sort],
+    () =>
+      [...all].sort(
+        (a, b) =>
+          Number(a.status === 'completed') - Number(b.status === 'completed') ||
+          (sort === 'reward-asc' ? a.reward - b.reward : b.reward - a.reward),
+      ),
+    [all, sort],
   )
 
   return (
@@ -98,11 +124,15 @@ export default function ChallengesPage() {
           <CopyCodeButton className="challenges__code" />
         </div>
 
-        <ul className="challenges__grid">
-          {challenges.map((c) => (
-            <ChallengeCard key={c.id} challenge={c} />
-          ))}
-        </ul>
+        {challenges.length > 0 ? (
+          <ul className="challenges__grid">
+            {challenges.map((c) => (
+              <ChallengeCard key={c.id} challenge={c} />
+            ))}
+          </ul>
+        ) : (
+          <p className="challenges__empty">No challenges right now. New ones drop on stream, so check back soon.</p>
+        )}
       </div>
     </div>
   )

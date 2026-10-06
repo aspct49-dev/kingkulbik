@@ -7,8 +7,6 @@ import AnimatedNumber from '../AnimatedNumber'
 import { formatPoints } from './format'
 import '../BetPanel.css'
 
-export const MIN_BET = 1
-
 type KenoControlsProps = {
   betInput: string
   onBetInputChange: (value: string) => void
@@ -25,6 +23,8 @@ type KenoControlsProps = {
   busy: boolean
   drawing: boolean
   error: string | null
+  /** Below this the balance can be reset */
+  minBet: number
   balance: number
   onResetBalance: () => void
 }
@@ -100,7 +100,7 @@ export default memo(function KenoControls(props: KenoControlsProps) {
           <img src={coinIcon} width={13} height={13} alt="" />
           <AnimatedNumber value={props.balance} format={formatPoints} duration={500} />
         </span>
-        {props.balance < MIN_BET && (
+        {props.balance < props.minBet && !busy && (
           <button type="button" className="bet-panel__reset" onClick={props.onResetBalance}>
             Reset
           </button>

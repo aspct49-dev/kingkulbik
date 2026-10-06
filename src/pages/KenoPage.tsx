@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import KenoControls, { MIN_BET } from '../components/keno/KenoControls'
+import KenoControls from '../components/keno/KenoControls'
 import KenoBoard from '../components/keno/KenoBoard'
 import KenoPayTable from '../components/keno/KenoPayTable'
 import gemIcon from '../assets/keno/gem.svg'
@@ -7,8 +7,15 @@ import GameTitleBar from '../components/GameTitleBar'
 import GameToolbar, { EMPTY_STATS, recordBet } from '../components/GameToolbar'
 import type { SessionStats } from '../components/GameToolbar'
 import { formatMultiplier, formatPoints } from '../components/keno/format'
-import { DRAW_COUNT, MAX_PICKS, RISKS, TILE_COUNT, drawTiles, getMultiplier, getPayouts, getReturnToPlayer } from '../games/keno/engine'
+import FairnessPanel from '../components/FairnessPanel'
+import LiveBets from '../components/LiveBets'
+import { DRAW_COUNT, MAX_PICKS, RISKS, TILE_COUNT, drawTiles } from '../games/keno/engine'
 import type { Risk } from '../games/keno/engine'
+import { postOriginals } from '../games/originals'
+import { kenoPayouts } from '../../shared/originals'
+import type { GameRules } from '../../shared/originals'
+import { useOriginalsRules } from '../hooks/useContent'
+import { refreshLiveBets } from '../hooks/useLiveBets'
 import {
   isSoundEnabled,
   playBet,
@@ -37,8 +44,12 @@ type Round = {
   risk: Risk
   drawn: number[]
   revealed: number
+  /** Settled by the server; shown once the last tile is revealed */
+  outcome: { hits: number; multiplier: number; payout: number }
   result: { hits: number; multiplier: number; payout: number } | null
 }
+
+type KenoResponse = { drawn: number[]; hits: number; multiplier: number; payout: number }
 
 const parseBet = (input: string) => Number(input.replace(/,/g, ''))
 const toBetInput = (value: number) => (Math.floor(value * 100) / 100).toFixed(2)
@@ -53,9 +64,14 @@ function readInstant() {
 
 export default function KenoPage() {
   const { balance, setBalance, reset } = useDemoPoints()
+  const rules = useOriginalsRules().keno
+  const { minBet, maxBet } = rules
   const [picks, setPicks] = useState<number[]>([])
   const [risk, setRisk] = useState<Risk>('medium')
-  const [betInput, setBetInput] = useState(toBetInput(MIN_BET))
+  const [betInput, setBetInput] = useState(toBetInput(minBet))
+  // Waiting for the server to settle the bet
+  const [placing, setPlacing] = useState(false)
+  const [serverError, setServerError] = useState<string | null>(null)
   const [round, setRound] = useState<Round | null>(null)
   const [instant, setInstant] = useState(readInstant)
   const [sound, setSound] = useState(isSoundEnabled)
@@ -73,16 +89,19 @@ export default function KenoPage() {
     return () => document.removeEventListener('pointerdown', preloadSounds)
   }, [])
 
-  const drawing = !!round && round.revealed < DRAW_COUNT
+  const drawing = placing || (!!round && round.revealed < DRAW_COUNT)
   const busy = drawing || autoPicking
   const bet = parseBet(betInput)
 
-  const error =
-    !Number.isFinite(bet) || bet < MIN_BET
-      ? `Minimum bet is ${MIN_BET} point.`
-      : bet > balance
-        ? 'Not enough points for this bet.'
-        : null
+  const error = !rules.enabled
+    ? 'Keno is closed right now.'
+    : !Number.isFinite(bet) || bet < minBet
+      ? `Minimum bet is ${formatPoints(minBet)} points.`
+      : bet > maxBet
+        ? `Maximum bet is ${formatPoints(maxBet)} points.`
+        : bet > balance
+          ? 'Not enough points for this bet.'
+          : null
   const canBet = !busy && picks.length > 0 && !error
 
   // Reveal the draw one tile at a time, then settle the round once
@@ -98,10 +117,8 @@ export default function KenoPage() {
     if (round.result || settledRef.current === round.id) return
     settledRef.current = round.id
 
-    const drawn = new Set(round.drawn)
-    const hits = round.picks.filter((tile) => drawn.has(tile)).length
-    const multiplier = getMultiplier(round.risk, round.picks.length, hits)
-    const payout = Math.round(round.bet * multiplier * 100) / 100
+    const { hits, multiplier, payout } = round.outcome
+    refreshLiveBets()
 
     if (payout > 0) {
       setBalance((b) => b + payout)
@@ -129,19 +146,32 @@ export default function KenoPage() {
     else playReveal(round.revealed - 1)
   }, [round])
 
-  const handleBet = useStableCallback(() => {
+  const handleBet = useStableCallback(async () => {
     if (!canBet) return
     preloadSounds()
     playBet()
+    setServerError(null)
+    setPlacing(true)
+    setRound(null)
     setBalance((b) => b - bet)
+    const roundPicks = [...picks]
+    const res = await postOriginals<KenoResponse>('keno', { picks: roundPicks, risk, bet })
+    setPlacing(false)
+    if (!res.ok) {
+      setBalance((b) => b + bet) // nothing was played
+      setServerError(res.error)
+      return
+    }
+    const { drawn, hits, multiplier, payout } = res.data
     setRound({
       id: Date.now(),
       bet,
-      picks: [...picks],
+      picks: roundPicks,
       risk,
-      // Reveal in reading order (top-left, row by row). Same random draw, only the order shown changes.
-      drawn: drawTiles().sort((a, b) => a - b),
+      // Reveal in reading order (top-left, row by row). Same draw, only the order shown changes.
+      drawn: [...drawn].sort((a, b) => a - b),
       revealed: 0,
+      outcome: { hits, multiplier, payout },
       result: null,
     })
   })
@@ -183,17 +213,19 @@ export default function KenoPage() {
     )
   })
 
-  const onBetInputChange = useStableCallback((value: string) => setBetInput(value.replace(/[^\d.,]/g, '')))
-  const onBetBlur = useStableCallback(() =>
-    setBetInput(toBetInput(Number.isFinite(bet) ? Math.max(MIN_BET, bet) : MIN_BET)),
-  )
+  const clampBet = (value: number) => Math.min(maxBet, Math.max(minBet, Number.isFinite(value) ? value : minBet))
+  const onBetInputChange = useStableCallback((value: string) => {
+    setServerError(null)
+    setBetInput(value.replace(/[^\d.,]/g, ''))
+  })
+  const onBetBlur = useStableCallback(() => setBetInput(toBetInput(clampBet(bet))))
   const onHalve = useStableCallback(() => {
     playTick()
-    setBetInput(toBetInput(Math.max(MIN_BET, (Number.isFinite(bet) ? bet : MIN_BET) / 2)))
+    setBetInput(toBetInput(clampBet((Number.isFinite(bet) ? bet : minBet) / 2)))
   })
   const onDouble = useStableCallback(() => {
     playTick()
-    setBetInput(toBetInput(Math.max(MIN_BET, Math.min(balance, (Number.isFinite(bet) ? bet : MIN_BET) * 2))))
+    setBetInput(toBetInput(clampBet(Math.min(balance, (Number.isFinite(bet) ? bet : minBet) * 2))))
   })
   const onRiskChange = useStableCallback((next: Risk) => {
     playTick()
@@ -227,6 +259,7 @@ export default function KenoPage() {
 
   return (
     <div className="keno-page">
+      <h1 className="visually-hidden">Keno</h1>
       <section className={`keno${theater ? ' keno--theater' : ''}`} aria-label="Keno">
         <div className="keno__controls">
           <KenoControls
@@ -243,7 +276,8 @@ export default function KenoPage() {
             canBet={canBet}
             busy={busy}
             drawing={drawing}
-            error={picks.length > 0 ? error : null}
+            error={serverError ?? (picks.length > 0 ? error : null)}
+            minBet={minBet}
             balance={balance}
             onResetBalance={reset}
           />
@@ -259,7 +293,10 @@ export default function KenoPage() {
             onToggle={togglePick}
             win={win}
           />
-          <KenoPayTable payouts={getPayouts(round ? round.risk : risk, (round ? round.picks : picks).length)} hits={hitsSoFar} />
+          <KenoPayTable
+            payouts={kenoPayouts(round ? round.risk : risk, (round ? round.picks : picks).length, rules.houseEdge)}
+            hits={hitsSoFar}
+          />
         </div>
 
         <div className="keno__toolbar">
@@ -274,7 +311,7 @@ export default function KenoPage() {
             onTheaterChange={setTheater}
             stats={stats}
             onResetStats={onResetStats}
-            fairness={<KenoFairness risk={risk} />}
+            fairness={<KenoFairness risk={risk} rules={rules} />}
           />
         </div>
 
@@ -286,29 +323,25 @@ export default function KenoPage() {
         </p>
       </section>
 
-      <GameTitleBar
-        name="Keno"
-        icon={gemIcon}
-        rtp={picks.length > 0 ? getReturnToPlayer(risk, picks.length) : 0.99}
-        wide={theater}
-      />
+      <GameTitleBar name="Keno" icon={gemIcon} rtp={1 - rules.houseEdge} wide={theater} />
+
+      <LiveBets wide={theater} />
     </div>
   )
 }
 
-/** Body of Keno's Fairness dialog: how it works, and every payout with its return */
-function KenoFairness({ risk }: { risk: Risk }) {
+/** Body of Keno's Fairness dialog: seeds, verification, and every payout under the current rules */
+function KenoFairness({ risk, rules }: { risk: Risk; rules: GameRules }) {
   const riskLabel = RISKS.find((r) => r.id === risk)?.label
   return (
-    <>
-      <h2>Fairness</h2>
+    <FairnessPanel game="keno" rules={rules}>
       <p>
-        Pick 1–{MAX_PICKS} of the {TILE_COUNT} tiles, then {DRAW_COUNT} tiles are drawn. Every tile is equally likely
-        to be drawn; your payout is your bet times the multiplier for how many of your picks were hit.
+        Pick 1–{MAX_PICKS} of the {TILE_COUNT} tiles, then {DRAW_COUNT} tiles are drawn. Your payout is your bet times
+        the multiplier for how many of your picks were hit, up to the max win.
       </p>
       <p>
-        <strong>Demo mode:</strong> the draw happens in your browser using its cryptographic random number generator,
-        and the points are a demo balance stored only on this device.
+        <strong>Demo balance:</strong> results are settled on the server, but the points are a demo balance on this
+        device until King Points can be spent here.
       </p>
       <h3>{riskLabel} payouts</h3>
       <div className="game-fairness__table-wrap">
@@ -317,20 +350,18 @@ function KenoFairness({ risk }: { risk: Risk }) {
             <tr>
               <th scope="col">Picks</th>
               <th scope="col">Multiplier by hits (0, 1, 2 …)</th>
-              <th scope="col">Return</th>
             </tr>
           </thead>
           <tbody>
             {Array.from({ length: MAX_PICKS }, (_, i) => i + 1).map((picks) => (
               <tr key={picks}>
                 <th scope="row">{picks}</th>
-                <td>{getPayouts(risk, picks).map(formatMultiplier).join(' · ')}</td>
-                <td>{(getReturnToPlayer(risk, picks) * 100).toFixed(2)}%</td>
+                <td>{kenoPayouts(risk, picks, rules.houseEdge).map(formatMultiplier).join(' · ')}</td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
-    </>
+    </FairnessPanel>
   )
 }

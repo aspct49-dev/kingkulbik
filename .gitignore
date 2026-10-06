@@ -6,3 +6,6 @@ dist
 !.env.example
 .vercel
 *.tsbuildinfo
+
+# Local content store (admin edits, uploads, bet feed) until there is a database
+/data

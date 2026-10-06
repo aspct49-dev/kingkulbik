@@ -1,0 +1,365 @@
+/* Event pages (Guess the Balance, Raffles): the round bar (Rewards' tracking strip), status
+   pills, stat tiles (the Item Store's), cards, "how it works" steps and the leaderboard-style table.
+   Each page sets its table columns. Containers: the page wrapper is a size container. */
+
+.ev-loading {
+  height: 260px;
+  margin-top: 20px;
+  border-radius: 10px;
+  background: var(--color-surface);
+  animation: ev-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes ev-pulse {
+  50% {
+    opacity: 0.55;
+  }
+}
+
+.ev-accent {
+  color: var(--color-accent);
+}
+
+/* ---------------------------------------------------------------- round bar (the Rewards tracking strip) */
+
+.ev-bar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 66px;
+  margin-top: 20px;
+  padding: 12px 18px 12px 14px;
+  border-radius: 10px;
+  background: #171f2c;
+  box-shadow: inset 0 1.5px 0 0 rgb(255 255 255 / 0.07);
+}
+
+.ev-bar__icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #2a2a1a;
+}
+
+.ev-bar__text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.ev-bar__title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.ev-bar__detail {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-muted);
+}
+
+.ev-bar__action {
+  flex: none;
+  width: 124px;
+  height: 34px;
+  font-size: 14px;
+}
+
+/* Status pill (the account page's Connected and its siblings) */
+.ev-chip {
+  flex: none;
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--color-border);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-text-muted);
+}
+
+.ev-chip--open {
+  background: rgb(83 252 24 / 0.1);
+  color: #7ee25a;
+}
+
+.ev-chip--closed {
+  background: rgb(230 210 24 / 0.1);
+  color: var(--color-accent);
+}
+
+/* ---------------------------------------------------------------- stat tiles (the Item Store's) */
+
+.ev-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ev-stat {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+  height: 73px;
+  padding: 0 22px;
+  border-radius: 7px;
+  background: #171f2c;
+  box-shadow: inset 0 1.5px 0 0 rgb(255 255 255 / 0.07);
+}
+
+.ev-stat__label {
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 15px;
+  color: var(--color-text-muted);
+}
+
+.ev-stat__value {
+  margin-top: 2px;
+  overflow: hidden;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 20px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--color-text);
+}
+
+/* ---------------------------------------------------------------- cards */
+
+.ev-card {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 18px 20px 20px;
+  border-radius: 10px;
+  background: #171f2c;
+  box-shadow: inset 0 1.5px 0 0 rgb(255 255 255 / 0.07);
+}
+
+.ev-card__title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.ev-card__text {
+  margin: 4px 0 0;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 20px;
+  color: var(--color-text-muted);
+}
+
+.ev-card__text strong {
+  color: var(--color-text);
+}
+
+/* ---------------------------------------------------------------- how it works */
+
+.ev-how {
+  margin-top: 8px;
+}
+
+.ev-how--compact {
+  margin-top: 0;
+}
+
+.ev-how__steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 14px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ev-how--compact .ev-how__steps {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
+}
+
+.ev-how__step {
+  display: flex;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 8px;
+  background: #1d2533;
+}
+
+.ev-how--compact .ev-how__step {
+  padding: 0;
+  background: none;
+}
+
+/* Numbered like the leaderboard's places, in gold */
+.ev-how__n {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: linear-gradient(0deg, #a88600, #e4de2c);
+  font-family: var(--font-display);
+  font-weight: 800;
+  color: #151b25;
+}
+
+.ev-how__title {
+  display: block;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.ev-how__text {
+  display: block;
+  margin-top: 1px;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 18px;
+  color: var(--color-text-muted);
+}
+
+.ev-section {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.ev-table {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ev-table__row {
+  display: grid;
+  align-items: center;
+  height: 52px;
+  padding: 0 20px 0 16px;
+  border-radius: var(--radius-md);
+  background: linear-gradient(to left, #11141c 80%, #161d2d);
+  font-size: 14px;
+  font-weight: 600;
+  color: #d7dbe4;
+}
+
+.ev-table__row:nth-child(odd):not(.ev-table__row--first):not(.ev-table__row--head) {
+  background: linear-gradient(to left, #171b26 80%, #222b41);
+}
+
+.ev-table__row--head {
+  height: 28px;
+  background: none;
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-muted);
+}
+
+.ev-table__row > :nth-child(n + 3) {
+  justify-self: end;
+}
+
+.ev-table__row--first {
+  background: linear-gradient(to left, #11141c 55%, #59531b);
+  box-shadow: inset 0 1px 0 0 rgb(255 255 255 / 0.1);
+}
+
+.ev-table__row--you {
+  box-shadow: inset 0 0 0 1px rgb(230 210 24 / 0.5);
+}
+
+.ev-table__place {
+  display: inline-grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: #2c3448;
+  font-family: var(--font-display);
+  font-weight: 800;
+  color: var(--color-text);
+}
+
+.ev-table__row--first .ev-table__place {
+  background: linear-gradient(0deg, #a88600, #e4de2c);
+  color: #151b25;
+}
+
+.ev-table__name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.ev-table__you {
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgb(230 210 24 / 0.15);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-accent);
+}
+
+/* ---------------------------------------------------------------- narrow */
+
+@container (max-width: 820px) {
+  .ev-how__steps {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@container (max-width: 600px) {
+  .ev-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .ev-stat {
+    padding: 0 16px;
+  }
+
+  .ev-bar {
+    flex-wrap: wrap;
+    row-gap: 10px;
+  }
+
+  /* Text takes the row; the status pill drops under it, in line with the text */
+  .ev-bar__text {
+    flex-basis: calc(100% - 54px);
+  }
+
+  .ev-chip {
+    margin-left: 54px;
+  }
+
+  .ev-bar__action {
+    width: 100%;
+  }
+
+  .ev-table__row {
+    gap: 8px;
+    padding: 0 14px 0 10px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ev-loading {
+    animation: none;
+  }
+}

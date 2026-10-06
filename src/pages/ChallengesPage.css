@@ -184,6 +184,40 @@
   font-size: 12px;
 }
 
+/* Won: flat label in place of the button (same look as the store's "Need X more") */
+.challenge-card__claim--done {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding: 0 8px;
+  border-radius: var(--radius-sm);
+  background: var(--color-border);
+  font-weight: 700;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--color-text-muted);
+}
+
+.challenge-card--done .challenge-card__art img {
+  filter: grayscale(0.6);
+  opacity: 0.7;
+}
+
+/* The art opens the game on Stake when it comes from the catalog */
+a.challenge-card__art:focus-visible {
+  outline: 2px solid #e6d218;
+  outline-offset: 2px;
+}
+
+.challenges__empty {
+  margin: 40px 0 0;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
 /* Narrower main column: two across, then one */
 @container (max-width: 1060px) {
   .challenges__grid {

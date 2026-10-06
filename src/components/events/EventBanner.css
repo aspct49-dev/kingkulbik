@@ -1,0 +1,51 @@
+/* Event page banner (Guess the Balance, Raffles): the Rewards banner's frame,
+   with the title as live Titan One text, silver over gold */
+.event-banner {
+  display: grid;
+  place-items: center;
+  height: 196px;
+  overflow: hidden;
+  container-type: inline-size;
+  border-radius: 8px;
+  background:
+    radial-gradient(ellipse 42% 75% at 50% 58%, rgb(240 185 30 / 0.16), transparent 70%),
+    radial-gradient(ellipse 70% 120% at 50% 120%, #22448c, transparent 70%),
+    repeating-radial-gradient(circle at 50% 135%, transparent 0 22px, rgb(120 160 255 / 0.05) 22px 24px),
+    linear-gradient(180deg, #0f1a33, #142650);
+}
+
+.event-banner__title {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0;
+  font-family: var(--font-logo);
+  font-weight: 400;
+  line-height: 1;
+  filter: drop-shadow(0 4px 6px rgb(0 0 0 / 0.35));
+}
+
+.event-banner__top,
+.event-banner__main {
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+.event-banner__top {
+  font-size: clamp(30px, 6cqi, 62px);
+  background-image: linear-gradient(180deg, #f9f9f9, #aaa);
+}
+
+.event-banner__main {
+  margin-top: -0.08em;
+  font-size: clamp(36px, 7.3cqi, 75px);
+  background-image: linear-gradient(0deg, #a88600, #e4de2c);
+}
+
+@media (max-width: 600px) {
+  .event-banner {
+    height: 120px;
+  }
+}

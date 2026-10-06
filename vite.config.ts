@@ -2,6 +2,8 @@ import { defineConfig, loadEnv } from 'vite'
 import type { Connect, Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 import { handleLeaderboardRequest } from './server/stakeLeaderboard.js'
+import { serveApi } from './server/api.js'
+import type { AuthEnv } from './server/auth.js'
 
 /**
  * Serves /api/leaderboard from `vite` and `vite preview`, mirroring the Vercel
@@ -27,10 +29,24 @@ function leaderboardApi(token: string | undefined, apiUrl: string | undefined): 
   }
 }
 
+/** Serves every other /api/* route from `vite` and `vite preview`, mirroring api/[...route].ts */
+function siteApi(env: AuthEnv): Plugin {
+  const middleware: Connect.NextHandleFunction = async (req, res, next) => {
+    if (!req.url?.startsWith('/api/')) return next()
+    if (!(await serveApi(req, res, env))) next()
+  }
+
+  return {
+    name: 'site-api',
+    configureServer: (server) => void server.middlewares.use(middleware),
+    configurePreviewServer: (server) => void server.middlewares.use(middleware),
+  }
+}
+
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
   return {
-    plugins: [react(), leaderboardApi(env.STAKE_API_TOKEN, env.STAKE_API_URL)],
+    plugins: [react(), leaderboardApi(env.STAKE_API_TOKEN, env.STAKE_API_URL), siteApi(env)],
     // The Coinflip chunk carries three.js (~580 kB, loaded only on /coinflip)
     build: { chunkSizeWarningLimit: 650 },
   }

@@ -1,0 +1,375 @@
+/* Tournament bracket: public page, stream overlay and the admin editor */
+.bracket {
+  overflow-x: auto;
+  padding-bottom: 8px;
+}
+
+.bracket__canvas {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  width: max-content;
+}
+
+/* Wires behind the cards */
+.bracket__wires {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+}
+
+.bracket__wires polyline,
+.bracket__wires line {
+  fill: none;
+  stroke: #2b3546;
+  stroke-width: 2;
+}
+
+.bracket__wires .bracket-wire--won {
+  stroke: rgb(230 210 24 / 0.55);
+}
+
+.bracket__col {
+  position: relative;
+  flex: none;
+}
+
+.bracket__round {
+  display: flex;
+  align-items: center;
+  margin: 0;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.bracket__stack {
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---------------------------------------------------------------- match card */
+
+.bracket-match {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: var(--radius-md);
+  background: #171f2c;
+  box-shadow:
+    inset 0 1.5px 0 0 rgb(255 255 255 / 0.07),
+    0 0 0 1px #212a39;
+}
+
+.bracket-match__rule {
+  height: 2px;
+  background: #121821;
+}
+
+.bracket-player {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 0 10px 0 8px;
+  background: #1a2230;
+  transition: opacity 0.2s ease;
+}
+
+.bracket-player--won {
+  background: linear-gradient(to left, #1d1d19, #59531b);
+}
+
+.bracket-player--lost {
+  opacity: 0.45;
+}
+
+.bracket-player__art {
+  flex: none;
+  width: 27px;
+  height: 36px;
+  border-radius: 3px;
+  object-fit: cover;
+}
+
+.bracket-player__seed {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 27px;
+  height: 27px;
+  border-radius: 50%;
+  background: #262f3f;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-text-muted);
+}
+
+.bracket-player__text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.bracket-player__name {
+  overflow: hidden;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--color-text);
+}
+
+.bracket-player--empty .bracket-player__name {
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.bracket-player__slot {
+  overflow: hidden;
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--color-text-muted);
+}
+
+.bracket-player__mult {
+  flex: none;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.bracket-player--won .bracket-player__mult {
+  color: var(--color-accent);
+}
+
+.bracket-match__foot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-top: 1px solid #121821;
+  background: #151b25;
+}
+
+.bracket-foot-note {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.bracket-foot-note--won {
+  color: var(--color-accent);
+}
+
+/* Footer actions in the editor (the site's gold button, slimmer) */
+.bracket-foot-btn {
+  height: 22px;
+  padding: 0 12px;
+  border-radius: 5px;
+  background: var(--color-accent-button);
+  box-shadow: inset 0 1px 0 0 rgb(255 255 255 / 0.36);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-text);
+  transition:
+    background-color 0.15s ease,
+    transform 0.15s ease;
+}
+
+.bracket-foot-btn--undo {
+  max-width: calc(100% - 16px);
+  overflow: hidden;
+  background: none;
+  box-shadow: none;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--color-accent);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .bracket-foot-btn:hover {
+    background: var(--color-accent-button-hover);
+  }
+
+  .bracket-foot-btn--undo:hover {
+    background: #262f3f;
+  }
+}
+
+.bracket-foot-btn:active {
+  transform: translateY(1px);
+}
+
+.bracket-foot-btn:focus-visible {
+  outline: 2px solid #e6d218;
+  outline-offset: 2px;
+}
+
+/* ---------------------------------------------------------------- editor fields */
+
+.bracket-name-in,
+.bracket-mult-in {
+  border: 1px solid rgb(53 66 87 / 0.8);
+  border-radius: 5px;
+  background: rgb(14 18 25 / 0.55);
+  transition: border-color 0.15s ease;
+}
+
+.bracket-name-in {
+  width: 100%;
+  height: 26px;
+  padding: 0 8px;
+  outline: 0;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.bracket-name-in::placeholder,
+.bracket-mult-in input::placeholder {
+  font-weight: 500;
+  color: var(--color-text-muted);
+}
+
+.bracket-name-in:focus-visible,
+.bracket-mult-in:focus-within {
+  border-color: #4a576e;
+}
+
+.bracket-mult-in {
+  display: flex;
+  flex: none;
+  align-items: center;
+  width: 70px;
+  height: 30px;
+  padding: 0 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-accent);
+}
+
+.bracket-mult-in input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: none;
+  font: inherit;
+  text-align: right;
+  color: #fff;
+}
+
+.bracket-mult-in input:disabled {
+  cursor: not-allowed;
+}
+
+.bracket-mult-in:has(input:disabled) {
+  opacity: 0.45;
+}
+
+/* The slot field inside a card */
+.bracket .slot-picker--compact .admin-input {
+  height: 24px;
+  padding: 0 8px;
+  border-radius: 5px;
+  background: rgb(14 18 25 / 0.55);
+}
+
+.bracket .slot-picker--compact .admin-input input {
+  font-size: 12px;
+}
+
+.bracket-slot-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  height: 24px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-text-muted);
+}
+
+.bracket-slot-chip span {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.bracket-slot-chip button {
+  flex: none;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-accent);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .bracket-slot-chip button:hover {
+    color: #c4b315;
+  }
+}
+
+.bracket-slot-chip button:focus-visible {
+  border-radius: 2px;
+  outline: 2px solid #e6d218;
+  outline-offset: 2px;
+}
+
+/* ---------------------------------------------------------------- champion */
+
+.bracket-champion {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 14px;
+  border-radius: var(--radius-md);
+  background: #171f2c;
+  box-shadow:
+    inset 0 1.5px 0 0 rgb(255 255 255 / 0.07),
+    0 0 0 1px #212a39;
+}
+
+.bracket-champion--crowned {
+  background:
+    radial-gradient(ellipse 80% 120% at 0% 50%, rgb(240 185 30 / 0.25), transparent 70%),
+    #171f2c;
+  box-shadow:
+    inset 0 1.5px 0 0 rgb(255 255 255 / 0.1),
+    0 0 0 1px rgb(230 210 24 / 0.45);
+}
+
+.bracket-champion__text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.bracket-champion__label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.bracket-champion--crowned .bracket-champion__label {
+  color: var(--color-accent);
+}
+
+.bracket-champion__name {
+  overflow: hidden;
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 700;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: #fff;
+}

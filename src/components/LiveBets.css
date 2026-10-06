@@ -1,0 +1,205 @@
+/* Sits under the game title bar and follows its width (and theatre mode) */
+.live-bets {
+  /* A size container has no width of its own: fill the parent (e.g. an admin card) */
+  width: 100%;
+  max-width: 1200px;
+  margin: 28px auto 0;
+  container-type: inline-size;
+  transition: max-width 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.live-bets--wide {
+  max-width: 1520px;
+}
+
+.live-bets__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.live-bets__title {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 600;
+  color: #fff;
+}
+
+/* Pulsing "live" mark */
+.live-bets__dot {
+  position: relative;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #53fc18;
+}
+
+.live-bets__dot::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: inherit;
+  animation: live-bets-pulse 1.8s ease-out infinite;
+}
+
+@keyframes live-bets-pulse {
+  from {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(2.6);
+  }
+}
+
+.live-bets__filter {
+  width: 220px;
+  background: #151b25;
+}
+
+.live-bets__table {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+}
+
+.live-bets__row {
+  display: grid;
+  grid-template-columns: 1.1fr 1.3fr 0.9fr 1fr 0.8fr 1fr;
+  align-items: center;
+  gap: 12px;
+  height: 46px;
+  padding: 0 16px;
+  border-radius: var(--radius-md);
+  background: #151b25;
+  font-weight: 600;
+  white-space: nowrap;
+  color: var(--color-text);
+}
+
+/* Every other row a shade lighter, like the leaderboard */
+.live-bets__row:nth-child(even):not(.live-bets__row--head) {
+  background: #19202c;
+}
+
+.live-bets__row > span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Amounts line up on the right */
+.live-bets__row > span:nth-child(n + 4) {
+  justify-content: flex-end;
+}
+
+.live-bets__row--head {
+  height: 30px;
+  background: none;
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.live-bets__row--fresh {
+  animation: live-bets-in 0.45s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@keyframes live-bets-in {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}
+
+.live-bets__game {
+  color: #fff;
+}
+
+.live-bets__game img {
+  flex: none;
+  object-fit: contain;
+}
+
+.live-bets__row > .live-bets__player {
+  display: block;
+}
+
+.live-bets__player--guest,
+.live-bets__muted {
+  color: #8b96ab;
+}
+
+.live-bets__amount img {
+  flex: none;
+}
+
+.live-bets__amount--win {
+  color: #7ee25a;
+}
+
+.live-bets__amount--loss {
+  color: #8b96ab;
+}
+
+.live-bets__empty {
+  margin: 0;
+  padding: 18px 16px;
+  border-radius: var(--radius-md);
+  background: #151b25;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+/* Narrow: drop time, then player and bet (Stake keeps game, multiplier and payout) */
+@container (max-width: 760px) {
+  .live-bets__row {
+    grid-template-columns: 1.1fr 1.3fr 1fr 0.8fr 1fr;
+  }
+
+  .live-bets__row > .live-bets__col-time {
+    display: none;
+  }
+}
+
+@container (max-width: 520px) {
+  .live-bets__row {
+    grid-template-columns: 1.2fr 0.8fr 1fr;
+    padding: 0 12px;
+  }
+
+  .live-bets__row > .live-bets__col-player,
+  .live-bets__row > .live-bets__col-bet {
+    display: none;
+  }
+}
+
+@media (max-width: 520px) {
+  .live-bets__head {
+    flex-wrap: wrap;
+  }
+
+  .live-bets__filter {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .live-bets__dot::after,
+  .live-bets__row--fresh {
+    animation: none;
+  }
+}

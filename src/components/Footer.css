@@ -62,8 +62,10 @@
   transition: opacity 0.15s ease;
 }
 
-.footer__marks a:hover .footer__aware {
-  opacity: 1;
+@media (hover: hover) and (pointer: fine) {
+  .footer__marks a:hover .footer__aware {
+    opacity: 1;
+  }
 }
 
 .footer__age {
@@ -104,8 +106,10 @@
   transition: color 0.15s ease;
 }
 
-.footer__icons a:hover {
-  color: var(--brand, var(--color-accent));
+@media (hover: hover) and (pointer: fine) {
+  .footer__icons a:hover {
+    color: var(--brand, var(--color-accent));
+  }
 }
 
 .footer__icons svg {
@@ -140,8 +144,10 @@
   transition: color 0.15s ease;
 }
 
-.footer__col a:hover {
-  color: var(--color-accent);
+@media (hover: hover) and (pointer: fine) {
+  .footer__col a:hover {
+    color: var(--color-accent);
+  }
 }
 
 .footer__col svg {
@@ -151,8 +157,10 @@
   transition: color 0.15s ease;
 }
 
-.footer__col a:hover svg {
-  color: var(--brand, var(--color-accent));
+@media (hover: hover) and (pointer: fine) {
+  .footer__col a:hover svg {
+    color: var(--brand, var(--color-accent));
+  }
 }
 
 .footer__legal {
@@ -213,4 +221,11 @@
     align-items: flex-start;
     gap: 6px;
   }
+}
+
+/* Keyboard focus: the site's gold ring */
+.footer a:focus-visible {
+  outline: 2px solid #e6d218;
+  outline-offset: 3px;
+  border-radius: 4px;
 }

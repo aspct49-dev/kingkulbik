@@ -16,7 +16,10 @@ import videocamIcon from '../assets/sidebar/videocam.svg'
 import kickIcon from '../assets/sidebar/kick.svg'
 import xIcon from '../assets/sidebar/x.svg'
 import discordIcon from '../assets/sidebar/discord.svg'
+import adminIcon from '../assets/sidebar/admin.svg'
+import tournamentsIcon from '../assets/sidebar/tournaments.svg'
 import { socials } from '../data/links'
+import { useAuth } from '../hooks/useAuth'
 import './Sidebar.css'
 
 type NavItem = {
@@ -68,7 +71,7 @@ const sections: NavSection[] = [
     items: [
       { label: 'Rewards', href: '/rewards', icon: svgIcon(rewardsIcon, 21, 21) },
       { label: 'Challenges', href: '/challenges', icon: svgIcon(challengesIcon, 16, 16) },
-      { label: 'Raffles', href: '#raffles', icon: svgIcon(rafflesIcon, 16, 16) },
+      { label: 'Raffles', href: '/raffles', icon: svgIcon(rafflesIcon, 16, 16) },
       { label: 'Item Store', href: '/item-store', icon: svgIcon(itemStoreIcon, 16, 16) },
       { label: '1K Referral', href: '/referral', icon: svgIcon(referralIcon, 16, 16) },
     ],
@@ -82,6 +85,7 @@ const sections: NavSection[] = [
         href: '/guess-the-balance',
         icon: <span className="sidebar__question-icon">?</span>,
       },
+      { label: 'Tournaments', href: '/tournaments', icon: svgIcon(tournamentsIcon, 16, 16) },
       { label: 'Coinflip', href: '/coinflip', icon: svgIcon(coinflipIcon, 17, 17) },
       { label: 'Keno', href: '/keno', icon: numberIcon },
     ],
@@ -133,7 +137,14 @@ type SidebarProps = {
   onClose: () => void
 }
 
+/** Shown only to admins (the server checks again on every admin request) */
+const adminSection: NavSection = {
+  title: 'Admin',
+  items: [{ label: 'Admin Panel', href: '/admin', icon: svgIcon(adminIcon, 16, 16) }],
+}
+
 export default function Sidebar({ open, onClose }: SidebarProps) {
+  const { admin } = useAuth()
   // While the drawer is open: Escape closes it and the page behind can't scroll
   useEffect(() => {
     if (!open) return
@@ -151,7 +162,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
       <div className={`sidebar__backdrop${open ? ' sidebar__backdrop--visible' : ''}`} onClick={onClose} aria-hidden />
       <aside className={`sidebar${open ? ' sidebar--open' : ''}`} id="site-nav">
         <nav className="sidebar__nav" aria-label="Main">
-          {sections.map((section, i) => (
+          {(admin ? [...sections, adminSection] : sections).map((section, i) => (
             <div className="sidebar__section" key={section.title ?? i}>
               {section.title && <p className="sidebar__section-title">{section.title}</p>}
               <ul className="sidebar__list">

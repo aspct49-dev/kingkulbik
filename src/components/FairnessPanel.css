@@ -1,0 +1,228 @@
+/* Lives inside the game's Fairness dialog (.game-fairness, GameToolbar.css) */
+.fair__tabs {
+  margin: 4px 0 16px;
+}
+
+.fair__games {
+  margin: 14px 0 4px;
+  width: min(100%, 240px);
+}
+
+.fair-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+  margin-top: 12px;
+}
+
+.fair-field__label {
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 15px;
+  color: var(--color-text-muted);
+}
+
+/* Same field as the store search and the Stake username form */
+.fair-input {
+  width: 100%;
+  min-width: 0;
+  height: 38px;
+  padding: 0 12px;
+  border: 1px solid rgb(53 66 87 / 0.8);
+  border-radius: var(--radius-sm);
+  background: rgb(36 44 58 / 0.5);
+  outline: 0;
+  font: inherit;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12.5px;
+  color: #fff;
+  transition: border-color 0.15s ease;
+}
+
+.fair-input:read-only {
+  color: #aab3c6;
+}
+
+.fair-input:focus-visible {
+  border-color: #4a576e;
+}
+
+.fair-pair {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 120px;
+  gap: 10px;
+}
+
+.fair-rotate {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 96px auto;
+  gap: 10px;
+  align-items: end;
+}
+
+.fair-rotate__button {
+  height: 38px;
+  padding: 0 16px;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.fair-rotate__button:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+/* .fair raises these over the dialog's grey paragraph colour */
+.fair .fair__message {
+  margin-top: 8px;
+  font-size: 13px;
+  color: #7ee25a;
+}
+
+.fair .fair__message--error {
+  color: #e5736f;
+}
+
+.fair__loading {
+  margin-top: 14px;
+}
+
+.fair__link {
+  margin-top: 12px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-accent);
+  transition: color 0.15s ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .fair__link:hover {
+    color: #c4b315;
+  }
+}
+
+.fair__link:focus-visible {
+  border-radius: 2px;
+  outline: 2px solid #e6d218;
+  outline-offset: 2px;
+}
+
+/* Verify result */
+.fair-result {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 16px;
+  padding: 14px;
+  border-radius: var(--radius-md);
+  background: #0e1219;
+  box-shadow: inset 0 1.5px 0 0 rgb(255 255 255 / 0.05);
+}
+
+.fair-result__hash {
+  margin-bottom: 6px;
+  overflow-wrap: anywhere;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12px;
+  color: #aab3c6;
+}
+
+.fair-result__tiles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* A drawn Keno tile */
+.fair-result__tiles li {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(to bottom, #384255, #2a3445);
+  box-shadow: inset 0 1px 0 0 #586989;
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.fair .fair-result__side {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  color: #fff;
+}
+
+/* The History strip's heads/tails marks */
+.fair-result__coin {
+  display: block;
+  flex: none;
+  width: 18px;
+  height: 18px;
+}
+
+.fair-result__coin--heads {
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #ffe27a, #e0a512);
+}
+
+.fair-result__coin--tails {
+  width: 14px;
+  height: 14px;
+  margin: 0 2px;
+  border-radius: 2px;
+  background: linear-gradient(135deg, #6a9bea, #2f61b4);
+  transform: rotate(45deg);
+}
+
+/* House rules */
+.fair-rules {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 14px 0 0;
+}
+
+.fair-rules div {
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: #0e1219;
+  box-shadow: inset 0 1.5px 0 0 rgb(255 255 255 / 0.05);
+}
+
+.fair-rules dt {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.fair-rules dd {
+  margin: 2px 0 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: #fff;
+}
+
+@media (max-width: 560px) {
+  .fair-rotate {
+    grid-template-columns: minmax(0, 1fr) 90px;
+  }
+
+  .fair-rotate__button {
+    grid-column: 1 / -1;
+  }
+
+  .fair-pair {
+    grid-template-columns: minmax(0, 1fr) 90px;
+  }
+
+  .fair-rules {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

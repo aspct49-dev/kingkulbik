@@ -196,6 +196,52 @@ h3 {
   outline-offset: 2px;
 }
 
+/* Segmented control (tabs, filters): the leaderboard site picker's look */
+.kk-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+}
+
+.kk-tab {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 0;
+  height: 32px;
+  padding: 0 12px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  color: var(--color-text-muted);
+  transition:
+    background-color 0.2s ease,
+    box-shadow 0.2s ease,
+    color 0.15s ease;
+}
+
+.kk-tab--selected {
+  background: var(--nav-item-from);
+  box-shadow: inset 0 1px 0 0 #364151;
+  color: var(--color-text);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .kk-tab:not(.kk-tab--selected):hover {
+    color: var(--color-text);
+  }
+}
+
+.kk-tab:focus-visible {
+  outline: 2px solid #e6d218;
+  outline-offset: 2px;
+}
+
 .visually-hidden {
   position: absolute;
   width: 1px;

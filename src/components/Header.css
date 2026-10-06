@@ -62,11 +62,16 @@
   transition: color 0.15s;
 }
 
-.header__sign-in:hover {
-  color: #fff;
+@media (hover: hover) and (pointer: fine) {
+  .header__sign-in:hover {
+    color: #fff;
+  }
 }
 
 .header__register {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 111px;
   height: 37px;
   color: var(--color-text-dark);
@@ -74,11 +79,121 @@
   border-radius: var(--radius-sm);
   background: linear-gradient(to right, #a88600, #e4de2c);
   box-shadow: inset 0 1px 0 0 #e2db70;
-  transition: filter 0.15s;
+  transition: transform 0.15s ease;
 }
 
-.header__register:hover {
-  filter: brightness(1.1);
+/* Gold buttons darken on hover, like everywhere else on the site */
+@media (hover: hover) and (pointer: fine) {
+  .header__register:hover {
+    background: linear-gradient(to right, #7a6200, #a6a11f);
+  }
+}
+
+.header__register:active {
+  transform: translateY(1px);
+}
+
+.header__sign-in:focus-visible,
+.header__register:focus-visible,
+.header__user:focus-visible {
+  outline: 2px solid #e6d218;
+  outline-offset: 3px;
+  border-radius: var(--radius-sm);
+}
+
+/* Until we know whether someone is signed in, show nothing (no flash of "Sign in") */
+.header__auth--loading > * {
+  visibility: hidden;
+}
+
+/* King Points balance (BotRix), as in the Item Store design's top bar */
+.header__points {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  height: 37px;
+  margin-right: -24px;
+  padding: 0 14px;
+  border-radius: var(--radius-md);
+  background: linear-gradient(to right, #2a2c1c, #1d2430);
+  box-shadow: inset 0 1px 0 0 rgb(255 255 255 / 0.08);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text);
+  transition: background-color 0.15s ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .header__points:hover {
+    background: linear-gradient(to right, #34371f, #252d3c);
+  }
+}
+
+.header__points:focus-visible {
+  outline: 2px solid #e6d218;
+  outline-offset: 3px;
+}
+
+/* Signed in: avatar and display name, linking to the account page */
+.header__user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 37px;
+  padding: 0 12px 0 3px;
+  border-radius: 999px;
+  background: var(--nav-item-from);
+  box-shadow: inset 0 1px 0 0 #2f384a;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text);
+  transition: background-color 0.15s ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .header__user:hover {
+    background: #2c3647;
+  }
+}
+
+.header__avatar {
+  flex: none;
+  width: 31px;
+  height: 31px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.header__avatar--blank {
+  display: grid;
+  place-items: center;
+  background: #5865f2;
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.header__user-name {
+  max-width: 140px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 480px) {
+  .header__points {
+    margin-right: -6px;
+    padding: 0 10px;
+    font-size: 13px;
+  }
+
+  .header__user-name {
+    display: none;
+  }
+
+  .header__user {
+    padding: 0 3px;
+  }
 }
 
 /* Mobile menu button: hidden while the sidebar is always visible */
@@ -93,8 +208,10 @@
   justify-content: center;
 }
 
-.header__menu:hover {
-  background: var(--nav-item-from);
+@media (hover: hover) and (pointer: fine) {
+  .header__menu:hover {
+    background: var(--nav-item-from);
+  }
 }
 
 .header__menu-icon,

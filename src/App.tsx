@@ -6,16 +6,39 @@ import Footer from './components/Footer'
 import HomePage from './pages/HomePage'
 import LeaderboardPage from './pages/LeaderboardPage'
 import KenoPage from './pages/KenoPage'
-import ComingSoonPage from './pages/ComingSoonPage'
 import ChallengesPage from './pages/ChallengesPage'
 import ItemStorePage from './pages/ItemStorePage'
 import ReferralPage from './pages/ReferralPage'
 import RewardsPage from './pages/RewardsPage'
-import bonusHuntArt from './assets/games/bonus-hunt-art.webp'
-import guessTheBalanceArt from './assets/games/guess-the-balance-art.webp'
+import AccountPage from './pages/AccountPage'
+import NotFoundPage from './pages/NotFoundPage'
 
 // Loaded on demand: keeps three.js and the 3D coin out of every other page
 const CoinflipPage = lazy(() => import('./pages/CoinflipPage'))
+const AdminPage = lazy(() => import('./pages/AdminPage'))
+const BonusHuntPage = lazy(() => import('./pages/BonusHuntPage'))
+const GuessTheBalancePage = lazy(() => import('./pages/GuessTheBalancePage'))
+const TournamentsPage = lazy(() => import('./pages/TournamentsPage'))
+const RafflesPage = lazy(() => import('./pages/RafflesPage'))
+const OverlayPage = lazy(() => import('./pages/OverlayPage'))
+
+/** Browser tab title per page */
+const TITLES: Record<string, string> = {
+  '/': 'King Kulbik',
+  '/leaderboard': 'Leaderboard',
+  '/rewards': 'Rewards',
+  '/challenges': 'Challenges',
+  '/raffles': 'Raffles',
+  '/item-store': 'Item Store',
+  '/referral': '$1,000 Referral',
+  '/account': 'Your Account',
+  '/admin': 'Admin Panel',
+  '/bonus-hunt': 'Bonus Hunt',
+  '/guess-the-balance': 'Guess the Balance',
+  '/tournaments': 'Tournaments',
+  '/coinflip': 'Coinflip',
+  '/keno': 'Keno',
+}
 
 function Layout() {
   // Mobile navigation drawer (the sidebar is always visible on desktop)
@@ -25,6 +48,8 @@ function Layout() {
   useEffect(() => {
     setMenuOpen(false)
     window.scrollTo(0, 0)
+    const title = TITLES[pathname] ?? 'Page not found'
+    document.title = pathname === '/' ? title : `${title} | King Kulbik`
   }, [pathname])
 
   return (
@@ -40,32 +65,16 @@ function Layout() {
               <Route path="/keno" element={<KenoPage />} />
               <Route path="/coinflip" element={<CoinflipPage />} />
               <Route path="/rewards" element={<RewardsPage />} />
+              <Route path="/account" element={<AccountPage />} />
+              <Route path="/admin" element={<AdminPage />} />
               <Route path="/challenges" element={<ChallengesPage />} />
+              <Route path="/raffles" element={<RafflesPage />} />
               <Route path="/item-store" element={<ItemStorePage />} />
               <Route path="/referral" element={<ReferralPage />} />
-              <Route
-                path="/bonus-hunt"
-                element={
-                  <ComingSoonPage
-                    title="Bonus Hunt"
-                    art={bonusHuntArt}
-                    artBox={[0.085, 0.185, 0.83, 0.43]}
-                    softEdges
-                    blurb="Follow every bonus from the stream as it's opened, with live totals and results. Catch the launch live on Kick."
-                  />
-                }
-              />
-              <Route
-                path="/guess-the-balance"
-                element={
-                  <ComingSoonPage
-                    title="Guess the Balance"
-                    art={guessTheBalanceArt}
-                    artBox={[0.07, 0.115, 0.81, 0.53]}
-                    blurb="Call where the bonus hunt ends and win when you're closest. Catch the launch live on Kick."
-                  />
-                }
-              />
+              <Route path="/bonus-hunt" element={<BonusHuntPage />} />
+              <Route path="/guess-the-balance" element={<GuessTheBalancePage />} />
+              <Route path="/tournaments" element={<TournamentsPage />} />
+              <Route path="*" element={<NotFoundPage />} />
             </Routes>
           </Suspense>
         </div>
@@ -78,7 +87,18 @@ function Layout() {
 export default function App() {
   return (
     <BrowserRouter>
-      <Layout />
+      <Routes>
+        {/* Stream overlays (OBS browser sources): no site chrome */}
+        <Route
+          path="/overlay/:kind"
+          element={
+            <Suspense fallback={null}>
+              <OverlayPage />
+            </Suspense>
+          }
+        />
+        <Route path="*" element={<Layout />} />
+      </Routes>
     </BrowserRouter>
   )
 }

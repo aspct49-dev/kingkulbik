@@ -1,0 +1,8 @@
+<svg width="31" height="31" viewBox="0 0 31 31" fill="none" xmlns="http://www.w3.org/2000/svg">
+<circle cx="15.5" cy="10" r="6.5" fill="url(#a)"/>
+<path d="M3.5 27.5C3.5 21.4249 8.42487 17.5 14.5 17.5H16.5C22.5751 17.5 27.5 21.4249 27.5 27.5C27.5 28.6046 26.6046 29.5 25.5 29.5H5.5C4.39543 29.5 3.5 28.6046 3.5 27.5Z" fill="url(#b)"/>
+<defs>
+<linearGradient id="a" x1="15.5" y1="3.5" x2="15.5" y2="16.5" gradientUnits="userSpaceOnUse"><stop stop-color="#E4DE2C"/><stop offset="1" stop-color="#A88600"/></linearGradient>
+<linearGradient id="b" x1="15.5" y1="17.5" x2="15.5" y2="29.5" gradientUnits="userSpaceOnUse"><stop stop-color="#E4DE2C"/><stop offset="1" stop-color="#A88600"/></linearGradient>
+</defs>
+</svg>

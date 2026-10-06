@@ -58,8 +58,10 @@
   transition: color 0.15s;
 }
 
-.sidebar__item:hover {
-  color: var(--color-text);
+@media (hover: hover) and (pointer: fine) {
+  .sidebar__item:hover {
+    color: var(--color-text);
+  }
 }
 
 .sidebar__item--active {
@@ -182,4 +184,10 @@
   .sidebar__backdrop {
     transition: none;
   }
+}
+
+/* Keyboard focus: the site's gold ring */
+.sidebar__item:focus-visible {
+  outline: 2px solid #e6d218;
+  outline-offset: 2px;
 }

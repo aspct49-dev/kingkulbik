@@ -132,11 +132,29 @@
   border-radius: var(--radius-md);
   font-size: 15px;
   font-weight: 700;
-  transition: filter 0.15s;
+  transition:
+    background-color 0.15s ease,
+    transform 0.15s ease;
 }
 
-.coming-soon__button:hover {
-  filter: brightness(1.12);
+/* Hover darkens, as on every button on the site */
+@media (hover: hover) and (pointer: fine) {
+  .coming-soon__button--dark:hover {
+    background: #2c3647;
+  }
+
+  .coming-soon__button--gold:hover {
+    background: linear-gradient(to right, #7a6200, #a6a11f);
+  }
+}
+
+.coming-soon__button:active {
+  transform: translateY(1px);
+}
+
+.coming-soon__button:focus-visible {
+  outline: 2px solid #e6d218;
+  outline-offset: 2px;
 }
 
 .coming-soon__button--dark {
@@ -202,4 +220,24 @@
   .coming-soon__headline {
     font-size: clamp(40px, 6.2cqi, 66px);
   }
+}
+
+/* No artwork (e.g. the 404 page): one centred column at every width */
+.coming-soon .coming-soon__content--center {
+  flex-direction: column;
+  text-align: center;
+}
+
+.coming-soon .coming-soon__content--center .coming-soon__text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.coming-soon .coming-soon__content--center .coming-soon__actions {
+  justify-content: center;
+}
+
+.coming-soon .coming-soon__content--center .coming-soon__wordmark {
+  order: 0;
 }

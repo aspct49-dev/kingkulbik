@@ -307,6 +307,21 @@
   color: #fff;
 }
 
+@media (hover: hover) and (pointer: fine) {
+  .game-fairness__close:hover {
+    background: #222a38;
+  }
+}
+
+.game-fairness__close:active {
+  transform: translateY(1px);
+}
+
+.game-fairness__close:focus-visible {
+  outline: 2px solid #e6d218;
+  outline-offset: 2px;
+}
+
 /* Faded site logo in the middle of the bar */
 .game-toolbar__logo {
   position: absolute;

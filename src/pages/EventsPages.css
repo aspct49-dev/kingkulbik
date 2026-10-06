@@ -1,0 +1,512 @@
+/* Bonus Hunt, Guess the Balance, Tournaments and Raffles. Page frame (.section-page) from ChallengesPage.css; empty states reuse .store-gate */
+
+.events {
+  display: flex;
+  flex-direction: column;
+  max-width: 1087px;
+  margin: 0 auto;
+}
+
+.events-loading {
+  height: 260px;
+  margin-top: 25px;
+  border-radius: 10px;
+  background: var(--color-surface);
+  animation: events-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes events-pulse {
+  50% {
+    opacity: 0.55;
+  }
+}
+
+.events-card {
+  margin: 0;
+  padding: 18px 20px;
+  border-radius: 10px;
+  background: var(--color-surface);
+  box-shadow: inset 0 1.5px 0 0 rgb(255 255 255 / 0.07);
+}
+
+.events-note {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 20px;
+  color: var(--color-text-muted);
+}
+
+.events-note strong {
+  color: var(--color-text);
+}
+
+.events-card.events-note {
+  margin-top: 12px;
+}
+
+.events-muted {
+  color: var(--color-text-muted);
+}
+
+.events-accent {
+  color: var(--color-accent);
+}
+
+.events-link {
+  font-weight: 700;
+  color: var(--color-accent);
+  transition: color 0.15s ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .events-link:hover {
+    color: #c4b315;
+  }
+}
+
+.events-link:focus-visible {
+  border-radius: 2px;
+  outline: 2px solid #e6d218;
+  outline-offset: 2px;
+}
+
+.events-section {
+  margin: 28px 0 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+/* ---------------------------------------------------------------- title row */
+
+.events-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin: 25px 0 14px;
+}
+
+.events-title--flush {
+  margin: 0 0 10px;
+}
+
+.events-title__name {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.events-title__prize {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+/* Status pill (the account page's Connected and its siblings) */
+.events-chip {
+  padding: 5px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--color-border);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-text-muted);
+}
+
+.events-chip--opening,
+.events-chip--open,
+.events-chip--live {
+  background: rgb(83 252 24 / 0.1);
+  color: #7ee25a;
+}
+
+.events-chip--collecting,
+.events-chip--closed {
+  background: rgb(230 210 24 / 0.1);
+  color: var(--color-accent);
+}
+
+.events-picker {
+  margin-top: 25px;
+  overflow-x: auto;
+  background: var(--color-surface);
+}
+
+.events-picker .kk-tab {
+  flex: none;
+}
+
+/* ---------------------------------------------------------------- stat tiles (the store's) */
+
+.events-stats {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.events-stat {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+  min-height: 73px;
+  padding: 10px 16px;
+  border-radius: 7px;
+  background: #171f2c;
+  box-shadow: inset 0 1.5px 0 0 rgb(255 255 255 / 0.07);
+}
+
+.events-stat__label {
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 15px;
+  color: var(--color-text-muted);
+}
+
+.events-stat__value {
+  margin-top: 2px;
+  overflow: hidden;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 20px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--color-text);
+}
+
+.events-stat__value--up {
+  color: #7ee25a;
+}
+
+.events-stat__detail {
+  overflow: hidden;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--color-text-muted);
+}
+
+.events-result {
+  margin: 12px 0 0;
+  padding: 12px 16px;
+  border-radius: var(--radius-md);
+  background: #171f2c;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.events-result strong {
+  color: var(--color-text);
+}
+
+.events-result--up strong {
+  color: #7ee25a;
+}
+
+/* ---------------------------------------------------------------- hunt table (the live feed's rows) */
+
+.events-table {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 14px;
+  container-type: inline-size;
+}
+
+.events-table__row {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 2.4fr) 1fr 1fr 1fr;
+  align-items: center;
+  gap: 12px;
+  min-height: 52px;
+  padding: 6px 16px 6px 12px;
+  border-radius: var(--radius-md);
+  background: #151b25;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.events-table__row:nth-child(odd):not(.events-table__row--head):not(.events-table__row--best) {
+  background: #19202c;
+}
+
+.events-table__row > span:nth-child(n + 3) {
+  text-align: right;
+}
+
+.events-table__row--head {
+  min-height: 30px;
+  background: none;
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.events-table__row--best {
+  background: linear-gradient(to left, #151b25 60%, #3d3a18);
+  box-shadow: inset 0 1px 0 0 rgb(255 255 255 / 0.1);
+}
+
+.events-table__index {
+  text-align: center;
+  color: var(--color-text-muted);
+}
+
+.events-table__slot {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.events-table__slot img,
+.events-table__art {
+  flex: none;
+  width: 27px;
+  height: 36px;
+  border-radius: 3px;
+  object-fit: cover;
+}
+
+.events-table__art {
+  background: #262f3f;
+}
+
+.events-table__text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.events-table__game {
+  overflow: hidden;
+  font-weight: 700;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: #fff;
+}
+
+.events-table__provider {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-text-muted);
+}
+
+/* ---------------------------------------------------------------- results and standings (raffles) */
+
+.events-final__label {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-accent);
+}
+
+/* Standings and winner lists */
+.events-standings {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.events-standing {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr) auto 130px;
+  align-items: center;
+  gap: 12px;
+  min-height: 46px;
+  padding: 0 16px 0 10px;
+  border-radius: var(--radius-md);
+  background: #151b25;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.events-standing:nth-child(even):not(.events-standing--first) {
+  background: #19202c;
+}
+
+.events-standing--first {
+  background: linear-gradient(to left, #151b25 60%, #3d3a18);
+}
+
+.events-standing--mine {
+  box-shadow: inset 0 0 0 1px rgb(230 210 24 / 0.45);
+}
+
+.events-standing__place {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  background: #2c3448;
+  font-family: var(--font-display);
+  font-weight: 800;
+}
+
+.events-standing__name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.events-standing__you {
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgb(230 210 24 / 0.15);
+  font-size: 11px;
+  color: var(--color-accent);
+}
+
+.events-standing__value {
+  font-weight: 700;
+}
+
+.events-standing__off {
+  text-align: right;
+  color: var(--color-text-muted);
+}
+
+/* ---------------------------------------------------------------- tournaments */
+
+.events--wide {
+  max-width: 1400px;
+}
+
+.events-bracket {
+  padding: 16px;
+}
+
+/* ---------------------------------------------------------------- raffles */
+
+.events-raffle {
+  margin-top: 25px;
+  background:
+    radial-gradient(ellipse 60% 90% at 50% 0%, rgb(83 252 24 / 0.06), transparent 70%),
+    var(--color-surface);
+}
+
+.events-raffle__how {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--color-text-muted);
+}
+
+.events-raffle__keyword {
+  padding: 3px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--nav-item-from);
+  box-shadow: inset 0 1px 0 0 #364151;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-weight: 700;
+  color: #fff;
+}
+
+.events-raffle__count {
+  margin: 12px 0 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text-muted);
+}
+
+.events-raffle__count strong {
+  font-size: 18px;
+  color: var(--color-text);
+}
+
+.events-raffle__winner {
+  display: flex;
+  flex-direction: column;
+  margin-top: 14px;
+  padding: 12px 16px;
+  border-radius: var(--radius-md);
+  background:
+    radial-gradient(ellipse 60% 120% at 0% 50%, rgb(240 185 30 / 0.18), transparent 70%),
+    #171f2c;
+}
+
+.events-raffle__winner-name {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.events-names {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 14px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.events-names li {
+  padding: 5px 10px;
+  border-radius: var(--radius-sm);
+  background: #171f2c;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+/* ---------------------------------------------------------------- narrow */
+
+@container (max-width: 900px) {
+  .events-stats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@container (max-width: 600px) {
+  .events-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .events-table__row {
+    grid-template-columns: 24px minmax(0, 1.6fr) 0.9fr 0.9fr;
+    gap: 8px;
+    padding: 6px 10px 6px 6px;
+  }
+
+  /* Bet drops out on phones: slot, payout and multiplier stay */
+  .events-table__row > :nth-child(3) {
+    display: none;
+  }
+
+  .events-standing {
+    grid-template-columns: 30px minmax(0, 1fr) auto;
+  }
+
+  .events-standing__off {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .events-loading {
+    animation: none;
+  }
+}

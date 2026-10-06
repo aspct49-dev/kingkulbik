@@ -1,13 +1,13 @@
 import { memo } from 'react'
 import coinIcon from '../../assets/coin.svg'
-import { MULTIPLIER, formatMultiplier, multiplierFor } from '../../games/coinflip/engine'
+import { formatMultiplier } from '../../games/coinflip/engine'
 import type { Side } from '../../games/coinflip/engine'
+import { cappedPayout, coinflipMultiplier } from '../../../shared/originals'
+import type { GameRules } from '../../../shared/originals'
 import AnimatedNumber from '../AnimatedNumber'
 import { formatPoints } from '../keno/format'
 import '../BetPanel.css'
 import './CoinflipControls.css'
-
-export const MIN_BET = 1
 
 type CoinflipControlsProps = {
   betInput: string
@@ -20,6 +20,7 @@ type CoinflipControlsProps = {
   flipping: boolean
   /** The side called for the flip in the air */
   calling: Side | null
+  rules: GameRules
   onCall: (side: Side) => void
   onRandomPick: () => void
   onBet: () => void
@@ -35,12 +36,12 @@ function SideIcon({ side }: { side: Side }) {
 }
 
 export default memo(function CoinflipControls(props: CoinflipControlsProps) {
-  const { game, flipping } = props
+  const { game, flipping, rules } = props
   const playing = !!game
-  const locked = playing
+  const locked = playing || flipping
   const streak = game?.streak ?? 0
-  const multiplier = multiplierFor(streak)
-  const cashout = game ? Math.round(game.bet * multiplier * 100) / 100 : 0
+  const multiplier = coinflipMultiplier(streak, rules.houseEdge)
+  const cashout = game ? cappedPayout(game.bet, multiplier, rules.maxWin) : 0
   const canCall = playing && !flipping
 
   return (
@@ -111,7 +112,7 @@ export default memo(function CoinflipControls(props: CoinflipControlsProps) {
       </div>
 
       <span className="bet-panel__label bet-panel__label--spaced">
-        Total Profit ({formatMultiplier(playing ? multiplier : MULTIPLIER)}×)
+        Total Profit ({formatMultiplier(playing && streak > 0 ? multiplier : coinflipMultiplier(1, rules.houseEdge))}×)
       </span>
       <div className="bet-field bet-field--readonly" aria-live="polite">
         <img src={coinIcon} width={14} height={14} alt="" />
@@ -129,7 +130,7 @@ export default memo(function CoinflipControls(props: CoinflipControlsProps) {
           <img src={coinIcon} width={13} height={13} alt="" />
           <AnimatedNumber value={props.balance} format={formatPoints} duration={500} />
         </span>
-        {props.balance < MIN_BET && !locked && (
+        {props.balance < rules.minBet && !locked && (
           <button type="button" className="bet-panel__reset" onClick={props.onResetBalance}>
             Reset
           </button>

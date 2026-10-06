@@ -1,0 +1,901 @@
+/* Page frame (.section-page) comes from ChallengesPage.css; gates reuse .store-gate */
+.admin {
+  display: flex;
+  flex-direction: column;
+  max-width: 1087px;
+  margin: 0 auto;
+}
+
+.admin--wide {
+  max-width: 1600px;
+}
+
+.admin-loading {
+  height: 240px;
+  margin-top: 25px;
+  border-radius: 10px;
+  background: var(--color-surface);
+  animation: admin-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes admin-pulse {
+  50% {
+    opacity: 0.55;
+  }
+}
+
+.admin-gate__id {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 460px;
+  margin: 6px 0 0;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+  color: var(--color-text);
+}
+
+.admin-gate__id span {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-muted);
+}
+
+.admin code {
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--nav-item-from);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.92em;
+  color: var(--color-text);
+}
+
+.admin-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.admin-intro {
+  margin: 0;
+  max-width: 720px;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 20px;
+  color: var(--color-text-muted);
+}
+
+/* ---------------------------------------------------------------- cards */
+
+.admin-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+  padding: 18px 20px 20px;
+  border-radius: 10px;
+  background: var(--color-surface);
+  box-shadow: inset 0 1.5px 0 0 rgb(255 255 255 / 0.07);
+}
+
+.admin-card--flush .live-bets {
+  margin-top: 0;
+}
+
+.admin-card__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 34px;
+}
+
+.admin-card__title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.admin-card__title--icon {
+  align-items: center;
+  gap: 8px;
+}
+
+.admin-count {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-muted);
+}
+
+.admin-note {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 19px;
+  color: var(--color-text-muted);
+}
+
+.admin-note a {
+  color: var(--color-text);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.admin-empty {
+  margin: 0;
+  padding: 18px 0 4px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.admin-error {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #e5736f;
+}
+
+/* ---------------------------------------------------------------- stat tiles (the store's) */
+
+.admin-stats {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.admin-stat {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+  height: 73px;
+  padding: 0 18px;
+  border-radius: 7px;
+  background: #171f2c;
+  box-shadow: inset 0 1.5px 0 0 rgb(255 255 255 / 0.07);
+}
+
+.admin-stat__label {
+  overflow: hidden;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 15px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--color-text-muted);
+}
+
+.admin-stat__value {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 20px;
+  white-space: nowrap;
+  color: var(--color-text);
+}
+
+.admin-stat__value--up {
+  color: #7ee25a;
+}
+
+.admin-stat__value--down {
+  color: #e5736f;
+}
+
+/* ---------------------------------------------------------------- overview */
+
+.admin-overview {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.admin-overview__card {
+  gap: 10px;
+}
+
+.admin-overview__lines {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 19px;
+  color: var(--color-text-muted);
+}
+
+.admin-overview__game {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.admin-overview__action {
+  align-self: flex-start;
+}
+
+/* ---------------------------------------------------------------- forms */
+
+.admin-form {
+  display: grid;
+  gap: 20px;
+  align-items: start;
+}
+
+.admin-form--with-art {
+  grid-template-columns: 139px minmax(0, 1fr);
+}
+
+.admin-form--with-preview {
+  grid-template-columns: 201px minmax(0, 1fr);
+}
+
+.admin-form__fields {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+
+.admin-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.admin-grid--two {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.admin-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.admin-field--wide {
+  grid-column: 1 / -1;
+}
+
+.admin-field__label {
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 15px;
+  color: var(--color-text-muted);
+}
+
+.admin-field__hint {
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 16px;
+  color: var(--color-text-subtle);
+}
+
+/* The store search field's look */
+.admin-input {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 38px;
+  padding: 0 12px;
+  border: 1px solid rgb(53 66 87 / 0.8);
+  border-radius: var(--radius-sm);
+  background: rgb(36 44 58 / 0.5);
+  transition: border-color 0.15s ease;
+}
+
+.admin-input:focus-within {
+  border-color: #4a576e;
+}
+
+.admin-input input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  background: none;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  color: #fff;
+}
+
+.admin-input input::placeholder {
+  color: var(--color-text-muted);
+}
+
+.admin-input__unit {
+  display: flex;
+  flex: none;
+  align-items: center;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-accent);
+}
+
+.admin-input--icon img {
+  flex: none;
+  opacity: 0.8;
+}
+
+.admin-input--small {
+  width: 170px;
+  height: 32px;
+}
+
+.admin-input--small input {
+  font-size: 13px;
+}
+
+.admin-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.admin-actions--split {
+  justify-content: space-between;
+}
+
+.admin-submit {
+  min-width: 150px;
+  height: 40px;
+  padding: 0 22px;
+  font-size: 15px;
+}
+
+.admin-submit:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.admin-link {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-accent);
+  transition: color 0.15s ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .admin-link:hover {
+    color: #c4b315;
+  }
+}
+
+.admin-link:focus-visible {
+  border-radius: 2px;
+  outline: 2px solid #e6d218;
+  outline-offset: 2px;
+}
+
+/* Card colour picker */
+.admin-tiers {
+  width: min(100%, 320px);
+}
+
+.admin-tier-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.admin-tier-dot--gold {
+  background: #ac9d15;
+}
+
+.admin-tier-dot--purple {
+  background: #7a2bd0;
+}
+
+.admin-tier-dot--blue {
+  background: #2a74cc;
+}
+
+/* ---------------------------------------------------------------- buttons */
+
+/* Dark button (the account page's), with quiet, danger and gold variants */
+.admin-button {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+  padding: 0 12px;
+  border-radius: var(--radius-sm);
+  background: var(--nav-item-from);
+  box-shadow: inset 0 1px 0 0 #364151;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  color: #efefef;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease,
+    transform 0.15s ease;
+}
+
+.admin-button--quiet {
+  background: none;
+  box-shadow: none;
+  color: var(--color-text-muted);
+}
+
+.admin-button--danger {
+  color: #e5736f;
+}
+
+.admin-button--gold {
+  background: var(--color-accent-button);
+  box-shadow: inset 0 1px 0 0 rgb(255 255 255 / 0.36);
+  color: var(--color-text);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .admin-button:hover:not(:disabled) {
+    background: #2c3647;
+  }
+
+  .admin-button--quiet:hover:not(:disabled) {
+    background: none;
+    color: var(--color-text);
+  }
+
+  .admin-button--gold:hover:not(:disabled) {
+    background: var(--color-accent-button-hover);
+  }
+}
+
+.admin-button:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.admin-button:focus-visible {
+  outline: 2px solid #e6d218;
+  outline-offset: 2px;
+}
+
+.admin-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.admin-confirm {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.admin-confirm__text {
+  margin-right: 4px;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  color: var(--color-text);
+}
+
+/* On/off switch: the game settings popover's */
+.admin-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.admin-toggle input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.admin-toggle__switch {
+  position: relative;
+  flex: none;
+  width: 34px;
+  height: 20px;
+  border-radius: 10px;
+  background: #2b3546;
+  transition: background-color 0.15s;
+}
+
+.admin-toggle__switch::after {
+  content: '';
+  position: absolute;
+  left: 3px;
+  top: 3px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform 0.15s;
+}
+
+.admin-toggle input:checked + .admin-toggle__switch {
+  background: var(--color-accent-button);
+}
+
+.admin-toggle input:checked + .admin-toggle__switch::after {
+  transform: translateX(14px);
+}
+
+.admin-toggle input:focus-visible + .admin-toggle__switch {
+  outline: 2px solid #e6d218;
+  outline-offset: 2px;
+}
+
+/* ---------------------------------------------------------------- image upload */
+
+.admin-image {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.admin-image__frame {
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 6px;
+  background: #171f2c;
+  box-shadow: inset 0 1.5px 0 0 rgb(255 255 255 / 0.07);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.admin-image--portrait {
+  width: 139px;
+}
+
+.admin-image--portrait .admin-image__frame {
+  width: 139px;
+  height: 186px;
+}
+
+.admin-image--square {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.admin-image--square .admin-image__frame {
+  width: 64px;
+  height: 64px;
+}
+
+.admin-image__frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.admin-image--square .admin-image__frame img {
+  object-fit: contain;
+}
+
+.admin-image__actions {
+  display: flex;
+  gap: 6px;
+}
+
+.admin-image--portrait .admin-image__actions .admin-button:first-child {
+  flex: 1;
+}
+
+.admin-image .admin-error {
+  flex-basis: 100%;
+}
+
+/* Store card preview: the real card, not clickable */
+.admin-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.admin-preview__card {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* ---------------------------------------------------------------- lists */
+
+.admin-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.admin-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 62px;
+  padding: 7px 12px;
+  border-radius: var(--radius-md);
+  background: #171f2c;
+  box-shadow: inset 0 1.5px 0 0 rgb(255 255 255 / 0.05);
+  transition: box-shadow 0.15s ease;
+}
+
+.admin-row--editing {
+  box-shadow:
+    inset 0 0 0 1px rgb(230 210 24 / 0.5),
+    inset 0 1.5px 0 0 rgb(255 255 255 / 0.05);
+}
+
+.admin-row__thumb {
+  flex: none;
+  border-radius: 4px;
+  object-fit: cover;
+}
+
+.admin-row__thumb--tier {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+}
+
+.admin-row__thumb--tier img {
+  object-fit: contain;
+}
+
+.admin-row__thumb--gold {
+  background: radial-gradient(circle at 50% 35%, rgb(240 200 30 / 0.35), rgb(240 200 30 / 0.08));
+}
+
+.admin-row__thumb--purple {
+  background: radial-gradient(circle at 50% 35%, rgb(140 60 230 / 0.4), rgb(140 60 230 / 0.08));
+}
+
+.admin-row__thumb--blue {
+  background: radial-gradient(circle at 50% 35%, rgb(40 120 220 / 0.4), rgb(40 120 220 / 0.08));
+}
+
+.admin-row__main {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.admin-row__name {
+  overflow: hidden;
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--color-text);
+}
+
+.admin-row__meta {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  overflow: hidden;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--color-text-muted);
+}
+
+.admin-row__meta strong {
+  font-weight: 700;
+  color: var(--color-accent);
+}
+
+.admin-row__actions {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Status pill (the account page's Connected) */
+.admin-chip {
+  flex: none;
+  max-width: 180px;
+  overflow: hidden;
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--color-border);
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--color-text-muted);
+}
+
+.admin-chip--on {
+  background: rgb(83 252 24 / 0.1);
+  color: #7ee25a;
+}
+
+/* ---------------------------------------------------------------- originals rules */
+
+.admin-rules {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+/* ---------------------------------------------------------------- catalog search */
+
+.slot-picker {
+  position: relative;
+}
+
+.slot-picker__menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  z-index: 20;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: #151a24;
+  box-shadow: 0 16px 40px rgb(0 0 0 / 0.5);
+}
+
+.slot-picker__status {
+  margin: 0;
+  padding: 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.slot-picker__list {
+  max-height: 320px;
+  margin: 0;
+  padding: 4px;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.slot-picker__option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 5px 8px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.slot-picker__option--active {
+  background: var(--nav-item-from);
+}
+
+.slot-picker__option img {
+  flex: none;
+  border-radius: 3px;
+  object-fit: cover;
+  background: #171f2c;
+}
+
+.slot-picker__text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.slot-picker__name {
+  overflow: hidden;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--color-text);
+}
+
+.slot-picker__provider {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-text-muted);
+}
+
+/* ---------------------------------------------------------------- narrow */
+
+@container (max-width: 1000px) {
+  .admin-stats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .admin-overview {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-row {
+    flex-wrap: wrap;
+  }
+
+  .admin-row__actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}
+
+@container (max-width: 760px) {
+  .admin-rules {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .admin-form--with-art,
+  .admin-form--with-preview {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .admin-preview__card {
+    width: 201px;
+  }
+
+  .admin-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@container (max-width: 520px) {
+  .admin-stats,
+  .admin-overview {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .admin-grid,
+  .admin-grid--two {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .admin-card {
+    padding: 16px 14px;
+  }
+
+  .admin-submit {
+    width: 100%;
+  }
+
+  .admin-row__meta {
+    flex-wrap: wrap;
+    white-space: normal;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-loading {
+    animation: none;
+  }
+}

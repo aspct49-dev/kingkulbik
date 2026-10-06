@@ -1,35 +1,20 @@
 /*
- * Coinflip rules — pure logic, no UI. Stake-style streaks: a bet starts a
- * game, each correct call doubles the multiplier, cash out any time after a
- * correct call, and a wrong call loses the stake.
- *
- * After n correct calls the multiplier is RETURN_TO_PLAYER × 2ⁿ
- * (1.98×, 3.96×, 7.92×, …). Each call is 50/50, so reaching n pays with
- * probability 1/2ⁿ and the return stays at 99% however long the streak runs:
- * the house edge applies once, not on every flip.
+ * Coinflip helpers for the page. The rules and results live on the server
+ * (server/originals.ts, shared/originals.ts): Stake-style streaks where each
+ * correct call doubles the multiplier, (1 - house edge) × 2ⁿ after n calls.
  */
 
 export type Side = 'heads' | 'tails'
 
-export const RETURN_TO_PLAYER = 0.99
 /** A game cashes out automatically after this many correct calls */
 export const MAX_STREAK = 20
 
-/** Multiplier after `streak` correct calls (0 → nothing yet) */
-export const multiplierFor = (streak: number) =>
-  streak <= 0 ? 0 : Math.round(RETURN_TO_PLAYER * 2 ** streak * 100) / 100
-
-/** First-call multiplier, for display */
-export const MULTIPLIER = multiplierFor(1)
-
-/** A fair flip from the platform's cryptographic RNG (one random bit). */
-export function flipCoin(): Side {
+/** Random Pick: which side to call (only the call; the flip itself is the server's) */
+export function randomSide(): Side {
   const buf = new Uint8Array(1)
   crypto.getRandomValues(buf)
   return buf[0] & 1 ? 'heads' : 'tails'
 }
-
-export const randomSide = flipCoin
 
 /** 1.98 → "1.98", 1038090.24 → "1,038,090" */
 export const formatMultiplier = (value: number) =>

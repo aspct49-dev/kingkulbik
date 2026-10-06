@@ -1,0 +1,499 @@
+/* Profile parts (account page and the admin's player view): the site's card and row styles */
+
+.profile-avatar {
+  flex: none;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.profile-avatar--blank {
+  display: grid;
+  place-items: center;
+  background: #5865f2;
+  font-weight: 700;
+  color: #fff;
+}
+
+.profile-card {
+  margin: 0;
+  padding: 16px 18px;
+  border-radius: 10px;
+  background: #171f2c;
+  box-shadow: inset 0 1.5px 0 0 rgb(255 255 255 / 0.07);
+}
+
+.profile-empty {
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 20px;
+  color: var(--color-text-muted);
+}
+
+.profile-link {
+  font-weight: 700;
+  color: var(--color-accent);
+  transition: color 0.15s ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .profile-link:hover {
+    color: #c4b315;
+  }
+}
+
+.profile-link:focus-visible {
+  border-radius: 2px;
+  outline: 2px solid #e6d218;
+  outline-offset: 2px;
+}
+
+.profile-up {
+  color: #7ee25a;
+}
+
+.profile-down {
+  color: #e5736f;
+}
+
+/* ---------------------------------------------------------------- header */
+
+.profile-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  margin-top: 25px;
+  padding: 18px 20px;
+  border-radius: 10px;
+  background:
+    radial-gradient(ellipse 50% 90% at 0% 50%, rgb(88 101 242 / 0.12), transparent 70%),
+    var(--color-surface);
+  box-shadow: inset 0 1.5px 0 0 rgb(255 255 255 / 0.07);
+}
+
+.profile-head__text {
+  flex: 1;
+  min-width: 180px;
+}
+
+.profile-head__name {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.profile-head__meta {
+  margin: 2px 0 0;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-muted);
+}
+
+.profile-head__stats {
+  display: flex;
+  gap: 8px;
+  margin: 0;
+}
+
+.profile-head__stats div {
+  min-width: 104px;
+  padding: 9px 14px;
+  border-radius: 7px;
+  background: #171f2c;
+  box-shadow: inset 0 1.5px 0 0 rgb(255 255 255 / 0.07);
+}
+
+.profile-head__stats dt {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-text-muted);
+}
+
+.profile-head__stats dd {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin: 2px 0 0;
+  font-size: 15px;
+  font-weight: 700;
+  white-space: nowrap;
+  color: var(--color-text);
+}
+
+.profile-head__stats dd.profile-up {
+  color: #7ee25a;
+}
+
+.profile-head__stats dd.profile-down {
+  color: #e5736f;
+}
+
+/* ---------------------------------------------------------------- milestone (Rewards' colours) */
+
+.profile-milestone {
+  --tone: #e6d218;
+}
+
+.profile-milestone--bronze {
+  --tone: #cd9d70;
+}
+
+.profile-milestone--silver {
+  --tone: #bababa;
+}
+
+.profile-milestone--gold {
+  --tone: #ffca72;
+}
+
+.profile-milestone--platinum {
+  --tone: #67d2d9;
+}
+
+.profile-milestone__rank {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.profile-milestone__unranked {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #202b3d;
+}
+
+.profile-milestone__text,
+.profile-milestone__wager {
+  display: flex;
+  flex-direction: column;
+}
+
+.profile-milestone__wager {
+  margin-left: auto;
+  align-items: flex-end;
+  font-size: 15px;
+  color: var(--color-text);
+}
+
+.profile-milestone__label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-text-muted);
+}
+
+.profile-milestone__name {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--tone);
+}
+
+.profile-milestone__bar {
+  height: 11px;
+  margin-top: 12px;
+  border-radius: 5.5px;
+  background: #202b3d;
+  overflow: hidden;
+}
+
+.profile-milestone__fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--tone);
+  transition: width 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.profile-milestone__next {
+  margin: 8px 0 0;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-muted);
+}
+
+.profile-milestone__next strong {
+  color: var(--color-text);
+}
+
+/* ---------------------------------------------------------------- rows */
+
+.profile-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.profile-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  min-height: 58px;
+  padding: 8px 12px;
+  border-radius: var(--radius-md);
+  background: #171f2c;
+  box-shadow: inset 0 1.5px 0 0 rgb(255 255 255 / 0.05);
+}
+
+.profile-row__thumb {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+}
+
+.profile-row__thumb img {
+  object-fit: contain;
+}
+
+.profile-row__thumb--gold {
+  background: radial-gradient(circle at 50% 35%, rgb(240 200 30 / 0.35), rgb(240 200 30 / 0.08));
+}
+
+.profile-row__thumb--purple {
+  background: radial-gradient(circle at 50% 35%, rgb(140 60 230 / 0.4), rgb(140 60 230 / 0.08));
+}
+
+.profile-row__thumb--blue {
+  background: radial-gradient(circle at 50% 35%, rgb(40 120 220 / 0.4), rgb(40 120 220 / 0.08));
+}
+
+.profile-row__main {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 160px;
+}
+
+.profile-row__name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.profile-row__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-muted);
+}
+
+.profile-row__note {
+  margin-top: 2px;
+  font-size: 12px;
+  font-style: italic;
+  color: var(--color-text-subtle);
+}
+
+/* Status pills: the account page's Connected and its quieter siblings */
+.profile-chip {
+  flex: none;
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--color-border);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-text-muted);
+}
+
+.profile-chip--fulfilled {
+  background: rgb(83 252 24 / 0.1);
+  color: #7ee25a;
+}
+
+.profile-chip--pending {
+  background: rgb(230 210 24 / 0.1);
+  color: var(--color-accent);
+}
+
+.profile-chip--rejected {
+  background: rgb(229 115 111 / 0.1);
+  color: #e5736f;
+}
+
+/* ---------------------------------------------------------------- bet history (the live feed's rows) */
+
+.profile-bets {
+  container-type: inline-size;
+}
+
+.profile-bets__list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.profile-bets__row {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr 0.9fr 0.8fr 0.9fr;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  height: 44px;
+  padding: 0 14px;
+  border-radius: var(--radius-md);
+  background: #171f2c;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  text-align: left;
+  color: var(--color-text);
+  transition: background-color 0.15s ease;
+}
+
+.profile-bets__row > span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.profile-bets__row > span:nth-child(n + 3) {
+  justify-content: flex-end;
+}
+
+.profile-bets__row--head {
+  height: 28px;
+  background: none;
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+button.profile-bets__row {
+  cursor: pointer;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  button.profile-bets__row:hover {
+    background: #1c2535;
+  }
+}
+
+button.profile-bets__row:focus-visible {
+  outline: 2px solid #e6d218;
+  outline-offset: 2px;
+}
+
+.profile-bets__row--open {
+  background: #1c2535;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.profile-bets__game {
+  color: #fff;
+}
+
+.profile-bets__muted {
+  color: #8b96ab;
+}
+
+.profile-bets__detail {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 12px 14px 14px;
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+  background: #131a25;
+  font-size: 12.5px;
+}
+
+.profile-bets__detail dt {
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.profile-bets__detail dd {
+  margin: 2px 0 0;
+  overflow-wrap: anywhere;
+  color: #aab3c6;
+}
+
+.profile-bets__mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+.profile-bets__hint {
+  margin: 0;
+  color: var(--color-text-subtle);
+}
+
+.profile-more {
+  display: block;
+  margin: 10px auto 0;
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--nav-item-from);
+  box-shadow: inset 0 1px 0 0 #364151;
+  font-size: 13px;
+  font-weight: 700;
+  color: #efefef;
+  transition:
+    background-color 0.15s ease,
+    transform 0.15s ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .profile-more:hover {
+    background: #2c3647;
+  }
+}
+
+.profile-more:active {
+  transform: translateY(1px);
+}
+
+.profile-more:focus-visible {
+  outline: 2px solid #e6d218;
+  outline-offset: 2px;
+}
+
+@container (max-width: 520px) {
+  .profile-bets__row {
+    grid-template-columns: 1fr 0.8fr 0.8fr 0.9fr;
+  }
+
+  .profile-bets__row > .profile-bets__time {
+    display: none;
+  }
+}
+
+@media (max-width: 600px) {
+  .profile-head__stats {
+    width: 100%;
+  }
+
+  .profile-head__stats div {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .profile-milestone__rank {
+    flex-wrap: wrap;
+  }
+
+  .profile-milestone__wager {
+    margin-left: 0;
+    align-items: flex-start;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .profile-milestone__fill {
+    transition: none;
+  }
+}
