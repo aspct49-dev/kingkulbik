@@ -383,36 +383,208 @@
   font-size: 15px;
 }
 
-/* Purchase confirmation (the game Fairness dialog's frame) */
-.store-redeem {
-  width: min(440px, calc(100vw - 32px));
+/* Purchase confirmation: a compact card, the item row and two buttons side by side */
+.store-confirm {
+  width: min(360px, calc(100vw - 32px));
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: #151a24;
+  box-shadow: 0 24px 60px rgb(0 0 0 / 0.55);
+  color: var(--color-text);
 }
 
-.store-redeem .store-redeem__error {
-  margin-top: 10px;
+.store-confirm::backdrop {
+  background: rgb(5 7 11 / 0.7);
+}
+
+.store-confirm[open] {
+  animation: store-confirm-in 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@keyframes store-confirm-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+}
+
+.store-confirm__body {
+  display: flex;
+  flex-direction: column;
+  padding: 14px 16px 16px;
+}
+
+.store-confirm__head {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 28px;
+}
+
+.store-confirm__back {
+  position: absolute;
+  left: 0;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+  transition:
+    color 0.15s ease,
+    background-color 0.15s ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .store-confirm__back:hover {
+    background: var(--nav-item-from);
+    color: var(--color-text);
+  }
+}
+
+.store-confirm__back:focus-visible {
+  outline: 2px solid #e6d218;
+  outline-offset: 2px;
+}
+
+.store-confirm__title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: #fff;
+}
+
+/* The item: photo on the tier's glow, then name and price */
+.store-confirm__item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 14px;
+  padding: 10px;
+  border-radius: 10px;
+  background: #1d2533;
+  box-shadow: inset 0 1.5px 0 0 rgb(255 255 255 / 0.05);
+}
+
+.store-confirm__thumb {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 92px;
+  height: 64px;
+  overflow: hidden;
+  border-radius: 8px;
+  background-color: #11161f;
+  background-position: center;
+  background-size: cover;
+}
+
+.store-confirm__thumb img {
+  width: 84%;
+  height: 84%;
+  object-fit: contain;
+}
+
+.store-confirm__thumb .store-confirm__bag {
+  width: 26px;
+  height: auto;
+}
+
+.store-confirm__info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.store-confirm__name {
+  overflow: hidden;
+  font-size: 15px;
+  font-weight: 700;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: #fff;
+}
+
+.store-confirm__price {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.store-confirm__note {
+  margin: 10px 2px 0;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 17px;
+  color: var(--color-text-muted);
+}
+
+.store-confirm__note strong {
+  color: var(--color-text);
+}
+
+.store-confirm__error {
+  margin: 8px 2px 0;
   font-size: 13px;
   font-weight: 600;
   color: #e5736f;
 }
 
-.store-redeem__actions {
-  display: flex;
-  justify-content: flex-end;
+.store-confirm__actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
-  margin-top: 18px;
+  margin-top: 14px;
 }
 
-.store-redeem__actions .store-redeem__cancel {
-  margin: 0;
-}
-
-.store-redeem__confirm {
-  min-width: 110px;
-  padding: 0 18px;
+.store-confirm__button {
+  height: 40px;
   font-size: 14px;
 }
 
-.store-redeem__confirm:disabled {
+.store-confirm__button:disabled {
   opacity: 0.6;
   cursor: progress;
+}
+
+/* Close: the account page's dark button */
+.store-confirm__close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  background: var(--nav-item-from);
+  box-shadow: inset 0 1px 0 0 #364151;
+  font-weight: 700;
+  color: #efefef;
+  transition:
+    background-color 0.15s ease,
+    transform 0.15s ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .store-confirm__close:hover:not(:disabled) {
+    background: #2c3647;
+  }
+}
+
+.store-confirm__close:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.store-confirm__close:focus-visible {
+  outline: 2px solid #e6d218;
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .store-confirm[open] {
+    animation: none;
+  }
 }

@@ -372,33 +372,75 @@ function RedeemDialog({
     }
   }
 
+  const art = item ? TIER_ART[item.tier] : null
+  const close = () => ref.current?.close()
+
   return (
     <dialog
       ref={ref}
-      className="game-fairness store-redeem"
-      aria-label="Confirm purchase"
+      className="store-confirm"
+      aria-labelledby="store-confirm-title"
       onClose={onClose}
-      onClick={(e) => e.target === ref.current && ref.current.close()}
+      onClick={(e) => e.target === ref.current && close()}
     >
-      {item && (
-        <div className="game-fairness__body">
-          <h2>Redeem {item.name}?</h2>
-          <p>
-            This takes <strong>{points(item.price)} King Points</strong>
-            {available !== null && <> of your {points(available)}</>} now. We'll deliver it, usually within a day:
-            watch for a message in the Discord. If we can't, or you cancel while it's pending, the points come back.
+      {item && art && (
+        <div className="store-confirm__body">
+          <header className="store-confirm__head">
+            <button type="button" className="store-confirm__back" aria-label="Back to the store" onClick={close}>
+              <svg width="8" height="13" viewBox="0 0 8 13" aria-hidden>
+                <path d="M6.5 1.5 1.5 6.5l5 5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+            <h2 id="store-confirm-title" className="store-confirm__title">
+              Confirm Purchase
+            </h2>
+          </header>
+
+          <div className="store-confirm__item">
+            <span className="store-confirm__thumb" style={{ backgroundImage: `url(${art.bg})` }} aria-hidden>
+              {item.image ? (
+                <img src={item.image} alt="" />
+              ) : (
+                <img className="store-confirm__bag" src={art.bag} width={26} height={29} alt="" />
+              )}
+            </span>
+            <span className="store-confirm__info">
+              <span className="store-confirm__name" title={item.name}>
+                {item.name}
+              </span>
+              <span className="store-confirm__price">
+                <img src={coinIcon} width={14} height={14} alt="" />
+                {points(item.price)}
+                <span className="visually-hidden"> King Points</span>
+              </span>
+            </span>
+          </div>
+
+          <p className="store-confirm__note">
+            {available !== null && (
+              <>
+                Balance after: <strong>{points(Math.max(0, available - item.price))}</strong>.{' '}
+              </>
+            )}
+            Points come off now and come back if it’s rejected or you cancel.
           </p>
           {error && (
-            <p className="store-redeem__error" role="alert">
+            <p className="store-confirm__error" role="alert">
               {error}
             </p>
           )}
-          <div className="store-redeem__actions">
-            <button type="button" className="game-fairness__close store-redeem__cancel" onClick={() => ref.current?.close()}>
-              Cancel
+
+          <div className="store-confirm__actions">
+            <button
+              type="button"
+              className={`kk-button kk-button--${item.tier} store-confirm__button`}
+              disabled={busy}
+              onClick={() => void confirm()}
+            >
+              {busy ? 'Purchasing…' : 'Purchase'}
             </button>
-            <button type="button" className={`kk-button kk-button--${item.tier} store-redeem__confirm`} disabled={busy} onClick={() => void confirm()}>
-              {busy ? 'Sending…' : 'Confirm'}
+            <button type="button" className="store-confirm__button store-confirm__close" disabled={busy} onClick={close}>
+              Close
             </button>
           </div>
         </div>
