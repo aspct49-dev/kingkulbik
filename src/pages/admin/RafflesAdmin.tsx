@@ -91,7 +91,7 @@ export default function RafflesAdmin({ notify }: { notify: (message: string) => 
             <button type="button" className="admin-button" onClick={() => void create('watch')}>
               New watch-time raffle
             </button>
-            <button type="button" className="kk-button admin-submit" onClick={() => void create('wager')}>
+            <button type="button" className="admin-button admin-button--gold" onClick={() => void create('wager')}>
               New wager raffle
             </button>
           </div>
