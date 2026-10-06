@@ -100,7 +100,7 @@ export default function RafflesAdmin({ notify }: { notify: (message: string) => 
 
       {raffles && raffles.length > 1 && (
         <div className="kk-tabs admin-picker" role="radiogroup" aria-label="Raffle">
-          {raffles.slice(0, 8).map((r) => (
+          {raffles.map((r) => (
             <button
               key={r.id}
               type="button"
@@ -252,11 +252,18 @@ function RaffleEditor({ raffle, reload, notify }: { raffle: AdminRaffle; reload:
               {usd(raffle.prizePool)} pool · {raffle.drawsTotal} draws of {usd(raffle.prizePerDraw)} · max {raffle.maxWinsPerPerson} wins
               each · seed hash <code>{raffle.seedHash?.slice(0, 16)}…</code>
             </p>
-            {raffle.status === 'locked' && done === 0 && (
-              <button type="button" className="admin-button" disabled={busy} onClick={() => void act('/unlock', {}, 'Unlocked: tickets count again')}>
-                Unlock
-              </button>
-            )}
+            <div className="admin-row__actions">
+              {raffle.status === 'locked' && done === 0 && (
+                <button type="button" className="admin-button" disabled={busy} onClick={() => void act('/unlock', {}, 'Unlocked: tickets count again')}>
+                  Unlock
+                </button>
+              )}
+              <ConfirmButton
+                label="Delete raffle"
+                confirm={raffle.status === 'complete' ? 'Delete it and its draws?' : 'Delete it?'}
+                onConfirm={() => void act('/delete', {}, 'Raffle deleted')}
+              />
+            </div>
           </div>
         )}
       </section>

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import coinIcon from '../../assets/coin.svg'
 import { KICK_CHATROOM_ID } from '../../../shared/events'
-import type { Giveaway } from '../../../shared/events'
+import type { Giveaway, RaffleWin } from '../../../shared/events'
 import { adminPost } from './api'
 import { readChat } from './kickChat'
 import type { ChatStatus } from './kickChat'
@@ -257,6 +257,8 @@ export default function GiveawayAdmin({
           </div>
         </>
       )}
+
+      <PastWinners drawn={giveaway?.winners.length ?? 0} notify={notify} />
     </div>
   )
 }
@@ -264,4 +266,54 @@ export default function GiveawayAdmin({
 function LiveChip({ live }: { live: boolean | null }) {
   if (live === null) return null
   return <span className={`admin-chip${live ? ' admin-chip--live' : ''}`}>{live ? 'Live on Kick' : 'Offline'}</span>
+}
+
+/** The past winners list on the site: remove a test or mistaken draw, or clear it */
+function PastWinners({ drawn, notify }: { drawn: number; notify: (message: string) => void }) {
+  const [history, setHistory] = useState<RaffleWin[] | null>(null)
+
+  // Reload after each draw, which adds to the list
+  useEffect(() => {
+    fetch('/api/events/giveaway', { credentials: 'same-origin' })
+      .then((r) => r.json())
+      .then((d: { history: RaffleWin[] }) => setHistory(d.history))
+      .catch(() => setHistory([]))
+  }, [drawn])
+
+  const act = async (route: string, body: unknown, message: string) => {
+    try {
+      const res = await adminPost<{ history: RaffleWin[] }>(`giveaway/history/${route}`, body)
+      setHistory(res.history)
+      notify(message)
+    } catch (err) {
+      notify(err instanceof Error ? err.message : 'Could not save.')
+    }
+  }
+
+  if (!history?.length) return null
+  return (
+    <section className="admin-card">
+      <div className="admin-card__head">
+        <h2 className="admin-card__title">
+          Past winners <span className="admin-count">shown on the site</span>
+        </h2>
+        <ConfirmButton label="Clear all" confirm="Clear every past winner?" onConfirm={() => void act('clear', {}, 'Past winners cleared')} />
+      </div>
+      <ul className="admin-list">
+        {history.map((w) => (
+          <li key={w.at} className="admin-row">
+            <span className="admin-row__main">
+              <span className="admin-row__name">{w.name}</span>
+              <span className="admin-row__meta">
+                {w.prize} · {new Date(w.at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+              </span>
+            </span>
+            <div className="admin-row__actions">
+              <ConfirmButton label="Remove" confirm="Remove?" onConfirm={() => void act('remove', { at: w.at }, 'Winner removed')} />
+            </div>
+          </li>
+        ))}
+      </ul>
+    </section>
+  )
 }

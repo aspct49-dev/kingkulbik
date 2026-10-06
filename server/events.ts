@@ -29,6 +29,8 @@
  *   POST /api/admin/giveaway/remove     { kickId }
  *   POST /api/admin/giveaway/restore    { kickId }
  *   POST /api/admin/giveaway/end
+ *   POST /api/admin/giveaway/history/remove { at }   one past winner, off the site's list
+ *   POST /api/admin/giveaway/history/clear
  *
  * The giveaway reads Kick chat in the admin's browser (a socket can't live in
  * a serverless function), but who may enter and who wins is decided here.
@@ -442,6 +444,12 @@ export async function handleEventsRequest(req: AuthRequest, env: AuthEnv): Promi
       if (rest === 'end') {
         await write('giveaway', null)
         return json(200, { giveaway: null })
+      }
+      // Past winners shown on the site (kept apart from the current giveaway)
+      if (rest === 'history/remove' || rest === 'history/clear') {
+        const at = Number(body.at)
+        const history = await update('raffleWins', (list) => (rest === 'history/clear' ? [] : list.filter((w) => w.at !== at)))
+        return json(200, { history: history.slice(0, 20) })
       }
 
       const current = await read('giveaway')

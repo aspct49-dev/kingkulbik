@@ -81,7 +81,7 @@ export default function TournamentsAdmin({
 
       {tournaments.length > 1 && (
         <div className="kk-tabs admin-picker" role="radiogroup" aria-label="Tournament">
-          {tournaments.slice(0, 6).map((t) => (
+          {tournaments.map((t) => (
             <button
               key={t.id}
               type="button"

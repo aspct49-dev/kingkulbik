@@ -71,7 +71,7 @@ export default function HuntAdmin({
 
       {hunts.length > 1 && (
         <div className="kk-tabs admin-picker" role="radiogroup" aria-label="Hunt">
-          {hunts.slice(0, 6).map((h) => (
+          {hunts.map((h) => (
             <button
               key={h.id}
               type="button"

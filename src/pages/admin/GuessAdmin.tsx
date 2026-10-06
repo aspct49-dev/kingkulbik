@@ -155,6 +155,11 @@ function RoundPanel({
               {round.status === 'drawn' ? 'Undo draw and reopen' : 'Reopen entries'}
             </button>
           )}
+          <ConfirmButton
+            label="Delete round"
+            confirm="Delete this round?"
+            onConfirm={() => void act(`guess/${round.id}/delete`, {}, 'Round deleted')}
+          />
         </div>
         <form
           className="admin-row__actions"
