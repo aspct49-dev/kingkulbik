@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import * as THREE from 'three'
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'
-import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js'
 import './RaffleMachine.css'
 
 /*
@@ -38,6 +37,22 @@ const RISE_S = 0.8
 const TUBE_S = 2.6
 const DROP_S = 0.55
 
+/**
+ * Surface finish per GLB material, matching the Blender render: polished gold,
+ * chrome-like silver, and lacquered navy (glossy, not a mirror). Colours stay
+ * as modelled.
+ */
+const FINISH: Record<string, Partial<THREE.MeshPhysicalMaterial>> = {
+  KK_Gold: { metalness: 1, roughness: 0.24 },
+  KK_Gold_Highlight: { metalness: 1, roughness: 0.18 },
+  KK_Gold_Glow: { metalness: 0.9, roughness: 0.22 },
+  KK_Silver: { metalness: 1, roughness: 0.14 },
+  KK_Navy: { metalness: 0.3, roughness: 0.32 },
+  KK_Navy_Deep: { metalness: 0.3, roughness: 0.36 },
+  KK_Blue_Dark: { metalness: 0.25, roughness: 0.3 },
+  KK_Gunmetal: { metalness: 0.4, roughness: 0.3 },
+}
+
 /** Ball colours: the site's gold, white and blue */
 const BALL_COLORS = [
   { base: '#f2c21b', band: '#ffffff', text: '#151b25' },
@@ -45,11 +60,12 @@ const BALL_COLORS = [
   { base: '#2f6fd6', band: '#ffffff', text: '#151b25' },
 ]
 
-function ballTexture(name: string, colorIndex: number) {
+function ballTexture(name: string, colorIndex: number, anisotropy: number) {
   const c = document.createElement('canvas')
-  c.width = 512
-  c.height = 256
+  c.width = 1024
+  c.height = 512
   const g = c.getContext('2d')!
+  g.scale(2, 2)
   const col = BALL_COLORS[colorIndex % BALL_COLORS.length]
   g.fillStyle = col.base
   g.fillRect(0, 0, 512, 256)
@@ -70,8 +86,85 @@ function ballTexture(name: string, colorIndex: number) {
   g.fillText(name, 384, 129)
   const t = new THREE.CanvasTexture(c)
   t.colorSpace = THREE.SRGBColorSpace
-  t.anisotropy = 4
+  t.anisotropy = anisotropy
   return t
+}
+
+/**
+ * The reflection environment: a photo studio built in code, rendered to an HDR
+ * cube by PMREM (so no HDRI download). A dark room with a big softbox high in
+ * front, tall strip lights either side (the long edge highlights on the gold
+ * rings and the glass), a warm card in front and a cool panel behind for the
+ * rim. Colours above 1 are what make it HDR.
+ */
+function studioEnvironment(): THREE.Scene {
+  const env = new THREE.Scene()
+  env.add(new THREE.Mesh(new THREE.SphereGeometry(30, 32, 16), new THREE.MeshBasicMaterial({ color: 0x0b1120, side: THREE.BackSide })))
+  const panel = (w: number, h: number, color: number, strength: number, at: [number, number, number]) => {
+    const mesh = new THREE.Mesh(
+      new THREE.PlaneGeometry(w, h),
+      new THREE.MeshBasicMaterial({ color: new THREE.Color(color).multiplyScalar(strength), side: THREE.DoubleSide }),
+    )
+    mesh.position.set(...at)
+    mesh.lookAt(0, 2, 0)
+    env.add(mesh)
+  }
+  panel(9, 5, 0xffffff, 3.2, [2.5, 10, 8]) // key softbox
+  panel(1.4, 10, 0xffffff, 6, [-9, 3, 4]) // left strip
+  panel(1.4, 10, 0xffffff, 4.5, [9, 3, 1]) // right strip
+  panel(8, 3, 0xffe2b4, 1.2, [0, 0.5, 12]) // warm front card
+  panel(8, 5, 0x6f9bff, 2.4, [-4, 5, -10]) // cool rim panel
+  panel(14, 14, 0xffffff, 0.7, [0, 16, 0]) // ceiling
+  return env
+}
+
+/**
+ * The card's backdrop (RaffleMachine.css), drawn inside the scene: glass
+ * refracts what is rendered behind it, and a transparent canvas gives it
+ * nothing, which turns the tube milky.
+ */
+function backdropTexture() {
+  const w = 1024
+  const h = 768
+  const c = document.createElement('canvas')
+  c.width = w
+  c.height = h
+  const g = c.getContext('2d')!
+  const base = g.createLinearGradient(0, 0, 0, h)
+  base.addColorStop(0, '#111a2e')
+  base.addColorStop(1, '#0e1219')
+  g.fillStyle = base
+  g.fillRect(0, 0, w, h)
+  const glow = (x: number, y: number, rx: number, ry: number, rgb: string, a: number) => {
+    g.save()
+    g.translate(x * w, y * h)
+    g.scale(rx * w, ry * h)
+    const r = g.createRadialGradient(0, 0, 0, 0, 0, 1)
+    r.addColorStop(0, `rgba(${rgb},${a})`)
+    r.addColorStop(0.7, `rgba(${rgb},0)`)
+    g.fillStyle = r
+    g.fillRect(-1, -1, 2, 2)
+    g.restore()
+  }
+  glow(0.4, 0.55, 0.55, 0.6, '47,96,200', 0.22)
+  glow(0.74, 0.78, 0.3, 0.35, '240,185,30', 0.12)
+  const t = new THREE.CanvasTexture(c)
+  t.colorSpace = THREE.SRGBColorSpace
+  return t
+}
+
+/** A soft dark ellipse for under the bases: contact shadow and ambient occlusion where they meet the floor */
+function contactShadowTexture() {
+  const c = document.createElement('canvas')
+  c.width = c.height = 256
+  const g = c.getContext('2d')!
+  const grad = g.createRadialGradient(128, 128, 0, 128, 128, 128)
+  grad.addColorStop(0, 'rgba(0,0,0,0.75)')
+  grad.addColorStop(0.45, 'rgba(0,0,0,0.4)')
+  grad.addColorStop(1, 'rgba(0,0,0,0)')
+  g.fillStyle = grad
+  g.fillRect(0, 0, 256, 256)
+  return new THREE.CanvasTexture(c)
 }
 
 type Ball = {
@@ -123,34 +216,64 @@ export default function RaffleMachine({ names, draw, resting = null, onDrawn, ti
       return
     }
     const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
+    // Colour management as in Blender's Filmic/ACES view: linear lighting, ACES tone map, sRGB out
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
     renderer.outputColorSpace = THREE.SRGBColorSpace
     renderer.toneMapping = THREE.ACESFilmicToneMapping
-    renderer.toneMappingExposure = 1.1
+    renderer.toneMappingExposure = 1
+    renderer.shadowMap.enabled = true
+    // PCF with a radius gives soft shadow edges (PCFSoft ignores the radius)
+    renderer.shadowMap.type = THREE.PCFShadowMap
     host.appendChild(renderer.domElement)
+    const anisotropy = renderer.capabilities.getMaxAnisotropy()
 
     const scene = new THREE.Scene()
     const pmrem = new THREE.PMREMGenerator(renderer)
-    const envTexture = pmrem.fromScene(new RoomEnvironment(), 0.04).texture
+    const studio = studioEnvironment()
+    const envTexture = pmrem.fromScene(studio, 0.02).texture
+    studio.traverse((o) => {
+      const m = o as THREE.Mesh
+      if (m.isMesh) {
+        m.geometry.dispose()
+        ;(m.material as THREE.Material).dispose()
+      }
+    })
     scene.environment = envTexture
-    scene.add(new THREE.HemisphereLight(0xdfe8ff, 0x0b1020, 0.5))
-    const key = new THREE.DirectionalLight(0xffffff, 2)
-    key.position.set(3, 5, 6)
-    scene.add(key)
-    const rim = new THREE.DirectionalLight(0x5b8dff, 1.4)
-    rim.position.set(-4, 2, -3)
-    scene.add(rim)
+    const backdrop = backdropTexture()
+    scene.background = backdrop
+
+    const look = new THREE.Vector3(1.03, 1.95, 0.35)
+    // Three-point studio lighting, plus a faint top light
+    const key = new THREE.DirectionalLight(0xfff3e2, 2.6)
+    key.position.set(look.x + 3.5, look.y + 6, look.z + 6)
+    key.target.position.copy(look)
+    key.castShadow = true
+    key.shadow.mapSize.set(2048, 2048)
+    key.shadow.radius = 5
+    key.shadow.bias = -0.0004
+    key.shadow.normalBias = 0.02
+    Object.assign(key.shadow.camera, { left: -4, right: 4, top: 4, bottom: -4, near: 1, far: 20 })
+    const fill = new THREE.DirectionalLight(0xcfdcff, 0.7)
+    fill.position.set(look.x - 6, look.y + 1.5, look.z + 4)
+    const rim = new THREE.DirectionalLight(0x6f9bff, 1.8)
+    rim.position.set(look.x - 2, look.y + 3, look.z - 6)
+    const top = new THREE.DirectionalLight(0xffffff, 0.35)
+    top.position.set(look.x, look.y + 8, look.z)
+    for (const light of [key, fill, rim, top]) {
+      light.target.position.copy(look)
+      scene.add(light, light.target)
+    }
+    scene.add(new THREE.HemisphereLight(0xdfe8ff, 0x0b1020, 0.15))
     // A warm glow on the pedestal
     const spot = new THREE.PointLight(0xffd36b, 0, 3)
     spot.position.set(TARGET.x, TARGET.y + 0.9, TARGET.z + 0.6)
     scene.add(spot)
 
     const camera = new THREE.PerspectiveCamera(30, 1, 0.1, 60)
-    const look = new THREE.Vector3(1.03, 1.95, 0.35)
 
     const tube = new THREE.CatmullRomCurve3(TUBE_POINTS.map((p) => new THREE.Vector3(...p)))
     const ballGeometry = new THREE.SphereGeometry(BALL_R, 28, 20)
-    const disposables: { dispose: () => void }[] = [envTexture, pmrem, ballGeometry]
+    const disposables: { dispose: () => void }[] = [envTexture, pmrem, ballGeometry, backdrop]
     const machine = new THREE.Group()
     scene.add(machine)
     const paddles: THREE.Object3D[] = []
@@ -158,9 +281,11 @@ export default function RaffleMachine({ names, draw, resting = null, onDrawn, ti
     let balls: Ball[] = []
     let colorCursor = 0
     const makeBall = (name: string, at?: THREE.Vector3): Ball => {
-      const map = ballTexture(name, colorCursor++)
+      const map = ballTexture(name, colorCursor++, anisotropy)
       const mat = new THREE.MeshPhysicalMaterial({ map, roughness: 0.22, metalness: 0.05, clearcoat: 1, clearcoatRoughness: 0.08 })
       const mesh = new THREE.Mesh(ballGeometry, mat)
+      mesh.castShadow = true
+      mesh.receiveShadow = true
       const start =
         at ??
         new THREE.Vector3(
@@ -291,27 +416,52 @@ export default function RaffleMachine({ names, draw, resting = null, onDrawn, ti
           const mesh = o as THREE.Mesh
           if (o.name.startsWith('Mixing_Paddle') || o.name.startsWith('Mixing_Hub')) paddles.push(o)
           if (!mesh.isMesh) return
-          const mat = mesh.material as THREE.MeshStandardMaterial
-          // The acrylic as clear glass: balls stay visible inside the globe and tube
+          mesh.castShadow = true
+          mesh.receiveShadow = true
+          const mat = mesh.material as THREE.MeshPhysicalMaterial
+          const finish = FINISH[mat.name]
+          if (finish) Object.assign(mat, finish)
+          // The acrylic as real glass: refraction through transmission, IOR from the GLB (1.45)
           if (mat.name === 'KK_Acrylic') {
             const glass = new THREE.MeshPhysicalMaterial({
-              color: 0xcfe0ff,
+              name: mat.name,
+              color: 0xf2f7ff,
               metalness: 0,
               roughness: 0.04,
-              transparent: true,
-              opacity: 0.13,
-              clearcoat: 1,
-              clearcoatRoughness: 0.03,
-              envMapIntensity: 1.2,
-              depthWrite: false,
+              transmission: 1,
+              ior: mat.ior || 1.45,
+              thickness: 0.08,
+              attenuationColor: new THREE.Color(0xa8c8ff),
+              attenuationDistance: 1.5,
+              specularIntensity: 1,
+              envMapIntensity: 0.8,
             })
+            mat.dispose()
             mesh.material = glass
-            mesh.renderOrder = 2
-            disposables.push(glass)
+            // Clear things cast almost no shadow
+            mesh.castShadow = false
           }
           disposables.push(mesh.geometry)
           disposables.push(mesh.material as THREE.Material)
         })
+
+        // The floor: real shadows from the key light, plus a soft contact shadow under the bases
+        const box = new THREE.Box3().setFromObject(gltf.scene)
+        const floorY = box.min.y + 0.002
+        const floor = new THREE.Mesh(new THREE.PlaneGeometry(14, 14), new THREE.ShadowMaterial({ opacity: 0.32 }))
+        floor.rotation.x = -Math.PI / 2
+        floor.position.set(look.x, floorY, look.z)
+        floor.receiveShadow = true
+        const contactMap = contactShadowTexture()
+        const contact = new THREE.Mesh(
+          new THREE.PlaneGeometry(1, 1),
+          new THREE.MeshBasicMaterial({ map: contactMap, transparent: true, depthWrite: false, toneMapped: false }),
+        )
+        contact.rotation.x = -Math.PI / 2
+        contact.position.set((box.min.x + box.max.x) / 2, floorY + 0.001, (box.min.z + box.max.z) / 2)
+        contact.scale.set((box.max.x - box.min.x) * 1.15, (box.max.z - box.min.z) * 1.3, 1)
+        machine.add(floor, contact)
+        disposables.push(floor.geometry, floor.material, contact.geometry, contact.material, contactMap)
         setStatus('ready')
       })
       .catch(() => setStatus('unsupported'))
@@ -327,11 +477,12 @@ export default function RaffleMachine({ names, draw, resting = null, onDrawn, ti
       if (!w || !h) return
       renderer.setSize(w, h, false)
       camera.aspect = w / h
-      // Fit the whole machine (about 4.5 wide, 4 tall) at any aspect
-      const fit = Math.max(4.6 / (w / h), 4.3) * (tight ? 0.92 : 1)
+      // Fit the whole machine, base included (about 4.9 wide, 4.7 tall), at any aspect
+      const fit = Math.max(4.9 / (w / h), 4.7) * (tight ? 0.92 : 1)
       const dist = fit / (2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)))
-      camera.position.set(look.x + 0.6, look.y + 0.55, look.z + dist)
-      camera.lookAt(look)
+      const aim = look.clone().setY(look.y - 0.2)
+      camera.position.set(aim.x + 0.6, aim.y + 0.55, aim.z + dist)
+      camera.lookAt(aim)
       camera.updateProjectionMatrix()
     }
     const ro = new ResizeObserver(resize)

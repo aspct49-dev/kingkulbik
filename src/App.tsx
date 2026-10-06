@@ -21,6 +21,7 @@ const GuessTheBalancePage = lazy(() => import('./pages/GuessTheBalancePage'))
 const TournamentsPage = lazy(() => import('./pages/TournamentsPage'))
 const RafflesPage = lazy(() => import('./pages/RafflesPage'))
 const OverlayPage = lazy(() => import('./pages/OverlayPage'))
+const RafflePreviewPage = lazy(() => import('./pages/RafflePreviewPage'))
 
 /** Browser tab title per page */
 const TITLES: Record<string, string> = {
@@ -69,6 +70,8 @@ function Layout() {
               <Route path="/admin" element={<AdminPage />} />
               <Route path="/challenges" element={<ChallengesPage />} />
               <Route path="/raffles" element={<RafflesPage />} />
+              {/* Tuning the 3D render without a live raffle (not in production builds) */}
+              {import.meta.env.DEV && <Route path="/raffle-preview" element={<RafflePreviewPage />} />}
               <Route path="/item-store" element={<ItemStorePage />} />
               <Route path="/referral" element={<ReferralPage />} />
               <Route path="/bonus-hunt" element={<BonusHuntPage />} />
