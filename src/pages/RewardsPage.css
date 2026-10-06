@@ -44,7 +44,7 @@
 }
 
 .rewards__title-main {
-  margin-top: -0.08em;
+  margin-top: -0.2em;
   font-size: clamp(36px, 7.3cqi, 75px);
   background-image: linear-gradient(0deg, #a88600, #e4de2c);
 }

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import ticketIcon from '../../assets/ticket.svg'
 import RaffleMachine from '../../components/raffle/RaffleMachine'
 import type { RaffleDrawShow } from '../../components/raffle/RaffleMachine'
 import type { Raffle, RaffleEntry, RaffleKind } from '../../../shared/raffles'
@@ -337,7 +338,10 @@ function RaffleEditor({ raffle, reload, notify }: { raffle: AdminRaffle; reload:
                 </span>
                 <span className="ev-table__name">{e.name}</span>
                 <span className="raffles__muted">{wager ? money(e.amount) : hours(e.amount)}</span>
-                <span className="raffles__tickets">{e.tickets.toLocaleString('en-US')}</span>
+                <span className="raffles__tickets">
+                  <img src={ticketIcon} width={15} height={15} alt="" />
+                  {e.tickets.toLocaleString('en-US')}
+                </span>
                 <span>{pct(e.odds)}</span>
               </div>
             ))}

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router'
 import coinIcon from '../assets/coin.svg'
+import ticketIcon from '../assets/ticket.svg'
 import raffleIcon from '../assets/events/raffle-icon.svg'
 import EventBanner from '../components/events/EventBanner'
 import RaffleMachine from '../components/raffle/RaffleMachine'
@@ -248,7 +249,10 @@ function YourTickets({ raffle }: { raffle: PublicRaffle }) {
         <>
           <div className="raffles__you-figures">
             <span className="raffles__you-tickets">
-              {mine.tickets.toLocaleString('en-US')}
+              <span className="raffles__you-count">
+                <img src={ticketIcon} width={22} height={22} alt="" />
+                {mine.tickets.toLocaleString('en-US')}
+              </span>
               <small>{mine.tickets === 1 ? 'ticket' : 'tickets'}</small>
             </span>
             <span className="raffles__you-odds">
@@ -322,7 +326,7 @@ function Entries({ raffle }: { raffle: PublicRaffle }) {
                   {wager ? money(e.amount) : hours(e.amount)}
                 </span>
                 <span role="cell" className="raffles__tickets">
-                  <img src={coinIcon} width={12} height={12} alt="" />
+                  <img src={ticketIcon} width={15} height={15} alt="" />
                   {e.tickets.toLocaleString('en-US')}
                 </span>
                 <span role="cell">{pct(e.odds)}</span>
