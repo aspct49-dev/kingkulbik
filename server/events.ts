@@ -13,7 +13,8 @@
  *   POST /api/admin/hunts               { name, startBalance }
  *   POST /api/admin/hunts/<id>          the whole hunt (name, startBalance, status, bonuses)
  *   POST /api/admin/hunts/<id>/delete
- *   POST /api/admin/guess               { name, prize, huntId }   (closes any open round)
+ *   POST /api/admin/guess               { name, prize, huntId, startBalance?, bonusCount? }   (closes any open round)
+ *   POST /api/admin/guess/<id>/figures  { startBalance, bonusCount }   blank for the hunt's
  *   POST /api/admin/guess/<id>          { status: 'open' | 'closed' }
  *   POST /api/admin/guess/<id>/draw     { finalBalance }
  *   POST /api/admin/guess/<id>/remove   { userId }
@@ -97,6 +98,16 @@ function safeImage(v: unknown): string | undefined {
   if (isUploadUrl(s)) return s
   if (/^https:\/\/mediumrare\.imgix\.net\/[\w./%-]+(\?[\w=&.%-]*)?$/.test(s)) return s
   return undefined
+}
+
+/** An optional figure: blank means none */
+const optionalMoney = (v: unknown, label: string) => (v === null || v === undefined || String(v).trim() === '' ? null : money(v, label))
+
+const optionalCount = (v: unknown) => {
+  if (v === null || v === undefined || String(v).trim() === '') return null
+  const n = Number(v)
+  if (!Number.isInteger(n) || n < 0 || n > 10_000) throw new InputError('Bonuses must be a whole number up to 10,000.')
+  return n
 }
 
 const safeSlug = (v: unknown) => {
@@ -194,6 +205,8 @@ async function publicGuessRound(userId: string | null): Promise<PublicGuessRound
     hunt: hunt
       ? (() => {
           const stats = huntStats(hunt)
+          // Break-even follows the start balance the page shows
+          const start = round.startBalance ?? hunt.startBalance
           return {
             name: hunt.name,
             status: hunt.status,
@@ -201,7 +214,7 @@ async function publicGuessRound(userId: string | null): Promise<PublicGuessRound
             count: stats.count,
             opened: stats.opened,
             totalWon: stats.totalWon,
-            breakEven: stats.breakEven,
+            breakEven: stats.totalBet > 0 && start > 0 ? start / stats.totalBet : null,
           }
         })()
       : null,
@@ -346,6 +359,8 @@ export async function handleEventsRequest(req: AuthRequest, env: AuthEnv): Promi
           name: text(body.name, 'Name', 60),
           prize: text(body.prize, 'Prize', 40, false),
           huntId,
+          startBalance: optionalMoney(body.startBalance, 'Start balance'),
+          bonusCount: optionalCount(body.bonusCount),
           status: 'open',
           guesses: [],
           finalBalance: null,
@@ -368,6 +383,9 @@ export async function handleEventsRequest(req: AuthRequest, env: AuthEnv): Promi
           round.finalBalance = money(body.finalBalance, 'Final balance')
           round.status = 'drawn'
           round.drawnAt = Date.now()
+        } else if (action === 'figures') {
+          round.startBalance = optionalMoney(body.startBalance, 'Start balance')
+          round.bonusCount = optionalCount(body.bonusCount)
         } else if (action === 'remove') {
           round.guesses = round.guesses.filter((g) => g.userId !== String(body.userId))
         } else if (!action) {

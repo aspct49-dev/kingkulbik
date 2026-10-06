@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import KenoControls from '../components/keno/KenoControls'
 import KenoBoard from '../components/keno/KenoBoard'
 import KenoPayTable from '../components/keno/KenoPayTable'
+import Toast, { useToast } from '../components/Toast'
 import gemIcon from '../assets/keno/gem.svg'
 import GameTitleBar from '../components/GameTitleBar'
 import GameToolbar, { EMPTY_STATS, recordBet } from '../components/GameToolbar'
@@ -93,17 +94,18 @@ export default function KenoPage() {
   const busy = drawing || autoPicking
   const bet = parseBet(betInput)
 
+  // Over the maximum the Bet button still works, and says so in a toast (as Stake does)
+  const overMax = bet > maxBet
+  const { toast, show: showToast } = useToast(3200)
   const error = gate
     ? gate.reason
     : !rules.enabled
       ? 'Keno is closed right now.'
       : !Number.isInteger(bet) || bet < minBet
         ? `Bets are whole King Points, at least ${formatKingPoints(minBet)}.`
-        : bet > maxBet
-          ? `Maximum bet is ${formatKingPoints(maxBet)} King Points.`
-          : ready && bet > balance
-            ? 'Not enough King Points for this bet.'
-            : null
+        : ready && !overMax && bet > balance
+          ? 'Not enough King Points for this bet.'
+          : null
   const canBet = ready && !busy && picks.length > 0 && !error
 
   // Reveal the draw one tile at a time, then settle the round once
@@ -150,6 +152,7 @@ export default function KenoPage() {
 
   const handleBet = useStableCallback(async () => {
     if (!canBet) return
+    if (overMax) return showToast(`The bet amount must not be greater than ${formatKingPoints(maxBet)} King Points.`)
     preloadSounds()
     playBet()
     setServerError(null)
@@ -216,11 +219,13 @@ export default function KenoPage() {
   })
 
   const clampBet = (value: number) => Math.min(maxBet, Math.max(minBet, Number.isFinite(value) ? value : minBet))
+  // Leaving the field rounds up to the minimum but keeps a bet over the maximum, so Bet can say why it won't go
+  const raiseToMin = (value: number) => Math.max(minBet, Number.isFinite(value) ? value : minBet)
   const onBetInputChange = useStableCallback((value: string) => {
     setServerError(null)
     setBetInput(value.replace(/[^\d,]/g, ''))
   })
-  const onBetBlur = useStableCallback(() => setBetInput(toBetInput(clampBet(bet))))
+  const onBetBlur = useStableCallback(() => setBetInput(toBetInput(raiseToMin(bet))))
   const onHalve = useStableCallback(() => {
     playTick()
     setBetInput(toBetInput(clampBet((Number.isFinite(bet) ? bet : minBet) / 2)))
@@ -327,6 +332,8 @@ export default function KenoPage() {
       <GameTitleBar name="Keno" icon={gemIcon} rtp={1 - rules.houseEdge} wide={theater} />
 
       <LiveBets wide={theater} />
+
+      <Toast toast={toast} tone="error" />
     </div>
   )
 }

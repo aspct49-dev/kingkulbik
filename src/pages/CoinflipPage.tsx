@@ -4,6 +4,7 @@ import CoinflipControls from '../components/coinflip/CoinflipControls'
 import CoinStage, { QUICK_TOSS_SECONDS, TOSS_SECONDS } from '../components/coinflip/CoinStage'
 import type { Toss } from '../components/coinflip/CoinStage'
 import GameTitleBar from '../components/GameTitleBar'
+import Toast, { useToast } from '../components/Toast'
 import WinCard from '../components/WinCard'
 import GameToolbar, { EMPTY_STATS, recordBet } from '../components/GameToolbar'
 import type { SessionStats } from '../components/GameToolbar'
@@ -76,17 +77,18 @@ export default function CoinflipPage() {
 
   const flipping = !!flip || pending
   const bet = parseBet(betInput)
+  // Over the maximum the Bet button still works, and says so in a toast (as Stake does)
+  const overMax = bet > maxBet
+  const { toast, show: showToast } = useToast(3200)
   const error = gate
     ? gate.reason
     : !rules.enabled
       ? 'Coinflip is closed right now.'
       : !Number.isInteger(bet) || bet < minBet
         ? `Bets are whole King Points, at least ${formatKingPoints(minBet)}.`
-        : bet > maxBet
-          ? `Maximum bet is ${formatKingPoints(maxBet)} King Points.`
-          : ready && bet > balance
-            ? 'Not enough King Points for this bet.'
-            : null
+        : ready && !overMax && bet > balance
+          ? 'Not enough King Points for this bet.'
+          : null
   const canBet = ready && !game && !pending && !error
 
   // A game left running (reload, another tab) carries on: its bet was already taken
@@ -110,6 +112,7 @@ export default function CoinflipPage() {
 
   const startGame = useStableCallback(async () => {
     if (!canBet) return
+    if (overMax) return showToast(`The bet amount must not be greater than ${formatKingPoints(maxBet)} King Points.`)
     preloadSounds()
     playBet()
     setServerError(null)
@@ -206,7 +209,8 @@ export default function CoinflipPage() {
               setServerError(null)
               setBetInput(value.replace(/[^\d,]/g, ''))
             }}
-            onBetBlur={() => setBetInput(toBetInput(clampBet(safeBet)))}
+            // Keeps a bet over the maximum, so Bet can say why it won't go
+            onBetBlur={() => setBetInput(toBetInput(Math.max(minBet, safeBet)))}
             onHalve={() => {
               playTick()
               setBetInput(toBetInput(clampBet(safeBet / 2)))
@@ -300,6 +304,8 @@ export default function CoinflipPage() {
       <GameTitleBar name="Coinflip" icon={coinIcon} rtp={1 - rules.houseEdge} wide={theater} />
 
       <LiveBets wide={theater} />
+
+      <Toast toast={toast} tone="error" />
     </div>
   )
 }

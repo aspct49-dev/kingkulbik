@@ -20,7 +20,7 @@ export default function GuessAdmin({
   onChange: (rounds: GuessRound[]) => void
   notify: (message: string) => void
 }) {
-  const [form, setForm] = useState({ name: '', prize: '', huntId: hunts[0]?.id ?? '' })
+  const [form, setForm] = useState({ name: '', prize: '', huntId: hunts[0]?.id ?? '', startBalance: '', bonusCount: '' })
   const [error, setError] = useState<string | null>(null)
   const round = rounds.find((r) => r.status !== 'drawn') ?? rounds[0] ?? null
 
@@ -40,10 +40,17 @@ export default function GuessAdmin({
     e.preventDefault()
     setError(null)
     if (!form.name.trim()) return setError('Name the round.')
+    const figures = parseFigures(form.startBalance, form.bonusCount)
+    if (typeof figures === 'string') return setError(figures)
     try {
-      const res = await adminPost<{ guesses: GuessRound[] }>('guess', { name: form.name.trim(), prize: form.prize.trim(), huntId: form.huntId || null })
+      const res = await adminPost<{ guesses: GuessRound[] }>('guess', {
+        name: form.name.trim(),
+        prize: form.prize.trim(),
+        huntId: form.huntId || null,
+        ...figures,
+      })
       onChange(res.guesses)
-      setForm((f) => ({ ...f, name: '', prize: '' }))
+      setForm((f) => ({ ...f, name: '', prize: '', startBalance: '', bonusCount: '' }))
       notify('Round open for guesses')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not save.')
@@ -72,6 +79,12 @@ export default function GuessAdmin({
                 ))}
               </select>
             </span>
+          </Field>
+          <Field label="Start balance" hint={form.huntId ? 'Blank to use the hunt’s' : undefined}>
+            <Input value={form.startBalance} onChange={(v) => setForm((f) => ({ ...f, startBalance: v }))} unit="$" placeholder="2,500.00" inputMode="decimal" />
+          </Field>
+          <Field label="Bonuses" hint={form.huntId ? 'Blank to use the hunt’s' : undefined}>
+            <Input value={form.bonusCount} onChange={(v) => setForm((f) => ({ ...f, bonusCount: v }))} placeholder="25" inputMode="numeric" />
           </Field>
         </div>
         {error && <p className="admin-error" role="alert">{error}</p>}
@@ -112,6 +125,15 @@ export default function GuessAdmin({
 
 const STATUS = { open: 'Taking guesses', closed: 'Entries closed', drawn: 'Drawn' } as const
 
+/** The start balance and bonus count fields: blank is none, otherwise a figure or what's wrong with it */
+function parseFigures(startBalance: string, bonusCount: string) {
+  const start = startBalance.trim() ? num(startBalance) : null
+  const count = bonusCount.trim() ? num(bonusCount) : null
+  if (start !== null && !(start >= 0)) return 'Start balance must be a number.'
+  if (count !== null && !(Number.isInteger(count) && count >= 0)) return 'Bonuses must be a whole number.'
+  return { startBalance: start, bonusCount: count }
+}
+
 function RoundPanel({
   round,
   hunt,
@@ -125,6 +147,18 @@ function RoundPanel({
   const [final, setFinal] = useState(
     round.finalBalance !== null ? String(round.finalBalance) : hunt?.status === 'finished' && huntWon !== null ? String(huntWon) : '',
   )
+  const [figures, setFigures] = useState({
+    startBalance: round.startBalance != null ? String(round.startBalance) : '',
+    bonusCount: round.bonusCount != null ? String(round.bonusCount) : '',
+  })
+  const [figuresError, setFiguresError] = useState<string | null>(null)
+  const saveFigures = (e: FormEvent) => {
+    e.preventDefault()
+    const parsed = parseFigures(figures.startBalance, figures.bonusCount)
+    setFiguresError(typeof parsed === 'string' ? parsed : null)
+    if (typeof parsed !== 'string') void act(`guess/${round.id}/figures`, parsed, 'Figures saved')
+  }
+  const huntFigures = hunt ? { start: usd(hunt.startBalance), count: String(hunt.bonuses.length) } : null
   const ranked = rankGuesses(round)
   const rows = ranked.length
     ? ranked
@@ -178,6 +212,34 @@ function RoundPanel({
           </button>
         </form>
       </div>
+      <form className="admin-figures" onSubmit={saveFigures} noValidate>
+        <Field label="Start balance">
+          <Input
+            value={figures.startBalance}
+            onChange={(v) => setFigures((f) => ({ ...f, startBalance: v }))}
+            unit="$"
+            placeholder={huntFigures ? huntFigures.start.slice(1) : '2,500.00'}
+            inputMode="decimal"
+          />
+        </Field>
+        <Field label="Bonuses">
+          <Input
+            value={figures.bonusCount}
+            onChange={(v) => setFigures((f) => ({ ...f, bonusCount: v }))}
+            placeholder={huntFigures?.count ?? '25'}
+            inputMode="numeric"
+          />
+        </Field>
+        <button type="submit" className="admin-button">
+          Save figures
+        </button>
+      </form>
+      {figuresError && <p className="admin-error" role="alert">{figuresError}</p>}
+      <p className="admin-note">
+        {huntFigures
+          ? `Shown on the page. Leave blank to use ${hunt?.name}’s: ${huntFigures.start} and ${huntFigures.count} bonuses.`
+          : 'Shown on the Guess the Balance page.'}
+      </p>
       {hunt && huntWon !== null && round.status !== 'drawn' && (
         <p className="admin-note">
           {hunt.name} has paid {usd(huntWon)} so far

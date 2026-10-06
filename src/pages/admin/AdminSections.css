@@ -368,6 +368,30 @@
   width: 72px;
 }
 
+/* Guess the balance: start balance and bonuses beside their Save button */
+.admin-figures {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+/* As tall as the fields it sits beside */
+.admin-figures .admin-button {
+  height: 38px;
+}
+
+@media (max-width: 600px) {
+  .admin-figures {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .admin-figures .admin-button {
+    grid-column: 1 / -1;
+  }
+}
+
 /* ---------------------------------------------------------------- raffles */
 
 .admin-raffle-machine .raffle-machine {

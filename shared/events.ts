@@ -100,6 +100,9 @@ export type GuessRound = {
   prize: string
   /** The hunt it's played on (its start balance and bonus count show on the page) */
   huntId: string | null
+  /** Typed in by an admin; when set they show in place of the hunt's (absent on older rounds) */
+  startBalance?: number | null
+  bonusCount?: number | null
   status: GuessStatus
   guesses: Guess[]
   finalBalance: number | null

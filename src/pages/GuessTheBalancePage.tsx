@@ -62,6 +62,9 @@ function RoundView({ round, onGuessed }: { round: PublicGuessRound; onGuessed: (
   const hunt = round.hunt
   const stage = STAGE[round.status]
   const opening = hunt && hunt.opened > 0
+  // Figures typed in by an admin win over the hunt's
+  const start = round.startBalance ?? hunt?.startBalance ?? null
+  const bonuses = round.bonusCount ?? hunt?.count ?? null
 
   return (
     <>
@@ -85,8 +88,11 @@ function RoundView({ round, onGuessed }: { round: PublicGuessRound; onGuessed: (
       </section>
 
       <ul className="ev-stats">
-        <Stat label="Start balance" value={hunt ? usd(hunt.startBalance) : '—'} />
-        <Stat label="Bonuses" value={hunt ? (opening ? `${hunt.opened}/${hunt.count} opened` : String(hunt.count)) : '—'} />
+        <Stat label="Start balance" value={start !== null ? usd(start) : '—'} />
+        <Stat
+          label="Bonuses"
+          value={bonuses === null ? '—' : opening ? `${hunt.opened}/${bonuses} opened` : bonuses.toLocaleString('en-US')}
+        />
         <Stat
           label={opening ? 'Paid so far' : 'Break-even'}
           value={hunt ? (opening ? usd(hunt.totalWon) : hunt.breakEven !== null ? multi(hunt.breakEven) : '—') : '—'}
@@ -214,7 +220,7 @@ function GuessCard({ round, onGuessed }: { round: PublicGuessRound; onGuessed: (
               setMessage(null)
             }}
             inputMode="decimal"
-            placeholder={round.hunt ? round.hunt.startBalance.toLocaleString('en-US') : '2,500.00'}
+            placeholder={(round.startBalance ?? round.hunt?.startBalance)?.toLocaleString('en-US') ?? '2,500.00'}
             autoComplete="off"
           />
         </div>
