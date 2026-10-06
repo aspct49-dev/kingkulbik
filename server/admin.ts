@@ -27,7 +27,7 @@ import type { Challenge, ItemTier, StoreItem } from '../shared/content.js'
 import { sanitizeRules } from '../shared/originals.js'
 import { isAdmin, json, readSession } from './auth.js'
 import type { AuthEnv, AuthRequest, AuthResponse } from './auth.js'
-import { read, readUpload, saveUpload, StoreError, update, write } from './store.js'
+import { isUploadUrl, read, readUpload, saveUpload, StoreError, update, write } from './store.js'
 
 const UPLOAD_TYPES = { 'image/webp': 'webp', 'image/png': 'png', 'image/jpeg': 'jpg', 'image/gif': 'gif' } as const
 const UPLOAD_MAX = 3 * 1024 * 1024
@@ -69,7 +69,7 @@ const number = (v: unknown, label: string, min: number, max: number) => {
 const image = (v: unknown, label = 'Image') => {
   const s = String(v ?? '').trim()
   if (/^\/content\/[\w./-]+$/.test(s) && !s.includes('..')) return s
-  if (/^\/api\/uploads\/[a-z0-9-]+\.(webp|png|jpg|gif)$/.test(s)) return s
+  if (isUploadUrl(s)) return s
   if (/^https:\/\/mediumrare\.imgix\.net\/[\w./%-]+(\?[\w=&.%-]*)?$/.test(s)) return s
   throw new InputError(`${label}: upload one or pick a game from the catalog.`)
 }

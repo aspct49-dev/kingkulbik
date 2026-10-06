@@ -60,7 +60,7 @@ import type {
 import { isAdmin, json, readSession } from './auth.js'
 import type { AuthEnv, AuthRequest, AuthResponse } from './auth.js'
 import { getBotrixViewer } from './botrix.js'
-import { read, StoreError, update, write } from './store.js'
+import { isUploadUrl, read, StoreError, update, write } from './store.js'
 
 class InputError extends Error {}
 
@@ -92,7 +92,7 @@ const money = (v: unknown, label: string, max = 100_000_000) => {
 function safeImage(v: unknown): string | undefined {
   const s = String(v ?? '').trim()
   if (/^\/content\/[\w./-]+$/.test(s) && !s.includes('..')) return s
-  if (/^\/api\/uploads\/[a-z0-9-]+\.(webp|png|jpg|gif)$/.test(s)) return s
+  if (isUploadUrl(s)) return s
   if (/^https:\/\/mediumrare\.imgix\.net\/[\w./%-]+(\?[\w=&.%-]*)?$/.test(s)) return s
   return undefined
 }
