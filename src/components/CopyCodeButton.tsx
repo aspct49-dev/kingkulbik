@@ -5,7 +5,7 @@ import Toast, { useToast } from './Toast'
 import './CopyCodeButton.css'
 
 /** Clipboard API where allowed, else the old hidden-textarea copy (e.g. on plain http) */
-function copyText(text: string): Promise<void> {
+export function copyText(text: string): Promise<void> {
   if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(text)
   return new Promise((resolve, reject) => {
     const area = document.createElement('textarea')

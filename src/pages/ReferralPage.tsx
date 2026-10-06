@@ -4,13 +4,42 @@ import symbolK from '../assets/referral/symbol-k.webp'
 import symbolReveal from '../assets/referral/symbol-reveal.webp'
 import symbolCowboy from '../assets/referral/symbol-cowboy.webp'
 import discordIcon from '../assets/referral/discord.svg'
-import CopyCodeButton from '../components/CopyCodeButton'
+import cardHeader from '../assets/referral/card-header.png'
+import clipboardIcon from '../assets/leaderboard/clipboard.svg'
+import CopyCodeButton, { copyText } from '../components/CopyCodeButton'
 import FloatingSymbol from '../components/FloatingSymbol'
+import Toast, { useToast } from '../components/Toast'
 import { socials } from '../data/links'
 import './ReferralPage.css'
 
+const STATS = [
+  { value: '$1,000', label: 'Referral Reward' },
+  { value: '$100K', label: 'Required Wager' },
+  { value: 'INSTANT', label: 'One-time Payment' },
+]
+
+/** What it takes to earn the bonus, as listed on the card */
+const TERMS = [
+  'Refer a High Roller',
+  'Must Wager $100K+ Total',
+  'Open Ticket to Claim',
+  'Discuss in Advance',
+  'One-time Payment',
+]
+
+/** "discord.gg/kinglabs", shown on the card above the Discord button */
+const discordInvite = socials.discord.url.replace(/^https?:\/\//, '')
+
 /** $1,000 for referring an eligible high roller to the code */
 export default function ReferralPage() {
+  const { toast, show } = useToast()
+
+  const copyInvite = () =>
+    copyText(socials.discord.url).then(
+      () => show('Discord invite copied to clipboard'),
+      () => show(<>Couldn't copy. The invite is <span className="toast__accent">{discordInvite}</span></>),
+    )
+
   return (
     <div className="referral-page">
       <div className="referral-page__bg" style={{ backgroundImage: `url(${bg})` }} aria-hidden />
@@ -79,7 +108,54 @@ export default function ReferralPage() {
             Join Discord
           </a>
         </div>
+
+        <dl className="referral__stats">
+          {STATS.map(({ value, label }) => (
+            <div key={label} className="referral__stat">
+              <dt>{label}</dt>
+              <dd>{value}</dd>
+            </div>
+          ))}
+        </dl>
+
+        <article className="referral-card">
+          <header className="referral-card__header" style={{ backgroundImage: `url(${cardHeader})` }}>
+            <p className="referral-card__amount">
+              $1<span className="referral__comma">,</span>000
+            </p>
+            <h2 className="referral-card__title">Referral Bonus</h2>
+          </header>
+
+          <ul className="referral-card__terms">
+            {TERMS.map((term) => (
+              <li key={term}>{term}</li>
+            ))}
+          </ul>
+
+          <button
+            type="button"
+            className="referral-card__invite"
+            onClick={copyInvite}
+            aria-label={`Copy Discord invite ${discordInvite}`}
+          >
+            {discordInvite}
+            <img src={clipboardIcon} width={17.0974} height={17.9511} alt="" />
+          </button>
+          <a
+            className="referral__button referral__button--discord referral-card__discord"
+            href={socials.discord.url}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <img src={discordIcon} width={20} height={16} alt="" />
+            Join Discord
+          </a>
+          <a className="referral-card__ticket" href={socials.discord.url} target="_blank" rel="noopener noreferrer">
+            Open a Ticket
+          </a>
+        </article>
       </section>
+      <Toast toast={toast} />
     </div>
   )
 }
