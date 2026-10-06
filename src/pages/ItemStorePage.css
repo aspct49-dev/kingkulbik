@@ -600,4 +600,25 @@
   left: calc(50% - 54.5px);
   top: 4.5px;
   object-fit: contain;
+  /* Hovers over the rings: the floating symbols' idle bob (half the lift, as the stage is drawn at 2x) */
+  animation: store-hero-hover 4.6s ease-in-out infinite;
+  filter: drop-shadow(0 6px 6px rgb(0 0 0 / 0.35));
+}
+
+@keyframes store-hero-hover {
+  0%,
+  100% {
+    translate: 0 0;
+    rotate: 0deg;
+  }
+  50% {
+    translate: 0 -5px;
+    rotate: 2deg;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .store-hero-art__phone {
+    animation: none;
+  }
 }
