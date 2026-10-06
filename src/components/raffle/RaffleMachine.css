@@ -105,3 +105,105 @@
     animation: none;
   }
 }
+
+/* A ball up close (click one in the machine): over the machine, dimmed behind */
+.raffle-machine__stage canvas.is-pickable {
+  cursor: pointer;
+}
+
+.ball-viewer {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  background: rgb(8 11 18 / 0.78);
+  backdrop-filter: blur(6px);
+  animation: ball-viewer-in 0.25s ease-out;
+}
+
+@keyframes ball-viewer-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/* Square, so clicks around it (the dimmed part) can close the viewer */
+.ball-viewer__stage {
+  height: min(76%, 520px);
+  max-width: 90%;
+  aspect-ratio: 1;
+  cursor: grab;
+  touch-action: none;
+}
+
+.ball-viewer__stage:active {
+  cursor: grabbing;
+}
+
+.ball-viewer__stage canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.ball-viewer__name {
+  position: absolute;
+  top: 5%;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: 80%;
+  overflow: hidden;
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: #fff;
+}
+
+.ball-viewer__hint {
+  position: absolute;
+  bottom: 5%;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  color: var(--color-text-muted);
+}
+
+.ball-viewer__close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 8px;
+  background: rgb(255 255 255 / 0.08);
+  font-size: 22px;
+  line-height: 1;
+  color: var(--color-text);
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .ball-viewer__close:hover {
+    background: rgb(255 255 255 / 0.16);
+  }
+}
+
+.ball-viewer__close:focus-visible {
+  outline: 2px solid #e6d218;
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ball-viewer {
+    animation: none;
+  }
+}

@@ -1,6 +1,8 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import * as THREE from 'three'
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'
+import BallViewer from './BallViewer'
+import { ballMaterial, ballTexture, studioEnvironment } from './studio'
 import './RaffleMachine.css'
 
 /*
@@ -51,71 +53,6 @@ const FINISH: Record<string, Partial<THREE.MeshPhysicalMaterial>> = {
   KK_Navy_Deep: { metalness: 0.3, roughness: 0.36 },
   KK_Blue_Dark: { metalness: 0.25, roughness: 0.3 },
   KK_Gunmetal: { metalness: 0.4, roughness: 0.3 },
-}
-
-/** Ball colours: the site's gold, white and blue */
-const BALL_COLORS = [
-  { base: '#f2c21b', band: '#ffffff', text: '#151b25' },
-  { base: '#f4f6fb', band: '#151b25', text: '#ffffff' },
-  { base: '#2f6fd6', band: '#ffffff', text: '#151b25' },
-]
-
-function ballTexture(name: string, colorIndex: number, anisotropy: number) {
-  const c = document.createElement('canvas')
-  c.width = 1024
-  c.height = 512
-  const g = c.getContext('2d')!
-  g.scale(2, 2)
-  const col = BALL_COLORS[colorIndex % BALL_COLORS.length]
-  g.fillStyle = col.base
-  g.fillRect(0, 0, 512, 256)
-  // A band round the middle carries the name (equirectangular: it wraps the ball)
-  g.fillStyle = col.band
-  g.fillRect(0, 86, 512, 84)
-  g.fillStyle = col.text
-  g.textAlign = 'center'
-  g.textBaseline = 'middle'
-  let size = 54
-  g.font = `800 ${size}px Onest, system-ui, sans-serif`
-  while (g.measureText(name).width > 230 && size > 22) {
-    size -= 2
-    g.font = `800 ${size}px Onest, system-ui, sans-serif`
-  }
-  // Twice round the band, so a name always faces out
-  g.fillText(name, 128, 129)
-  g.fillText(name, 384, 129)
-  const t = new THREE.CanvasTexture(c)
-  t.colorSpace = THREE.SRGBColorSpace
-  t.anisotropy = anisotropy
-  return t
-}
-
-/**
- * The reflection environment: a photo studio built in code, rendered to an HDR
- * cube by PMREM (so no HDRI download). A dark room with a big softbox high in
- * front, tall strip lights either side (the long edge highlights on the gold
- * rings and the glass), a warm card in front and a cool panel behind for the
- * rim. Colours above 1 are what make it HDR.
- */
-function studioEnvironment(): THREE.Scene {
-  const env = new THREE.Scene()
-  env.add(new THREE.Mesh(new THREE.SphereGeometry(30, 32, 16), new THREE.MeshBasicMaterial({ color: 0x0b1120, side: THREE.BackSide })))
-  const panel = (w: number, h: number, color: number, strength: number, at: [number, number, number]) => {
-    const mesh = new THREE.Mesh(
-      new THREE.PlaneGeometry(w, h),
-      new THREE.MeshBasicMaterial({ color: new THREE.Color(color).multiplyScalar(strength), side: THREE.DoubleSide }),
-    )
-    mesh.position.set(...at)
-    mesh.lookAt(0, 2, 0)
-    env.add(mesh)
-  }
-  panel(9, 5, 0xffffff, 3.2, [2.5, 10, 8]) // key softbox
-  panel(1.4, 10, 0xffffff, 6, [-9, 3, 4]) // left strip
-  panel(1.4, 10, 0xffffff, 4.5, [9, 3, 1]) // right strip
-  panel(8, 3, 0xffe2b4, 1.2, [0, 0.5, 12]) // warm front card
-  panel(8, 5, 0x6f9bff, 2.4, [-4, 5, -10]) // cool rim panel
-  panel(14, 14, 0xffffff, 0.7, [0, 16, 0]) // ceiling
-  return env
 }
 
 /**
@@ -169,6 +106,8 @@ function contactShadowTexture() {
 
 type Ball = {
   name: string
+  /** Which of the ball colours (the close-up uses the same) */
+  colorIndex: number
   mesh: THREE.Mesh
   vel: THREE.Vector3
   spin: THREE.Vector3
@@ -204,6 +143,8 @@ export default function RaffleMachine({ names, draw, resting = null, onDrawn, ti
   const onDrawnRef = useRef(onDrawn)
   onDrawnRef.current = onDrawn
   const seenDraw = useRef<string | null>(draw?.key ?? null)
+  /** The ball open in the close-up viewer */
+  const [inspect, setInspect] = useState<{ name: string; colorIndex: number } | null>(null)
 
   useEffect(() => {
     const host = hostRef.current
@@ -281,8 +222,9 @@ export default function RaffleMachine({ names, draw, resting = null, onDrawn, ti
     let balls: Ball[] = []
     let colorCursor = 0
     const makeBall = (name: string, at?: THREE.Vector3): Ball => {
-      const map = ballTexture(name, colorCursor++, anisotropy)
-      const mat = new THREE.MeshPhysicalMaterial({ map, roughness: 0.22, metalness: 0.05, clearcoat: 1, clearcoatRoughness: 0.08 })
+      const colorIndex = colorCursor++
+      const map = ballTexture(name, colorIndex, anisotropy)
+      const mat = ballMaterial(map)
       const mesh = new THREE.Mesh(ballGeometry, mat)
       mesh.castShadow = true
       mesh.receiveShadow = true
@@ -296,7 +238,7 @@ export default function RaffleMachine({ names, draw, resting = null, onDrawn, ti
       mesh.position.copy(start)
       mesh.rotation.set(Math.random() * 6, Math.random() * 6, 0)
       machine.add(mesh)
-      return { name, mesh, vel: new THREE.Vector3(), spin: new THREE.Vector3(Math.random(), Math.random(), Math.random()).multiplyScalar(2) }
+      return { name, colorIndex, mesh, vel: new THREE.Vector3(), spin: new THREE.Vector3(Math.random(), Math.random(), Math.random()).multiplyScalar(2) }
     }
     const dropBall = (b: Ball) => {
       machine.remove(b.mesh)
@@ -472,6 +414,28 @@ export default function RaffleMachine({ names, draw, resting = null, onDrawn, ti
     })
     io.observe(host)
 
+    // Click a ball (in the globe or on the pedestal) to see it up close
+    const canvas = renderer.domElement
+    const raycaster = new THREE.Raycaster()
+    const pointer = new THREE.Vector2()
+    const ballAt = (e: PointerEvent | MouseEvent): Ball | null => {
+      const rect = canvas.getBoundingClientRect()
+      pointer.set(((e.clientX - rect.left) / rect.width) * 2 - 1, -((e.clientY - rect.top) / rect.height) * 2 + 1)
+      raycaster.setFromCamera(pointer, camera)
+      const all = pedestal ? [...balls, pedestal] : balls
+      const hit = raycaster.intersectObjects(all.map((b) => b.mesh), false)[0]
+      return hit ? (all.find((b) => b.mesh === hit.object) ?? null) : null
+    }
+    const onMove = (e: PointerEvent) => {
+      if (e.pointerType === 'mouse') canvas.classList.toggle('is-pickable', ballAt(e) !== null)
+    }
+    const onClick = (e: MouseEvent) => {
+      const b = ballAt(e)
+      if (b) setInspect({ name: b.name, colorIndex: b.colorIndex })
+    }
+    canvas.addEventListener('pointermove', onMove)
+    canvas.addEventListener('click', onClick)
+
     const resize = () => {
       const { clientWidth: w, clientHeight: h } = host
       if (!w || !h) return
@@ -553,6 +517,8 @@ export default function RaffleMachine({ names, draw, resting = null, onDrawn, ti
       cancelAnimationFrame(frame)
       io.disconnect()
       ro.disconnect()
+      canvas.removeEventListener('pointermove', onMove)
+      canvas.removeEventListener('click', onClick)
       balls.forEach(dropBall)
       if (pedestal) dropBall(pedestal)
       disposables.forEach((d) => d.dispose())
@@ -581,6 +547,8 @@ export default function RaffleMachine({ names, draw, resting = null, onDrawn, ti
     api.current?.play(draw)
   }, [draw, status])
 
+  const closeInspect = useCallback(() => setInspect(null), [])
+
   return (
     <div className={`raffle-machine raffle-machine--${status}`}>
       <div className="raffle-machine__stage" ref={hostRef} />
@@ -592,6 +560,7 @@ export default function RaffleMachine({ names, draw, resting = null, onDrawn, ti
           <span className="raffle-machine__winner-name">{winner.name}</span>
         </div>
       )}
+      {inspect && <BallViewer name={inspect.name} colorIndex={inspect.colorIndex} onClose={closeInspect} />}
     </div>
   )
 }
