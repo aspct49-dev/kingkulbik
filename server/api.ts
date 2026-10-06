@@ -1,7 +1,7 @@
 /*
  * One entry point for every /api/* route except the leaderboard: sign-in and
  * linked accounts, the originals, the admin panel and its content. Served by
- * api/[...route].ts on Vercel and by the Vite middleware locally.
+ * api/router.ts on Vercel and by the Vite middleware locally.
  */
 
 import type { IncomingMessage, ServerResponse } from 'node:http'

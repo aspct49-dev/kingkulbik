@@ -1,7 +1,9 @@
 /*
  * Vercel Function: every /api/* route except the leaderboard (sign-in, linked
- * accounts, the originals, the admin panel). The logic lives in server/; the
- * Vite dev server serves the same routes locally (see vite.config.ts).
+ * accounts, the originals, the admin panel). vercel.json rewrites /api/* here,
+ * since a [...route] file only catches one path segment outside Next.js; req.url
+ * keeps the original path. The logic lives in server/; the Vite dev server
+ * serves the same routes locally (see vite.config.ts).
  *
  * Environment variables (Project → Settings → Environment Variables):
  * DISCORD_CLIENT_ID/SECRET, KICK_CLIENT_ID/SECRET, SESSION_SECRET,

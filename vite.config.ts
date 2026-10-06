@@ -29,7 +29,7 @@ function leaderboardApi(token: string | undefined, apiUrl: string | undefined): 
   }
 }
 
-/** Serves every other /api/* route from `vite` and `vite preview`, mirroring api/[...route].ts */
+/** Serves every other /api/* route from `vite` and `vite preview`, mirroring api/router.ts */
 function siteApi(env: AuthEnv): Plugin {
   const middleware: Connect.NextHandleFunction = async (req, res, next) => {
     if (!req.url?.startsWith('/api/')) return next()
