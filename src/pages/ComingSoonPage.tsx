@@ -22,7 +22,7 @@ type ComingSoonPageProps = {
       softEdges?: boolean
     }
   | {
-      /** Art built from the section's own pieces (the Item Store's gold bag) */
+      /** Art built from the section's own pieces (the Item Store's iPhone on its rings) */
       artNode: ReactNode
     }
 )

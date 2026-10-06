@@ -583,14 +583,21 @@
 }
 
 /* The gold card's stage at Coming Soon size: drawn at card size, scaled as one */
-.store-bag-art {
+.store-hero-art {
   width: 201px;
   height: 118px;
   transform: scale(var(--art-scale, 2));
 }
 
-.store-bag-art .store-card__glow {
+.store-hero-art .store-card__glow {
   border-radius: 8px;
   mask-image: radial-gradient(closest-side, #000 35%, transparent);
   -webkit-mask-image: radial-gradient(closest-side, #000 35%, transparent);
+}
+
+/* The iPhone, centred on the rings (their centre is 59px down the stage) */
+.store-hero-art__phone {
+  left: calc(50% - 54.5px);
+  top: 4.5px;
+  object-fit: contain;
 }

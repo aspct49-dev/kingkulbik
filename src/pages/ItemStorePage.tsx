@@ -95,11 +95,11 @@ function StatSymbol({
   )
 }
 
-/** The gold card's ringed bag on its own, scaled up (the Coming Soon page's art) */
-export function StoreBagArt() {
+/** The iPhone on the gold card's rings, scaled up (the Coming Soon page's art) */
+export function StoreHeroArt() {
   const art = TIER_ART.gold
   return (
-    <div className="store-bag-art">
+    <div className="store-hero-art">
       <div className="store-card__stage">
         <div className="store-card__glow">
           <img src={art.bg} width={201} height={118} alt="" />
@@ -107,7 +107,7 @@ export function StoreBagArt() {
         <img className="store-card__ring-outer" src={art.outer} width={98} height={98} alt="" />
         <span className="store-card__ring-fill" />
         <img className="store-card__ring-inner" src={art.inner} width={88} height={88} alt="" />
-        <img className="store-card__bag" src={art.bag} width={46.2515} height={50.6999} alt="" />
+        <img className="store-hero-art__phone" src="/content/shop/iphone-16-pro-max.webp" width={109} height={109} alt="" />
       </div>
     </div>
   )

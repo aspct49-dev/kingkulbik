@@ -8,7 +8,7 @@ import HomePage from './pages/HomePage'
 import LeaderboardPage from './pages/LeaderboardPage'
 import KenoPage from './pages/KenoPage'
 import ChallengesPage from './pages/ChallengesPage'
-import ItemStorePage, { StoreBagArt } from './pages/ItemStorePage'
+import ItemStorePage, { StoreHeroArt } from './pages/ItemStorePage'
 import ComingSoonPage from './pages/ComingSoonPage'
 import bonusHuntArt from './assets/games/bonus-hunt-art.webp'
 import { useAuth } from './hooks/useAuth'
@@ -101,7 +101,7 @@ function Layout() {
                     soon={
                       <ComingSoonPage
                         title="Item Store"
-                        artNode={<StoreBagArt />}
+                        artNode={<StoreHeroArt />}
                         blurb="Spend your King Points on rewards from the stream. Catch the launch live on Kick."
                       />
                     }

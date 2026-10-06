@@ -159,7 +159,7 @@
   outline-offset: 2px;
 }
 
-/* Art built from parts (the store's bag): a square stage, its pieces scaled up together */
+/* Art built from parts (the store's iPhone): a square stage, its pieces scaled up together */
 .coming-soon__art--node {
   --art-scale: 1.45;
   display: grid;
