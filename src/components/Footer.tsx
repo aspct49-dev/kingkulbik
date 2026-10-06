@@ -31,110 +31,88 @@ const XIcon = () => (
   </svg>
 )
 
-type SocialLink = { label: string; handle: string; url: string; brand: string; icon: ReactNode }
+type SocialLink = { label: string; url: string; brand: string; icon: ReactNode }
 
 const socialLinks: SocialLink[] = [
-  { ...socials.kick, brand: '#53fc18', icon: <KickIcon /> },
-  { ...socials.discord, brand: '#5865f2', icon: <DiscordIcon /> },
-  { ...socials.x, brand: '#eaf2ff', icon: <XIcon /> },
+  { label: socials.kick.label, url: socials.kick.url, brand: '#53fc18', icon: <KickIcon /> },
+  { label: socials.discord.label, url: socials.discord.url, brand: '#5865f2', icon: <DiscordIcon /> },
+  { label: socials.x.label, url: socials.x.url, brand: '#eaf2ff', icon: <XIcon /> },
 ]
 
-const explore = [
-  { to: '/', label: 'Home' },
-  { to: '/leaderboard', label: 'Leaderboard' },
-  { to: '/rewards', label: 'Rewards' },
-  { to: '/challenges', label: 'Challenges' },
-  { to: '/raffles', label: 'Raffles' },
-  { to: '/item-store', label: 'Item Store' },
-]
-
-const games = [
-  { to: '/keno', label: 'Keno' },
-  { to: '/coinflip', label: 'Coinflip' },
-  { to: '/bonus-hunt', label: 'Bonus Hunt' },
-  { to: '/guess-the-balance', label: 'Guess the Balance' },
-  { to: '/tournaments', label: 'Tournaments' },
-]
-
-/**
- * An open band under the page (no box): a gold hairline on top, the game
- * cards' grid fading in behind, the brand on the left and links on the right.
- */
 export default function Footer() {
   return (
     <footer className="footer">
-      <div className="footer__backdrop" aria-hidden />
+      <div className="footer__card">
+      <div className="footer__top">
+        <div className="footer__brand">
+          <Link to="/" className="footer__logo" aria-label="King Kulbik home">
+            <span className="footer__logo-king">KING</span>{' '}
+            <span className="footer__logo-kulbik">KULBIK</span>
+          </Link>
 
-      <div className="footer__inner">
-        <div className="footer__top">
-          <div className="footer__brand">
-            <Link to="/" className="footer__logo" aria-label="King Kulbik home">
-              <span className="footer__logo-king">KING</span>{' '}
-              <span className="footer__logo-kulbik">KULBIK</span>
-            </Link>
-            <p className="footer__tagline">
-              The community leaderboard for Stake players under the code <strong>{STAKE_CODE}</strong>.
-            </p>
-
-            <div className="footer__actions">
-              <a className="kk-button footer__play" href={STAKE_URL} target="_blank" rel="noopener noreferrer">
-                Play on Stake
-              </a>
-              <div className="footer__socials" aria-label="Social media">
-                {socialLinks.map((link) => (
-                  <a
-                    key={link.label}
-                    className="footer__social"
-                    href={link.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label={`${link.label}: ${link.handle}`}
-                    title={link.handle}
-                    style={{ '--brand': link.brand } as CSSProperties}
-                  >
-                    {link.icon}
-                  </a>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <nav className="footer__col" aria-label="Explore">
-            <h4>Explore</h4>
-            {explore.map((l) => (
-              <Link key={l.to} to={l.to}>
-                {l.label}
-              </Link>
-            ))}
-          </nav>
-
-          <nav className="footer__col" aria-label="Games">
-            <h4>Games</h4>
-            {games.map((l) => (
-              <Link key={l.to} to={l.to}>
-                {l.label}
-              </Link>
-            ))}
-          </nav>
-        </div>
-
-        <div className="footer__notice">
-          <p className="footer__note">
-            We take no responsibility for losses at any casino linked or promoted here. You are responsible for your
-            own bets. King Kulbik is not a casino, and it is not operated by Stake.
-          </p>
           <div className="footer__marks">
             <a href="https://www.begambleaware.org" target="_blank" rel="noopener noreferrer">
               <img className="footer__aware" src={gambleAware} alt="BeGambleAware" width={163} height={24} />
             </a>
             <span className="footer__age">18+</span>
           </div>
+
+          <p className="footer__note">
+            We take no responsibility for losses at any casino linked or promoted here. You are responsible
+            for your own bets. King Kulbik is a community leaderboard for Stake players under the code{' '}
+            <strong>{STAKE_CODE}</strong>. It is not a casino, and it is not operated by Stake.
+          </p>
+
+          <div className="footer__icons" aria-label="Social media">
+            {socialLinks.map((link) => (
+              <a
+                key={link.label}
+                href={link.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={link.label}
+                style={{ '--brand': link.brand } as CSSProperties}
+              >
+                {link.icon}
+              </a>
+            ))}
+          </div>
         </div>
 
-        <div className="footer__legal">
-          <span className="footer__copyright">© {new Date().getFullYear()} King Kulbik. All rights reserved.</span>
-          <span className="footer__responsible">18+ only · Gamble responsibly</span>
-        </div>
+        <nav className="footer__col" aria-label="Explore">
+          <h4>Explore</h4>
+          <Link to="/">Home</Link>
+          <Link to="/leaderboard">Leaderboard</Link>
+          <Link to="/keno">Keno</Link>
+          <Link to="/coinflip">Coinflip</Link>
+          <Link to="/rewards">Rewards</Link>
+          <Link to="/item-store">Item Store</Link>
+          <a href={STAKE_URL} target="_blank" rel="noopener noreferrer">
+            Visit Stake
+          </a>
+        </nav>
+
+        <nav className="footer__col" aria-label="Social media links">
+          <h4>Social Media</h4>
+          {socialLinks.map((link) => (
+            <a
+              key={link.label}
+              href={link.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ '--brand': link.brand } as CSSProperties}
+            >
+              {link.icon}
+              {link.label}
+            </a>
+          ))}
+        </nav>
+      </div>
+
+      <div className="footer__legal">
+        <span className="footer__copyright">© {new Date().getFullYear()} King Kulbik - All Rights Reserved.</span>
+        <span className="footer__responsible">18+ only · Gamble responsibly</span>
+      </div>
       </div>
     </footer>
   )
