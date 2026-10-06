@@ -1,35 +1,67 @@
 /*
- * The footer is its own band: full width across the content area, a
- * slightly lighter background and a top border, so it is clearly separated
- * from the page above. The content sits in a bordered card inside it.
+ * The footer is an open band across the content area: no box, just a gold
+ * hairline on top, a soft blue light and the game cards' grid fading in
+ * behind. Brand on the left, two link columns on the right, then a slim
+ * notice row and the legal line.
  */
 .footer {
+  position: relative;
   margin: auto calc(-1 * var(--page-gutter)) 0;
-  padding: 20px var(--page-gutter);
-  border-top: 1px solid #1f2734;
-  background: #12171f;
+  padding: 44px var(--page-gutter) 22px;
+  overflow: hidden;
+  background: linear-gradient(to bottom, #10151d, #0c1016);
 }
 
-.footer__card {
+/* Gold hairline that fades out at both ends */
+.footer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(to right, transparent, rgb(228 222 44 / 0.55) 30%, rgb(228 222 44 / 0.55) 70%, transparent);
+}
+
+/* Blue light from the top left and the cards' grid, both fading out */
+.footer__backdrop {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(to right, rgb(70 130 220 / 0.09) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(70 130 220 / 0.09) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse 60% 90% at 18% 0%, #000 10%, transparent 75%);
+  -webkit-mask-image: radial-gradient(ellipse 60% 90% at 18% 0%, #000 10%, transparent 75%);
+  pointer-events: none;
+}
+
+.footer__backdrop::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 50% 80% at 18% 0%, rgb(44 96 178 / 0.35), transparent 70%);
+}
+
+.footer__inner {
+  position: relative;
   max-width: 1400px;
   margin: 0 auto;
-  padding: 28px 28px 20px;
-  border: 1px solid #252e3d;
-  border-radius: 12px;
-  background: #0f131a;
 }
 
 .footer__top {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto auto;
-  gap: 32px 60px;
+  gap: 32px 72px;
   align-items: start;
 }
 
+/* ---------------------------------------------------------------- brand */
+
 .footer__logo {
   font-family: var(--font-logo);
-  font-size: 26px;
-  line-height: normal;
+  font-size: 34px;
+  line-height: 1;
   white-space: nowrap;
 }
 
@@ -41,24 +73,142 @@
 }
 
 .footer__logo-king {
-  background-image: linear-gradient(to right, #e3e3e3, #c5c5c5);
+  background-image: linear-gradient(to bottom, #f9f9f9, #aaa);
 }
 
 .footer__logo-kulbik {
-  background-image: linear-gradient(to right, #e4de2c, #a88600);
+  background-image: linear-gradient(0deg, #a88600, #e4de2c);
+}
+
+.footer__tagline {
+  max-width: 360px;
+  margin-top: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.6;
+  color: #8f9ab2;
+}
+
+.footer__tagline strong {
+  color: var(--color-accent);
+  font-weight: 700;
+}
+
+.footer__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+  margin-top: 20px;
+}
+
+.footer__play {
+  height: 40px;
+  padding: 0 20px;
+  font-size: 14px;
+}
+
+.footer__socials {
+  display: flex;
+  gap: 8px;
+}
+
+/* Round dark buttons; the icon takes the brand's colour on hover */
+.footer__social {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--nav-item-from);
+  box-shadow: inset 0 1px 0 0 #364151;
+  color: #c9d0dd;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease,
+    transform 0.15s ease;
+}
+
+.footer__social svg {
+  width: 16px;
+  height: 16px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .footer__social:hover {
+    background: #2c3647;
+    color: var(--brand);
+  }
+}
+
+.footer__social:active {
+  transform: translateY(1px);
+}
+
+/* ---------------------------------------------------------------- links */
+
+.footer__col {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 4px;
+}
+
+.footer h4 {
+  margin: 0 0 4px;
+  color: var(--color-text-subtle);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.footer__col a {
+  width: fit-content;
+  color: #e6e9ef;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: color 0.15s ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .footer__col a:hover {
+    color: var(--color-accent);
+  }
+}
+
+/* ---------------------------------------------------------------- notice + legal */
+
+.footer__notice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px 40px;
+  margin-top: 36px;
+  padding: 18px 0;
+  border-top: 1px solid rgb(255 255 255 / 0.06);
+  border-bottom: 1px solid rgb(255 255 255 / 0.06);
+}
+
+.footer__note {
+  max-width: 640px;
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: var(--color-text-subtle);
 }
 
 .footer__marks {
   display: flex;
+  flex: none;
   align-items: center;
   gap: 10px;
-  margin-top: 12px;
 }
 
 .footer__aware {
   height: 20px;
   width: auto;
-  opacity: 0.7;
+  opacity: 0.6;
   transition: opacity 0.15s ease;
 }
 
@@ -81,103 +231,19 @@
   font-weight: 700;
 }
 
-.footer__note {
-  max-width: 420px;
-  margin-top: 10px;
-  font-size: 12.5px;
-  line-height: 1.8;
-  color: #aab3c6;
-}
-
-.footer__note strong {
-  color: var(--color-accent);
-  font-weight: 600;
-}
-
-.footer__icons {
-  display: flex;
-  gap: 14px;
-  margin-top: 12px;
-}
-
-.footer__icons a {
-  display: flex;
-  color: var(--color-text-subtle);
-  transition: color 0.15s ease;
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .footer__icons a:hover {
-    color: var(--brand, var(--color-accent));
-  }
-}
-
-.footer__icons svg {
-  width: 15px;
-  height: 15px;
-}
-
-.footer__col {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding-top: 18px;
-}
-
-.footer h4 {
-  margin: 0 0 4px;
-  color: var(--color-accent);
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-
-.footer__col a {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: #e6e9ef;
-  font-size: 14px;
-  font-weight: 500;
-  white-space: nowrap;
-  transition: color 0.15s ease;
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .footer__col a:hover {
-    color: var(--color-accent);
-  }
-}
-
-.footer__col svg {
-  width: 14px;
-  height: 14px;
-  color: #e6e9ef;
-  transition: color 0.15s ease;
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .footer__col a:hover svg {
-    color: var(--brand, var(--color-accent));
-  }
-}
-
 .footer__legal {
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
-  gap: 12px;
-  margin-top: 22px;
-  padding-top: 18px;
-  border-top: 1px solid #232b3a;
+  gap: 8px 12px;
+  margin-top: 18px;
 }
 
 .footer__copyright {
-  font-size: 14px;
-  font-weight: 700;
-  color: #cfd5e2;
+  font-size: 13px;
+  font-weight: 600;
+  color: #aab3c6;
 }
 
 .footer__responsible {
@@ -188,32 +254,40 @@
   color: var(--color-text-subtle);
 }
 
+/* ---------------------------------------------------------------- narrow */
+
 @media (max-width: 960px) {
   .footer__top {
     grid-template-columns: 1fr 1fr;
-    gap: 24px;
+    gap: 32px 24px;
   }
 
   .footer__brand {
     grid-column: 1 / -1;
   }
 
-  .footer__col {
-    padding-top: 0;
+  .footer__backdrop {
+    mask-image: radial-gradient(ellipse 90% 70% at 30% 0%, #000 10%, transparent 75%);
+    -webkit-mask-image: radial-gradient(ellipse 90% 70% at 30% 0%, #000 10%, transparent 75%);
   }
 }
 
 @media (max-width: 600px) {
   .footer {
-    padding: 16px var(--page-gutter);
+    padding-top: 36px;
   }
 
-  .footer__card {
-    padding: 22px 18px 18px;
+  .footer__logo {
+    font-size: 30px;
   }
 
   .footer__col a {
-    padding: 4px 0;
+    padding: 3px 0;
+  }
+
+  .footer__notice {
+    flex-direction: column;
+    align-items: flex-start;
   }
 
   .footer__legal {
@@ -228,4 +302,8 @@
   outline: 2px solid #e6d218;
   outline-offset: 3px;
   border-radius: 4px;
+}
+
+.footer__social:focus-visible {
+  border-radius: 50%;
 }
