@@ -224,6 +224,23 @@
   opacity: 0.5;
 }
 
+/* Max bet and max win, under the bet field */
+.bet-panel__limits {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 7px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 15px;
+  color: var(--color-text-subtle);
+}
+
+.bet-panel__limits strong {
+  font-weight: 700;
+  color: var(--color-text-muted);
+}
+
 .bet-panel__error {
   margin-top: 8px;
   font-size: 12.5px;

@@ -5,6 +5,7 @@ import type { Side } from '../../games/coinflip/engine'
 import { cappedPayout, coinflipMultiplier } from '../../../shared/originals'
 import type { GameRules } from '../../../shared/originals'
 import AnimatedNumber from '../AnimatedNumber'
+import BetLimits from '../BetLimits'
 import { formatKingPoints } from '../../games/originals'
 import type { PlayGate } from '../../games/originals'
 import '../BetPanel.css'
@@ -73,6 +74,7 @@ export default memo(function CoinflipControls(props: CoinflipControlsProps) {
           </button>
         </div>
       </div>
+      <BetLimits rules={rules} />
 
       {playing ? (
         <button

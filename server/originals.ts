@@ -6,8 +6,9 @@
  *
  * Points: a bet is taken from the player's BotRix balance before the result
  * is drawn (BotRix refuses it if they're short), and a win is paid back to it.
- * A win BotRix can't pay at that moment is kept as owed and paid on the
- * player's next request, so nothing is lost. BotRix points are whole numbers:
+ * A win is booked as owed and paid just after the result goes out, so the
+ * player never waits on a second BotRix call; one BotRix can't pay then is
+ * paid on the player's next request, so nothing is lost. BotRix points are whole numbers:
  * bets are whole points and wins are rounded down.
  *
  * State: each player's seed pair, bet counter and Coinflip game live in the
@@ -116,45 +117,61 @@ async function returnBet(user: Player, bet: number, env: AuthEnv) {
   )
 }
 
-/** Pay a win; if BotRix can't right now, keep it as owed (paid on the next request) */
-async function payWin(user: Player, amount: number, reason: string, env: AuthEnv) {
-  if (amount <= 0) return true
+/** Work that carries on after the response is sent, so the player isn't kept waiting on it */
+const later = (work: Promise<unknown>) => void work.catch(() => undefined)
+
+/**
+ * Pay one owed win: claimed first (so two requests can't pay it twice), put
+ * back if BotRix fails. The first failure is logged; retries stay quiet.
+ */
+async function payOwed(o: OwedPayout, by: string, env: AuthEnv) {
+  let claimed = false
+  await update('owedPayouts', (list) => {
+    claimed = list.some((x) => x.id === o.id)
+    return list.filter((x) => x.id !== o.id)
+  })
+  if (!claimed) return
   try {
-    await adjustBotrixPoints(user.kick.username, amount, env.BOTRIX_BID)
-    return true
+    await adjustBotrixPoints(o.kick, o.amount, env.BOTRIX_BID)
+    if (o.attempts > 0) await logPoints({ kick: o.kick, delta: o.amount, kind: 'originals', reason: `${o.reason} (owed win paid)`, by, ok: true })
   } catch (err) {
-    const owed: OwedPayout = { id: randomBytes(6).toString('hex'), userId: user.discord.id, kick: user.kick.username, amount, reason, at: Date.now(), attempts: 1 }
-    await update('owedPayouts', (list) => [...list, owed]).catch(() => undefined)
-    await logPoints({
-      kick: user.kick.username,
-      delta: amount,
-      kind: 'originals',
-      reason: `${reason} (owed, will retry)`,
-      by: user.discord.name,
-      ok: false,
-      error: err instanceof Error ? err.message : 'Payout failed',
-    })
-    return false
+    await update('owedPayouts', (list) => [...list, { ...o, attempts: o.attempts + 1 }])
+    if (o.attempts === 0) {
+      await logPoints({
+        kick: o.kick,
+        delta: o.amount,
+        kind: 'originals',
+        reason: `${o.reason} (owed, will retry)`,
+        by,
+        ok: false,
+        error: err instanceof Error ? err.message : 'Payout failed',
+      })
+    }
   }
 }
 
-/** Pay anything still owed to this player (claimed first, so two requests can't pay it twice) */
+/**
+ * Pay a win without holding up the result. It's booked as owed first, so it
+ * can't be lost: paid straight after the response, or on the player's next
+ * request if that didn't get through.
+ */
+async function payWin(user: Player, amount: number, reason: string, env: AuthEnv) {
+  if (amount <= 0) return
+  const owed: OwedPayout = { id: randomBytes(6).toString('hex'), userId: user.discord.id, kick: user.kick.username, amount, reason, at: Date.now(), attempts: 0 }
+  try {
+    await update('owedPayouts', (list) => [...list, owed])
+  } catch {
+    // The store is down: pay it now instead
+    await adjustBotrixPoints(user.kick.username, amount, env.BOTRIX_BID)
+    return
+  }
+  later(payOwed(owed, user.discord.name, env))
+}
+
+/** Pay anything still owed to this player */
 async function settleOwed(user: Player, env: AuthEnv) {
   const mine = (await read('owedPayouts')).filter((o) => o.userId === user.discord.id)
-  for (const o of mine) {
-    let claimed = false
-    await update('owedPayouts', (list) => {
-      claimed = list.some((x) => x.id === o.id)
-      return list.filter((x) => x.id !== o.id)
-    }).catch(() => undefined)
-    if (!claimed) continue
-    try {
-      await adjustBotrixPoints(o.kick, o.amount, env.BOTRIX_BID)
-      await logPoints({ kick: o.kick, delta: o.amount, kind: 'originals', reason: `${o.reason} (owed win paid)`, by: user.discord.name, ok: true })
-    } catch {
-      await update('owedPayouts', (list) => [...list, { ...o, attempts: o.attempts + 1 }]).catch(() => undefined)
-    }
-  }
+  for (const o of mine) await payOwed(o, user.discord.name, env).catch(() => undefined)
 }
 
 // ---------------------------------------------------------------- helpers
@@ -204,7 +221,7 @@ export async function handleOriginalsRequest(req: AuthRequest, env: AuthEnv): Pr
     const user = session as Player
     const player = user.discord.name
 
-    await settleOwed(user, env)
+    const [rules] = await Promise.all([read('rules'), settleOwed(user, env)])
 
     if (route === 'fairness') {
       const { state } = await withState(user.discord.id, () => undefined)
@@ -212,7 +229,6 @@ export async function handleOriginalsRequest(req: AuthRequest, env: AuthEnv): Pr
     }
 
     if (req.method !== 'POST') return json(405, { error: 'Use POST.' })
-    const rules = await read('rules')
 
     if (route === 'fairness/rotate') {
       const body = parseBody<{ clientSeed?: string }>(req.body)
@@ -255,20 +271,25 @@ export async function handleOriginalsRequest(req: AuthRequest, env: AuthEnv): Pr
       const hits = picks.filter((t) => drawn.includes(t)).length
       const multiplier = kenoPayouts(risk, picks.length, r.houseEdge)[hits] ?? 0
       const payout = winOf(bet, multiplier, r.maxWin)
-      const paid = await payWin(user, payout, `Keno win (${multiplier}×)`, env)
+      await payWin(user, payout, `Keno win (${multiplier}×)`, env)
 
-      await recordFeed({ game: 'keno', player, bet, multiplier, payout })
-      await recordPlayerBet(user, {
-        game: 'keno',
-        bet,
-        multiplier,
-        payout,
-        serverSeedHash: await sha256Hex(claim.serverSeed),
-        clientSeed: claim.clientSeed,
-        nonces: [claim.nonce],
-        detail: { picks, drawn, risk },
-      })
-      return json(200, { drawn, hits, multiplier, payout, paid, nonce: claim.nonce, fairness: await fairness(state) })
+      // The live feed and bet history don't hold up the result
+      later(recordFeed({ game: 'keno', player, bet, multiplier, payout }))
+      later(
+        sha256Hex(claim.serverSeed).then((serverSeedHash) =>
+          recordPlayerBet(user, {
+            game: 'keno',
+            bet,
+            multiplier,
+            payout,
+            serverSeedHash,
+            clientSeed: claim.clientSeed,
+            nonces: [claim.nonce],
+            detail: { picks, drawn, risk },
+          }),
+        ),
+      )
+      return json(200, { drawn, hits, multiplier, payout, nonce: claim.nonce, fairness: await fairness(state) })
     }
 
     // ---- Coinflip: a game is several requests (start, flips, cash out)
@@ -311,19 +332,23 @@ export async function handleOriginalsRequest(req: AuthRequest, env: AuthEnv): Pr
           return g
         })
         const payout = multiplier > 0 ? winOf(game.bet, multiplier, r.maxWin) : 0
-        const paid = await payWin(user, payout, `Coinflip win (${multiplier}×)`, env)
-        await recordFeed({ game: 'coinflip', player, bet: game.bet, multiplier, payout })
-        await recordPlayerBet(user, {
-          game: 'coinflip',
-          bet: game.bet,
-          multiplier,
-          payout,
-          serverSeedHash: await sha256Hex(state.serverSeed),
-          clientSeed: state.clientSeed,
-          nonces: final.nonces,
-          detail: { calls: final.calls, results: final.results },
-        })
-        return { payout, paid, state }
+        await payWin(user, payout, `Coinflip win (${multiplier}×)`, env)
+        later(recordFeed({ game: 'coinflip', player, bet: game.bet, multiplier, payout }))
+        later(
+          sha256Hex(state.serverSeed).then((serverSeedHash) =>
+            recordPlayerBet(user, {
+              game: 'coinflip',
+              bet: game.bet,
+              multiplier,
+              payout,
+              serverSeedHash,
+              clientSeed: state.clientSeed,
+              nonces: final.nonces,
+              detail: { calls: final.calls, results: final.results },
+            }),
+          ),
+        )
+        return { payout, state }
       }
 
       if (action === 'flip') {
@@ -357,7 +382,7 @@ export async function handleOriginalsRequest(req: AuthRequest, env: AuthEnv): Pr
         // At the streak limit or the max win, the game cashes out by itself
         if (streak >= MAX_STREAK || winOf(claim.game.bet, multiplier, r.maxWin) >= r.maxWin) {
           const done = await settle(claim.game.id, multiplier, history)
-          return json(200, { result, won: true, streak, multiplier, payout: done.payout, paid: done.paid, cashedOut: true, nonce: claim.nonce, fairness: await fairness(done.state) })
+          return json(200, { result, won: true, streak, multiplier, payout: done.payout, cashedOut: true, nonce: claim.nonce, fairness: await fairness(done.state) })
         }
         return json(200, { result, won: true, streak, multiplier, nonce: claim.nonce, fairness: await fairness(state) })
       }
@@ -368,7 +393,7 @@ export async function handleOriginalsRequest(req: AuthRequest, env: AuthEnv): Pr
         if (current.streak < 1) throw new GameError('Win a call before cashing out.')
         const multiplier = coinflipMultiplier(current.streak, r.houseEdge)
         const done = await settle(current.id, multiplier, current)
-        return json(200, { payout: done.payout, paid: done.paid, multiplier, fairness: await fairness(done.state) })
+        return json(200, { payout: done.payout, multiplier, fairness: await fairness(done.state) })
       }
 
       throw new GameError('Unknown action.')

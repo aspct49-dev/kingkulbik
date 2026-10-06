@@ -48,7 +48,7 @@
   overflow: hidden;
 }
 
-.coming-soon__art img {
+.coming-soon__art > img {
   position: absolute;
   left: calc(-100% * var(--art-x) / var(--art-w));
   top: calc(-100% * var(--art-y) / var(--art-h));
@@ -129,49 +129,42 @@
   gap: 9px;
   height: 40px;
   padding: 0 20px;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   font-size: 15px;
   font-weight: 700;
+}
+
+/* Dark button (the account page's); the gold one is the shared .kk-button */
+.coming-soon__button--dark {
+  background: var(--nav-item-from);
+  box-shadow: inset 0 1px 0 0 #364151;
+  color: #efefef;
   transition:
     background-color 0.15s ease,
     transform 0.15s ease;
 }
 
-/* Hover darkens, as on every button on the site */
 @media (hover: hover) and (pointer: fine) {
   .coming-soon__button--dark:hover {
     background: #2c3647;
   }
-
-  .coming-soon__button--gold:hover {
-    background: linear-gradient(to right, #7a6200, #a6a11f);
-  }
 }
 
-.coming-soon__button:active {
+.coming-soon__button--dark:active {
   transform: translateY(1px);
 }
 
-.coming-soon__button:focus-visible {
+.coming-soon__button--dark:focus-visible {
   outline: 2px solid #e6d218;
   outline-offset: 2px;
 }
 
-.coming-soon__button--dark {
-  background: var(--nav-item-from);
-  box-shadow: inset 0 1px 0 0 #364151;
-  color: #efefef;
-}
-
-.coming-soon__button--gold {
-  background: linear-gradient(to right, #a88600, #e4de2c);
-  box-shadow: inset 0 1px 0 0 #eedb4a;
-  color: #0e1218;
-}
-
-/* Kick's logo is white; darken it for the gold button */
-.coming-soon__button--gold img {
-  filter: brightness(0) saturate(0) opacity(0.85);
+/* Art built from parts (the store's bag): a square stage, its pieces scaled up together */
+.coming-soon__art--node {
+  --art-scale: 1.45;
+  display: grid;
+  place-items: center;
+  aspect-ratio: 4 / 3;
 }
 
 /* Wide: big art on the left, the text beside it */
@@ -192,6 +185,10 @@
     flex: none;
     width: clamp(300px, 38cqi, 430px);
     margin-top: 0;
+  }
+
+  .coming-soon__art--node {
+    --art-scale: 2;
   }
 
   .coming-soon__text {
@@ -220,24 +217,4 @@
   .coming-soon__headline {
     font-size: clamp(40px, 6.2cqi, 66px);
   }
-}
-
-/* No artwork (e.g. the 404 page): one centred column at every width */
-.coming-soon .coming-soon__content--center {
-  flex-direction: column;
-  text-align: center;
-}
-
-.coming-soon .coming-soon__content--center .coming-soon__text {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.coming-soon .coming-soon__content--center .coming-soon__actions {
-  justify-content: center;
-}
-
-.coming-soon .coming-soon__content--center .coming-soon__wordmark {
-  order: 0;
 }

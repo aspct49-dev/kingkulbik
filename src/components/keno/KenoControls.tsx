@@ -4,6 +4,8 @@ import caretIcon from '../../assets/keno/caret.svg'
 import { RISKS } from '../../games/keno/engine'
 import type { Risk } from '../../games/keno/engine'
 import AnimatedNumber from '../AnimatedNumber'
+import BetLimits from '../BetLimits'
+import type { GameRules } from '../../../shared/originals'
 import { formatKingPoints } from '../../games/originals'
 import type { PlayGate } from '../../games/originals'
 import '../BetPanel.css'
@@ -27,6 +29,7 @@ type KenoControlsProps = {
   balance: number
   /** Signed out or no Kick: a link in place of the Bet button */
   gate: PlayGate
+  rules: GameRules
 }
 
 export default memo(function KenoControls(props: KenoControlsProps) {
@@ -58,6 +61,7 @@ export default memo(function KenoControls(props: KenoControlsProps) {
           </button>
         </div>
       </div>
+      <BetLimits rules={props.rules} />
 
       {props.gate ? (
         <a className="bet-panel__bet" href={props.gate.href}>

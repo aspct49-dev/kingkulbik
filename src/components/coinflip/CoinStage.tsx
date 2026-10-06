@@ -6,11 +6,11 @@ import type { Side } from '../../games/coinflip/engine'
 import './CoinStage.css'
 
 const MODEL_URL = '/models/king-kulbik-coin.glb'
-export const TOSS_SECONDS = 1.9
+export const TOSS_SECONDS = 1.4
 /** Instant flips (setting): a quick single flip instead of the full toss */
 export const QUICK_TOSS_SECONDS = 0.35
 const SETTLE_SECONDS = 0.55
-const SPINS = 5
+const SPINS = 4
 /** Brightness of the tails blue relative to the model file (see where it is applied) */
 const BLUE_TONE = 0.4
 /** Pivot angles that show each face to the camera */

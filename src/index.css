@@ -288,3 +288,15 @@ label {
 .page-loading {
   min-height: 60vh;
 }
+
+/* Above a section admins can see before launch */
+.admin-preview-note {
+  margin: 20px 0 0;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  background: rgb(240 185 30 / 0.08);
+  box-shadow: inset 0 0 0 1px rgb(240 185 30 / 0.25);
+  font-size: 13px;
+  font-weight: 600;
+  color: #d9c66a;
+}

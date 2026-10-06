@@ -31,8 +31,8 @@ import {
 import { useStableCallback } from '../hooks/useStableCallback'
 import './KenoPage.css'
 
-const REVEAL_MS = 125
-/** Pause after Bet so the gold → blue crossfade settles before the first reveal */
+const REVEAL_MS = 100
+/** Pause after Bet so the gold → blue crossfade settles before the first reveal (counted from the click, so it overlaps the wait for the server) */
 const REVEAL_LEAD_MS = 220
 const AUTO_PICK_MS = 120
 const INSTANT_KEY = 'kk:keno-instant'
@@ -79,6 +79,7 @@ export default function KenoPage() {
   const [theater, setTheater] = useState(false)
   const [stats, setStats] = useState<SessionStats>(EMPTY_STATS)
   const settledRef = useRef(0)
+  const betAtRef = useRef(0)
   // Random Pick places its tiles one at a time
   const [autoPicking, setAutoPicking] = useState(false)
   const autoPickTimers = useRef<number[]>([])
@@ -114,7 +115,7 @@ export default function KenoPage() {
     if (round.revealed < DRAW_COUNT) {
       const id = window.setTimeout(
         () => setRound((r) => (r && r.id === round.id ? { ...r, revealed: instant ? DRAW_COUNT : r.revealed + 1 } : r)),
-        instant ? 0 : round.revealed === 0 ? REVEAL_LEAD_MS : REVEAL_MS,
+        instant ? 0 : round.revealed === 0 ? Math.max(0, REVEAL_LEAD_MS - (Date.now() - betAtRef.current)) : REVEAL_MS,
       )
       return () => window.clearTimeout(id)
     }
@@ -155,6 +156,7 @@ export default function KenoPage() {
     if (overMax) return showToast(`The bet amount must not be greater than ${formatKingPoints(maxBet)} King Points.`)
     preloadSounds()
     playBet()
+    betAtRef.current = Date.now()
     setServerError(null)
     setPlacing(true)
     setRound(null)
@@ -286,6 +288,7 @@ export default function KenoPage() {
             error={serverError ?? (picks.length > 0 ? error : null)}
             balance={balance}
             gate={gate}
+            rules={rules}
           />
         </div>
 

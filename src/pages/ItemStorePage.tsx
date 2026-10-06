@@ -95,6 +95,24 @@ function StatSymbol({
   )
 }
 
+/** The gold card's ringed bag on its own, scaled up (the Coming Soon page's art) */
+export function StoreBagArt() {
+  const art = TIER_ART.gold
+  return (
+    <div className="store-bag-art">
+      <div className="store-card__stage">
+        <div className="store-card__glow">
+          <img src={art.bg} width={201} height={118} alt="" />
+        </div>
+        <img className="store-card__ring-outer" src={art.outer} width={98} height={98} alt="" />
+        <span className="store-card__ring-fill" />
+        <img className="store-card__ring-inner" src={art.inner} width={88} height={88} alt="" />
+        <img className="store-card__bag" src={art.bag} width={46.2515} height={50.6999} alt="" />
+      </div>
+    </div>
+  )
+}
+
 /** What Purchase does for this viewer: ask to redeem, or say why it can't */
 export type BuyState = { kind: 'buy' } | { kind: 'short'; missing: number } | { kind: 'sold-out' }
 

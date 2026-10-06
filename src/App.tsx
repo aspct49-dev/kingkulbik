@@ -1,4 +1,5 @@
 import { Suspense, lazy, useEffect, useState } from 'react'
+import type { ReactNode } from 'react'
 import { BrowserRouter, Route, Routes, useLocation } from 'react-router'
 import Header from './components/Header'
 import Sidebar from './components/Sidebar'
@@ -7,7 +8,10 @@ import HomePage from './pages/HomePage'
 import LeaderboardPage from './pages/LeaderboardPage'
 import KenoPage from './pages/KenoPage'
 import ChallengesPage from './pages/ChallengesPage'
-import ItemStorePage from './pages/ItemStorePage'
+import ItemStorePage, { StoreBagArt } from './pages/ItemStorePage'
+import ComingSoonPage from './pages/ComingSoonPage'
+import bonusHuntArt from './assets/games/bonus-hunt-art.webp'
+import { useAuth } from './hooks/useAuth'
 import ReferralPage from './pages/ReferralPage'
 import RewardsPage from './pages/RewardsPage'
 import AccountPage from './pages/AccountPage'
@@ -41,6 +45,23 @@ const TITLES: Record<string, string> = {
   '/keno': 'Keno',
 }
 
+/**
+ * A section that's built but not launched: players see Coming Soon, admins
+ * see the real page (with a note) so it can be tried before launch. Remove the
+ * wrapper from a route to launch it.
+ */
+function SoonForPlayers({ page, soon }: { page: ReactNode; soon: ReactNode }) {
+  const { status, admin } = useAuth()
+  if (status === 'loading') return <div className="page-loading" aria-label="Loading" />
+  if (!admin) return soon
+  return (
+    <>
+      <p className="admin-preview-note">Coming Soon for players. You see the page because you're an admin.</p>
+      {page}
+    </>
+  )
+}
+
 function Layout() {
   // Mobile navigation drawer (the sidebar is always visible on desktop)
   const [menuOpen, setMenuOpen] = useState(false)
@@ -72,9 +93,39 @@ function Layout() {
               <Route path="/raffles" element={<RafflesPage />} />
               {/* Tuning the 3D render without a live raffle (not in production builds) */}
               {import.meta.env.DEV && <Route path="/raffle-preview" element={<RafflePreviewPage />} />}
-              <Route path="/item-store" element={<ItemStorePage />} />
+              <Route
+                path="/item-store"
+                element={
+                  <SoonForPlayers
+                    page={<ItemStorePage />}
+                    soon={
+                      <ComingSoonPage
+                        title="Item Store"
+                        artNode={<StoreBagArt />}
+                        blurb="Spend your King Points on rewards from the stream. Catch the launch live on Kick."
+                      />
+                    }
+                  />
+                }
+              />
               <Route path="/referral" element={<ReferralPage />} />
-              <Route path="/bonus-hunt" element={<BonusHuntPage />} />
+              <Route
+                path="/bonus-hunt"
+                element={
+                  <SoonForPlayers
+                    page={<BonusHuntPage />}
+                    soon={
+                      <ComingSoonPage
+                        title="Bonus Hunt"
+                        art={bonusHuntArt}
+                        artBox={[0.085, 0.185, 0.83, 0.43]}
+                        softEdges
+                        blurb="Follow every bonus from the stream as it's opened, with live totals and results. Catch the launch live on Kick."
+                      />
+                    }
+                  />
+                }
+              />
               <Route path="/guess-the-balance" element={<GuessTheBalancePage />} />
               <Route path="/tournaments" element={<TournamentsPage />} />
               <Route path="*" element={<NotFoundPage />} />

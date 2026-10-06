@@ -581,3 +581,16 @@
     animation: none;
   }
 }
+
+/* The gold card's stage at Coming Soon size: drawn at card size, scaled as one */
+.store-bag-art {
+  width: 201px;
+  height: 118px;
+  transform: scale(var(--art-scale, 2));
+}
+
+.store-bag-art .store-card__glow {
+  border-radius: 8px;
+  mask-image: radial-gradient(closest-side, #000 35%, transparent);
+  -webkit-mask-image: radial-gradient(closest-side, #000 35%, transparent);
+}
