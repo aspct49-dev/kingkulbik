@@ -200,6 +200,20 @@ html.is-overlay #root {
   color: var(--color-text-subtle);
 }
 
+/* Five rows of 36px with 3px gaps */
+.ov-hunt__window {
+  height: 192px;
+  overflow: hidden;
+}
+
+.ov-hunt__window .ov-list {
+  transition: transform 0.7s cubic-bezier(0.45, 0, 0.2, 1);
+}
+
+.ov-hunt__window .ov-list--jump {
+  transition: none;
+}
+
 .ov-list__row--head {
   height: 22px;
   background: none;

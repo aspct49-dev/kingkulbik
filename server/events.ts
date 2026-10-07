@@ -347,7 +347,7 @@ export async function handleEventsRequest(req: AuthRequest, env: AuthEnv): Promi
           finishedAt: null,
         }
         const hunts = await update('hunts', (list) => {
-          // Numbered after the highest so far, so deleting one never reuses a number
+          // One after the highest number left (deleting the newest hunt frees its number)
           hunt.number = list.reduce((top, h) => Math.max(top, h.number ?? 0), 0) + 1
           return [hunt, ...list]
         })
