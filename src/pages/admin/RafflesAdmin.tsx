@@ -200,7 +200,7 @@ function RaffleEditor({ raffle, reload, notify }: { raffle: AdminRaffle; reload:
         </div>
         {raffle.error && <p className="admin-error">{raffle.error}</p>}
         {raffle.countingFrom && (
-          <p className="admin-note">Watch time counted from {new Date(raffle.countingFrom).toLocaleString('en-US')}.</p>
+          <p className="admin-note">Watch time counted from {new Date(raffle.countingFrom).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'UTC' })} UTC.</p>
         )}
 
         {raffle.status === 'open' ? (
@@ -221,12 +221,12 @@ function RaffleEditor({ raffle, reload, notify }: { raffle: AdminRaffle; reload:
               <Field label={wager ? 'Dollars wagered per ticket' : 'Minutes watched per ticket'}>
                 <Input value={form.ticketUnit} onChange={set('ticketUnit')} unit={wager ? '$' : 'min'} inputMode="decimal" />
               </Field>
-              <Field label="Counts from">
+              <Field label="Counts from (UTC)">
                 <span className="admin-input">
                   <input type="date" value={form.start} onChange={(e) => set('start')(e.target.value)} aria-label="Counts from" />
                 </span>
               </Field>
-              <Field label="Until (not including)">
+              <Field label="Until, not including (UTC)">
                 <span className="admin-input">
                   <input type="date" value={form.end} onChange={(e) => set('end')(e.target.value)} aria-label="Until" />
                 </span>

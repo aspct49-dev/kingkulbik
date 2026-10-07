@@ -23,7 +23,8 @@ const GAMES: Record<GameId, { name: string; icon: string }> = {
   coinflip: { name: 'Coinflip', icon: coinIcon },
 }
 
-const time = (at: number) => new Date(at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
+/** 24-hour UTC, like every time on the site */
+const time = (at: number) => new Date(at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' })
 
 /** Every player's settled originals, newest first, like Stake's bet feed */
 export default memo(function LiveBets({ wide }: { wide?: boolean }) {
@@ -82,7 +83,7 @@ export default memo(function LiveBets({ wide }: { wide?: boolean }) {
             Player
           </span>
           <span role="columnheader" className="live-bets__col-time">
-            Time
+            Time (UTC)
           </span>
           <span role="columnheader" className="live-bets__col-bet">
             Bet Amount

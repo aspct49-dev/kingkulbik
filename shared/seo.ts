@@ -57,7 +57,7 @@ export const PAGES: Record<string, PageSeo> = {
   '/raffles': {
     title: 'Raffles',
     description:
-      'Monthly wager and watch-time raffles: every $1,000 wagered under code KINGKULBIK is a ticket. Provably fair draws on stream.',
+      'Monthly viewer raffles: watch King Kulbik on Kick or wager under code KINGKULBIK to earn tickets. Provably fair draws live on stream.',
     index: true,
   },
   '/item-store': {

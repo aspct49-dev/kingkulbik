@@ -43,7 +43,7 @@ function ago(when: string) {
   if (days < 1) return 'Today'
   if (days === 1) return 'Yesterday'
   if (days < 30) return `${days} days ago`
-  return new Date(t).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+  return new Date(t).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' })
 }
 
 /** The live stream, King Kulbik's socials and his recent Kick streams */

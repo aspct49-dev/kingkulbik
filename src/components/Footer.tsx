@@ -111,7 +111,7 @@ export default function Footer() {
       </div>
 
       <div className="footer__legal">
-        <span className="footer__copyright">© {new Date().getFullYear()} King Kulbik - All Rights Reserved.</span>
+        <span className="footer__copyright">© {new Date().getUTCFullYear()} King Kulbik - All Rights Reserved.</span>
         <span className="footer__responsible">18+ only · Gamble responsibly</span>
       </div>
       </div>

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Link, useSearchParams } from 'react-router'
+import { Link, useLocation, useSearchParams } from 'react-router'
 import coinIcon from '../assets/coin.svg'
 import ticketIcon from '../assets/ticket.svg'
 import raffleIcon from '../assets/events/raffle-icon.svg'
@@ -24,6 +24,7 @@ const TABS: { id: Tab; label: string }[] = [
   { id: 'wager', label: 'Wager Raffle' },
   { id: 'chat', label: 'Chat Giveaways' },
 ]
+const DEFAULT_TAB = TABS[0].id
 
 const usd = (v: number) => `$${v.toLocaleString('en-US', { maximumFractionDigits: 2 })}`
 const money = (v: number) => `$${v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
@@ -38,7 +39,7 @@ export default function RafflesPage() {
   const [params, setParams] = useSearchParams()
   const raffles = data?.raffles ?? []
   const requested = params.get('tab') as Tab | null
-  const tab: Tab = requested && TABS.some((t) => t.id === requested) ? requested : 'watch'
+  const tab: Tab = requested && TABS.some((t) => t.id === requested) ? requested : DEFAULT_TAB
   const raffle = tab === 'chat' ? null : raffles.find((r) => r.kind === tab) ?? null
 
   return (
@@ -54,7 +55,7 @@ export default function RafflesPage() {
               role="tab"
               aria-selected={tab === t.id}
               className={`kk-tab${tab === t.id ? ' kk-tab--selected' : ''}`}
-              onClick={() => setParams(t.id === 'watch' ? {} : { tab: t.id }, { replace: true })}
+              onClick={() => setParams(t.id === DEFAULT_TAB ? {} : { tab: t.id }, { replace: true })}
             >
               {t.label}
             </button>
@@ -121,7 +122,7 @@ function RaffleView({ raffle }: { raffle: PublicRaffle }) {
 
   const detail =
     raffle.status === 'open'
-      ? `Tickets count until ${day(raffle.end - 1)}${raffle.countingFrom ? ` · watch time counted from ${day(raffle.countingFrom)}` : ''}. Draws happen live on stream.`
+      ? `Tickets count until ${day(raffle.end - 1)} (UTC)${raffle.countingFrom ? ` · watch time counted from ${day(raffle.countingFrom)}` : ''}. Draws happen live on stream.`
       : raffle.status === 'locked'
         ? `Tickets are locked. ${remaining} of ${raffle.drawsTotal} draws to go.`
         : 'Every draw has been made. The seed is revealed below, so anyone can check them.'
@@ -220,6 +221,8 @@ function Stat({ label, value, accent }: { label: string; value: string; accent?:
 
 /** The signed-in viewer's tickets and odds, or how to get some */
 function YourTickets({ raffle }: { raffle: PublicRaffle }) {
+  // Come back to this raffle's tab after signing in
+  const { pathname, search } = useLocation()
   const { status, user } = useAuth()
   const wager = raffle.kind === 'wager'
   if (status === 'loading') return <section className="ev-card raffles__you" aria-busy />
@@ -233,7 +236,7 @@ function YourTickets({ raffle }: { raffle: PublicRaffle }) {
       {!user ? (
         <>
           <p className="ev-card__text">Sign in to see your tickets and odds.</p>
-          <a className="kk-button raffles__you-action" href={signInUrl('/raffles')}>
+          <a className="kk-button raffles__you-action" href={signInUrl(pathname + search)}>
             Sign in
           </a>
         </>

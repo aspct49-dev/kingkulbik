@@ -15,7 +15,7 @@ const STATUSES: { id: HuntStatus; label: string }[] = [
 ]
 
 const x = (v: number | null) => (v === null ? '—' : `${v.toFixed(2)}×`)
-const day = (t: number) => new Date(t).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })
+const day = (t: number) => new Date(t).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC' })
 
 /** Bonus hunts: collect bonuses, then enter each payout as it opens */
 export default function HuntAdmin({

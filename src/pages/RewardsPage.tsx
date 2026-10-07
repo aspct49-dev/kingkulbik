@@ -94,7 +94,7 @@ const REWARDS: Reward[] = [
     main: 'RAFFLES',
     text: ['$1,000 Raffle every week', '5 Winners x $200.'],
     cta: 'Visit Raffles',
-    to: '/raffles',
+    to: '/raffles?tab=wager',
   },
   {
     ribbon: 'PAID INSTANTLY EVERY SATURDAY',

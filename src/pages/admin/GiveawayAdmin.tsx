@@ -305,7 +305,7 @@ function PastWinners({ drawn, notify }: { drawn: number; notify: (message: strin
             <span className="admin-row__main">
               <span className="admin-row__name">{w.name}</span>
               <span className="admin-row__meta">
-                {w.prize} · {new Date(w.at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                {w.prize} · {new Date(w.at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' })}
               </span>
             </span>
             <div className="admin-row__actions">
