@@ -10,7 +10,6 @@ import KenoPage from './pages/KenoPage'
 import ChallengesPage from './pages/ChallengesPage'
 import ItemStorePage, { StoreHeroArt } from './pages/ItemStorePage'
 import ComingSoonPage from './pages/ComingSoonPage'
-import bonusHuntArt from './assets/games/bonus-hunt-art.webp'
 import { useAuth } from './hooks/useAuth'
 import ReferralPage from './pages/ReferralPage'
 import RewardsPage from './pages/RewardsPage'
@@ -109,23 +108,7 @@ function Layout() {
                 }
               />
               <Route path="/referral" element={<ReferralPage />} />
-              <Route
-                path="/bonus-hunt"
-                element={
-                  <SoonForPlayers
-                    page={<BonusHuntPage />}
-                    soon={
-                      <ComingSoonPage
-                        title="Bonus Hunt"
-                        art={bonusHuntArt}
-                        artBox={[0.085, 0.185, 0.83, 0.43]}
-                        softEdges
-                        blurb="Follow every bonus from the stream as it's opened, with live totals and results. Catch the launch live on Kick."
-                      />
-                    }
-                  />
-                }
-              />
+              <Route path="/bonus-hunt" element={<BonusHuntPage />} />
               <Route path="/guess-the-balance" element={<GuessTheBalancePage />} />
               <Route path="/tournaments" element={<TournamentsPage />} />
               <Route path="*" element={<NotFoundPage />} />
