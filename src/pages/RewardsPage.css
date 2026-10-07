@@ -196,6 +196,18 @@
   letter-spacing: -5.12px;
 }
 
+/* About as wide as the other cards' icons */
+.bonus-card__figure--vip {
+  font-size: 48px;
+  letter-spacing: -2.4px;
+}
+
+/* The weekly bonus gift, in the trophy's gold and at its height, on the hexagon's centre */
+.bonus-card__gift {
+  left: 79.906px;
+  top: 75.88px;
+}
+
 .bonus-card__star {
   left: 66.906px;
   top: 57.88px;

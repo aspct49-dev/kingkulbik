@@ -40,7 +40,7 @@ export const PAGES: Record<string, PageSeo> = {
   '/rewards': {
     title: 'Kulbik Rewards',
     description:
-      'Every reward for playing under code KINGKULBIK: tripled weekly bonus, 10% weekly lossback, wager milestones, a free $21 on sign up, weekly $1,000 raffles and the $40K race.',
+      'Every reward for playing under code KINGKULBIK: tripled weekly bonus or 10% lossback, $40,000 monthly VIP giveaways, wager milestones, a free $21 on sign up, weekly $1,000 raffles and the $40K race.',
     index: true,
   },
   '/milestones': {

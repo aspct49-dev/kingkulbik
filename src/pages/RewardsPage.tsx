@@ -4,6 +4,7 @@ import bg from '../assets/rewards-page/bg.webp'
 import hexagon from '../assets/rewards-page/hexagon.svg'
 import arrow from '../assets/rewards-page/arrow.svg'
 import iconDiamond from '../assets/rewards-page/icon-diamond.svg'
+import iconGift from '../assets/rewards-page/icon-gift.svg'
 import iconStar from '../assets/rewards-page/icon-star.svg'
 import iconTicket from '../assets/rewards-page/icon-ticket.svg'
 import iconTrophy from '../assets/rewards-page/icon-trophy.svg'
@@ -33,7 +34,7 @@ type Reward = {
   to: string
 }
 
-const BigFigure = ({ children, size }: { children: string; size: 'big' | 'mid' }) => (
+const BigFigure = ({ children, size }: { children: string; size: 'big' | 'mid' | 'vip' }) => (
   <>
     <img className="bonus-card__hexagon" src={hexagon} width={245.813} height={237.76} alt="" />
     <span className={`bonus-card__figure bonus-card__figure--${size}`}>{children}</span>
@@ -43,20 +44,25 @@ const BigFigure = ({ children, size }: { children: string; size: 'big' | 'mid' }
 const REWARDS: Reward[] = [
   {
     ribbon: 'PAID INSTANTLY EVERY SATURDAY',
-    icon: <BigFigure size="big">3x</BigFigure>,
-    top: 'TRIPLED',
-    main: 'WEEKLY',
-    text: ['Claim 3x the standard amount', 'after collecting your weekly bonus.'],
+    icon: (
+      <>
+        <img className="bonus-card__hexagon" src={hexagon} width={245.813} height={237.76} alt="" />
+        <img className="bonus-card__gift" src={iconGift} width={86} height={86} alt="" />
+      </>
+    ),
+    top: 'WEEKLY BONUS',
+    main: '3X OR 10%',
+    text: ['Tripled weekly bonus or 10%', 'lossback on your recent losses.'],
     cta: 'Claim now',
     to: socials.discord.url,
   },
   {
-    ribbon: '10% PAID EVERY SATURDAY',
-    icon: <BigFigure size="mid">10%</BigFigure>,
-    top: '10% WEEKLY',
-    main: 'LOSSBACK',
-    text: ['Claim weekly resseting lossback', 'based on your recent loses.'],
-    cta: 'Claim now',
+    ribbon: '$40,000 EVERY MONTH',
+    icon: <BigFigure size="vip">$40K</BigFigure>,
+    top: 'VIP MONTHLY',
+    main: 'GIVEAWAYS',
+    text: ['$40,000 in VIP giveaways', 'every single month.'],
+    cta: 'Join now',
     to: socials.discord.url,
   },
   {
