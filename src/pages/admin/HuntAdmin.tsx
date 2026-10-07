@@ -53,8 +53,8 @@ export default function HuntAdmin({
     <div className="admin-stack">
       <form className="admin-card" onSubmit={create} noValidate>
         <h2 className="admin-card__title">Create new hunt</h2>
-        <div className="admin-grid">
-          <Field label="Hunt name" wide>
+        <div className="hunt-create">
+          <Field label="Hunt name">
             <Input value={form.name} onChange={(v) => setForm((f) => ({ ...f, name: v }))} placeholder="Friday night hunt" maxLength={60} />
           </Field>
           <Field label="Start cost">
@@ -69,13 +69,11 @@ export default function HuntAdmin({
           <Field label="Currency">
             <CurrencySelect value={form.currency} onChange={(currency) => setForm((f) => ({ ...f, currency }))} />
           </Field>
-        </div>
-        {error && <p className="admin-error" role="alert">{error}</p>}
-        <div className="admin-actions">
-          <button type="submit" className="kk-button admin-submit">
+          <button type="submit" className="kk-button admin-submit hunt-create__button">
             Create hunt
           </button>
         </div>
+        {error && <p className="admin-error" role="alert">{error}</p>}
       </form>
 
       {hunts.length > 1 && (
@@ -187,8 +185,8 @@ function HuntEditor({
         </div>
 
         {editing && (
-          <div className="admin-grid hunt-board__edit">
-            <Field label="Hunt name" wide>
+          <div className="hunt-create hunt-create--edit">
+            <Field label="Hunt name">
               <Input value={hunt.name} onChange={(v) => change((h) => ({ ...h, name: v }))} maxLength={60} />
             </Field>
             <Field label="Start cost">
@@ -244,7 +242,16 @@ function HuntEditor({
         ) : rows.length === 0 ? (
           <p className="admin-empty">No bonus matches “{search.trim()}”.</p>
         ) : (
-          <ol className="admin-list">
+          <ol className="admin-list hunt-rows">
+            <li className="hunt-row hunt-row--head" aria-hidden>
+              <span>#</span>
+              <span />
+              <span>Slot</span>
+              <span>Bet</span>
+              <span>Payout</span>
+              <span className="hunt-row__multi">Multi</span>
+              <span />
+            </li>
             {rows.map(({ b, n }) => (
               <BonusRow
                 key={b.id}
@@ -444,14 +451,14 @@ function BonusRow({
   const multi = bonusMultiplier(bonus)
 
   return (
-    <li className={`admin-row${best || lucky ? ' admin-row--best' : ''}`}>
-      <span className="admin-row__index">{index}</span>
+    <li className={`admin-row hunt-row${best || lucky ? ' admin-row--best' : ''}`}>
+      <span className="admin-row__index hunt-row__n">{index}</span>
       {bonus.image ? (
-        <img className="admin-row__thumb" src={bonus.image.replace('w=300', 'w=80')} width={30} height={40} alt="" loading="lazy" />
+        <img className="admin-row__thumb hunt-row__art" src={bonus.image.replace('w=300', 'w=80')} width={30} height={40} alt="" loading="lazy" />
       ) : (
-        <span className="admin-row__thumb admin-row__thumb--empty" />
+        <span className="admin-row__thumb admin-row__thumb--empty hunt-row__art" />
       )}
-      <span className="admin-row__main">
+      <span className="admin-row__main hunt-row__main">
         <span className="admin-row__name">
           {bonus.game}
           {bonus.badge && <span className="hunt-badge">{bonus.badge}</span>}
@@ -464,7 +471,7 @@ function BonusRow({
           {bonus.note && <> · {bonus.note}</>}
         </span>
       </span>
-      <span className="admin-input admin-input--small admin-input--unit admin-input--money">
+      <span className="admin-input admin-input--small admin-input--unit hunt-row__bet">
         <span className="admin-input__unit">{symbol}</span>
         <input
           value={bet}
@@ -477,7 +484,7 @@ function BonusRow({
           }}
         />
       </span>
-      <span className="admin-input admin-input--small admin-input--unit admin-input--money">
+      <span className="admin-input admin-input--small admin-input--unit hunt-row__pay">
         <span className="admin-input__unit">{symbol}</span>
         <input
           value={payout}
@@ -493,8 +500,10 @@ function BonusRow({
           }}
         />
       </span>
-      <span className={`admin-row__multi${multi !== null && multi >= 100 ? ' admin-row__multi--big' : ''}`}>{x(multi)}</span>
-      <button type="button" className="giveaway-names__remove" aria-label={`Remove ${bonus.game}`} onClick={onRemove}>
+      <span className={`hunt-row__multi${multi !== null && multi >= 100 ? ' hunt-row__multi--big' : ''}${multi === null ? ' hunt-row__multi--none' : ''}`}>
+        {x(multi)}
+      </span>
+      <button type="button" className="hunt-row__del" aria-label={`Remove ${bonus.game}`} title="Remove" onClick={onRemove}>
         ×
       </button>
     </li>

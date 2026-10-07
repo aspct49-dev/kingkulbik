@@ -662,6 +662,22 @@
   margin-left: auto;
 }
 
+/* Create / edit on one line: name, start cost, currency (and the button) */
+.hunt-create {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 170px 230px auto;
+  align-items: end;
+  gap: 12px;
+}
+
+.hunt-create--edit {
+  grid-template-columns: minmax(0, 1fr) 170px 230px;
+}
+
+.hunt-create__button {
+  min-width: 140px;
+}
+
 /* Four big tiles (counts and money), then five small ones (averages and multipliers) */
 .hunt-stats {
   display: grid;
@@ -878,13 +894,178 @@
   font-size: 11px;
 }
 
+/* The bonus list: # · art · slot · bet · payout · multi · remove */
+.hunt-rows {
+  gap: 4px;
+}
+
+.hunt-row {
+  display: grid;
+  grid-template-columns: 22px 30px minmax(0, 1fr) 118px 118px 72px 28px;
+  align-items: center;
+  gap: 12px;
+  min-height: 54px;
+  padding: 6px 8px 6px 12px;
+}
+
+.hunt-row--head {
+  min-height: 0;
+  padding: 0 8px 2px 12px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.hunt-row .admin-input--small {
+  width: 100%;
+}
+
+.hunt-row__n {
+  min-width: 0;
+}
+
+.hunt-row__multi {
+  font-size: 13px;
+  font-weight: 700;
+  text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text);
+}
+
+.hunt-row--head .hunt-row__multi {
+  font-size: inherit;
+  color: inherit;
+}
+
+.hunt-row__multi--big {
+  color: var(--color-accent);
+}
+
+.hunt-row__multi--none {
+  color: var(--color-text-muted);
+}
+
+.hunt-row__del {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  font-size: 18px;
+  line-height: 1;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .hunt-row__del:hover {
+    background: rgb(229 115 111 / 0.12);
+    color: #e5736f;
+  }
+}
+
+.hunt-row__del:focus-visible {
+  outline: 2px solid #e6d218;
+  outline-offset: 1px;
+}
+
+@media (max-width: 1100px) {
+  .hunt-create {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .hunt-create > :first-child,
+  .hunt-create__button {
+    grid-column: 1 / -1;
+  }
+
+  .hunt-create--edit > :first-child {
+    grid-column: 1 / -1;
+  }
+}
+
 @media (max-width: 760px) {
   .hunt-stats,
   .hunt-stats--small {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .hunt-stat {
+    height: 76px;
+  }
+
+  .hunt-stat__value {
+    font-size: 20px;
+    line-height: 26px;
+  }
+
+  .hunt-stat--small {
+    height: 64px;
+  }
+
+  /* Five small figures: the last takes the whole row */
+  .hunt-stats--small .hunt-stat:last-child {
+    grid-column: 1 / -1;
+  }
+
+  .hunt-board__title {
+    font-size: 18px;
+    line-height: 24px;
+  }
+
   .hunt-board__actions .kk-tabs {
     margin-left: 0;
+  }
+
+  /* Each bonus on two lines: the slot, then bet / payout / multi */
+  .hunt-row--head {
+    display: none;
+  }
+
+  .hunt-row {
+    grid-template-columns: 18px 30px minmax(0, 1fr) minmax(0, 1fr) 58px;
+    grid-template-areas:
+      'n art main main del'
+      'n art bet pay multi';
+    gap: 8px 10px;
+    padding: 8px 8px 8px 10px;
+  }
+
+  .hunt-row__n {
+    grid-area: n;
+  }
+
+  .hunt-row__art {
+    grid-area: art;
+    align-self: start;
+  }
+
+  .hunt-row__main {
+    grid-area: main;
+  }
+
+  .hunt-row__bet {
+    grid-area: bet;
+  }
+
+  .hunt-row__pay {
+    grid-area: pay;
+  }
+
+  .hunt-row__multi {
+    grid-area: multi;
+  }
+
+  .hunt-row__del {
+    grid-area: del;
+    justify-self: end;
   }
 }
