@@ -1,0 +1,768 @@
+/* Socials & Video. Page frame (.section-page) from ChallengesPage.css, heading from PageHeading */
+.socials {
+  position: relative;
+  max-width: 1032px;
+  margin: 0 auto;
+  --kick: #57e326;
+  --kick-line: #2b9108;
+}
+
+/* The Kick pattern behind the top of the page, full-bleed, fading out */
+.socials__backdrop {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 100vw;
+  max-width: calc(100% + 2 * var(--page-gutter));
+  height: 720px;
+  translate: -50% 0;
+  background-position: center top;
+  background-size: cover;
+  opacity: 0.75;
+  /* Fades out downwards and at both sides, so it has no edges */
+  mask-image:
+    linear-gradient(to bottom, #000 40%, transparent),
+    linear-gradient(to right, transparent, #000 15%, #000 85%, transparent);
+  mask-composite: intersect;
+  -webkit-mask-image:
+    linear-gradient(to bottom, #000 40%, transparent),
+    linear-gradient(to right, transparent, #000 15%, #000 85%, transparent);
+  -webkit-mask-composite: source-in;
+  pointer-events: none;
+}
+
+.socials > :not(.socials__backdrop) {
+  position: relative;
+}
+
+.socials__section {
+  margin-top: 36px;
+}
+
+/* ---------------------------------------------------------------- section titles */
+
+.socials__title {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+.socials__title-icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 54px;
+  height: 54px;
+}
+
+.socials__title-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  min-width: 0;
+}
+
+.socials__title h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.2;
+  color: #dadada;
+}
+
+.socials__title--kick {
+  --tone: var(--kick);
+  --tone-line: var(--kick-line);
+}
+
+.socials__title--gold {
+  --tone: var(--color-accent);
+  --tone-line: #6b5f10;
+}
+
+.socials__title-accent {
+  color: var(--tone);
+}
+
+/* The handle chip: links to the profile */
+.socials__handle {
+  display: inline-flex;
+  align-items: center;
+  height: 28px;
+  padding: 0 14px;
+  border: 1px solid var(--tone-line);
+  border-radius: 14px;
+  background: linear-gradient(to bottom, #1d2533, #151a24);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--tone);
+  transition: border-color 0.15s ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .socials__handle:hover {
+    border-color: var(--tone);
+  }
+}
+
+.socials__handle:focus-visible,
+.socials-card:focus-visible,
+.vod-card:focus-visible,
+.socials__dark-button:focus-visible {
+  outline: 2px solid #e6d218;
+  outline-offset: 2px;
+}
+
+/* Socials heading icon: the page's camera on a dark tile */
+.socials__icon-tile {
+  display: grid;
+  place-items: center;
+  width: 50px;
+  height: 50px;
+  border-radius: 12px;
+  background: var(--nav-item-from);
+  box-shadow: inset 0 1px 0 0 #364151;
+}
+
+/* Recent streams icon: Kick's K inside the replay ring */
+.socials__replay {
+  position: relative;
+  width: 54px;
+  height: 54px;
+}
+
+.socials__replay img {
+  position: absolute;
+}
+
+.socials__replay-ring {
+  inset: 0;
+}
+
+.socials__replay-k {
+  left: 19px;
+  top: 16px;
+}
+
+/* Live / offline, on the right of the live title */
+.socials__status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 30px;
+  margin-left: auto;
+  padding: 0 12px;
+  border-radius: 15px;
+  background: #1d2533;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.socials__status--live {
+  background: rgb(87 227 38 / 0.12);
+  box-shadow: inset 0 0 0 1px rgb(87 227 38 / 0.35);
+  color: var(--kick);
+}
+
+.socials__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: socials-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes socials-pulse {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .socials__dot {
+    animation: none;
+  }
+}
+
+/* ---------------------------------------------------------------- live player */
+
+.socials__player {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border: 6px solid #232431;
+  border-radius: 10px;
+  background: #0e1219;
+}
+
+.socials__player iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+/* The message sits low, so the channel's own offline art stays readable */
+.socials__offline {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: end center;
+  padding: 0 16px 24px;
+}
+
+.socials__offline > img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: brightness(0.45);
+}
+
+.socials__offline-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 360px;
+  padding: 22px 24px;
+  border-radius: 12px;
+  background: rgb(14 18 25 / 0.82);
+  box-shadow: inset 0 1px 0 0 rgb(255 255 255 / 0.07);
+  text-align: center;
+}
+
+.socials__offline-title {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.socials__offline-text {
+  margin-top: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--color-text-muted);
+}
+
+.socials__offline-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.socials__offline-follow {
+  height: 38px;
+  padding: 0 18px;
+  font-size: 14px;
+}
+
+/* Dark button (the account page's) */
+.socials__dark-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 38px;
+  padding: 0 18px;
+  border-radius: var(--radius-sm);
+  background: var(--nav-item-from);
+  box-shadow: inset 0 1px 0 0 #364151;
+  font-size: 14px;
+  font-weight: 700;
+  color: #efefef;
+  transition:
+    background-color 0.15s ease,
+    transform 0.15s ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .socials__dark-button:hover {
+    background: #2c3647;
+  }
+}
+
+.socials__dark-button:active {
+  transform: translateY(1px);
+}
+
+/* What's on: under the player while live */
+.socials__now {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin-top: 12px;
+}
+
+.socials__now-title {
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: #dadada;
+}
+
+.socials__now-category {
+  padding: 3px 10px;
+  border-radius: 6px;
+  background: #1d2533;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-text-muted);
+}
+
+/* ---------------------------------------------------------------- social cards */
+
+.socials__cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Each card turns in its own 3D space */
+.socials__cards > li {
+  perspective: 900px;
+}
+
+/*
+ * Drawn as in the design: textured panel, brand border, darker foot, Follow bar.
+ * It turns towards the mouse (--rx/--ry, set as it moves) and the logo, text
+ * and button sit at different depths, so it reads as a 3D card. No overflow
+ * clipping: that would flatten the 3D, so the parts round their own corners.
+ */
+.socials-card {
+  --rx: 0deg;
+  --ry: 0deg;
+  --press: 0px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 246px;
+  padding: 0 31px;
+  border: 2px solid var(--brand);
+  border-radius: 13px;
+  background-position: center;
+  background-size: cover;
+  text-align: center;
+  transform: rotateX(var(--rx)) rotateY(var(--ry)) translateY(var(--press));
+  transform-style: preserve-3d;
+  transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* While the mouse moves over it, the card follows closely */
+.socials-card--tilting {
+  transition-duration: 0.08s;
+}
+
+.socials-card__logo {
+  transform: translateZ(46px);
+}
+
+.socials-card__name {
+  transform: translateZ(30px);
+}
+
+.socials-card__handle {
+  transform: translateZ(22px);
+}
+
+.socials-card__action {
+  transform: translateZ(34px);
+}
+
+/* The Kick card: the neutral panel, lit green from the top */
+.socials-card--kick::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 11px;
+  background: radial-gradient(ellipse 70% 45% at 50% 0%, rgb(83 252 24 / 0.16), transparent 80%);
+  pointer-events: none;
+}
+
+.socials-card__shade {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: auto;
+  border-radius: 0 0 11px 11px;
+}
+
+.socials-card > :not(.socials-card__shade) {
+  position: relative;
+}
+
+.socials-card__logo {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 96px;
+  margin-top: 24px;
+}
+
+.socials-card__name {
+  margin-top: 31px;
+  font-family: var(--font-display);
+  font-size: 22.7px;
+  font-weight: 700;
+  line-height: 27px;
+  color: #d7d7d7;
+  text-transform: uppercase;
+}
+
+.socials-card__handle {
+  margin-top: 1px;
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 18px;
+  color: #6d78ad;
+  white-space: nowrap;
+}
+
+/* The Follow bar: the brand colour at 28%, a solid brand edge */
+.socials-card__action {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 27px;
+  margin-top: 8px;
+  border: 1.2px solid var(--brand);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--brand) 28%, transparent);
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+  color: #d7d7d7;
+  text-transform: uppercase;
+  transition: background-color 0.15s ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .socials-card:hover .socials-card__action {
+    background: color-mix(in srgb, var(--brand) 48%, transparent);
+  }
+}
+
+.socials-card:active {
+  --press: 1px;
+}
+
+.socials-card > .socials-card__live {
+  position: absolute;
+  transform: translateZ(24px);
+  top: 10px;
+  right: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: rgb(14 18 25 / 0.8);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: var(--kick);
+  text-transform: uppercase;
+}
+
+/* ---------------------------------------------------------------- recent streams */
+
+.socials__vods {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* The design's VOD box: dark card, the green Kick glow behind the thumbnail */
+.vod-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 8px 8px 12px;
+  overflow: hidden;
+  border-radius: 8px;
+  background: #171f2c;
+  box-shadow: inset 0 1.5px 0 0 rgb(255 255 255 / 0.07);
+}
+
+.vod-card__glow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 238 / 141;
+  object-fit: cover;
+  pointer-events: none;
+}
+
+.vod-card > :not(.vod-card__glow) {
+  position: relative;
+}
+
+.vod-card__thumb {
+  display: block;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border-radius: 7.5px;
+  background: #0e1219;
+}
+
+.vod-card__thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.25s ease;
+}
+
+.vod-card__badge {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 7px;
+  border-radius: 5px;
+  background: rgb(14 18 25 / 0.85);
+  font-size: 12px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: #efefef;
+}
+
+.vod-card__badge--live {
+  left: 6px;
+  right: auto;
+  top: 6px;
+  bottom: auto;
+  color: var(--kick);
+}
+
+.vod-card__line {
+  align-self: center;
+  width: 170px;
+  max-width: 76%;
+  height: 1px;
+  margin: 9px 0 10px;
+}
+
+.vod-card__title {
+  display: -webkit-box;
+  overflow: hidden;
+  padding: 0 3px;
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.1;
+  color: #b5b5bc;
+  word-break: break-word;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  transition: color 0.15s ease;
+}
+
+.vod-card__meta {
+  margin-top: auto;
+  padding: 10px 3px 0;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--color-text-subtle);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .vod-card:hover .vod-card__thumb img {
+    transform: scale(1.04);
+  }
+
+  .vod-card:hover .vod-card__title {
+    color: #fff;
+  }
+}
+
+.socials__more {
+  display: flex;
+  margin: 14px auto 0;
+}
+
+.socials__vods-loading {
+  height: 220px;
+  border-radius: 8px;
+  background: #171f2c;
+}
+
+.socials__empty {
+  padding: 20px;
+  border-radius: 8px;
+  background: #171f2c;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text-muted);
+}
+
+.socials__empty a {
+  color: var(--kick);
+  font-weight: 700;
+}
+
+/* ---------------------------------------------------------------- narrow */
+
+@container (max-width: 720px) {
+  .socials__cards {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .socials-card {
+    padding: 0 12px;
+  }
+
+  .socials-card__logo {
+    height: 76px;
+  }
+
+  .socials-card__logo img {
+    width: auto;
+    max-width: 76%;
+    height: 64px;
+  }
+
+  .socials-card__name {
+    margin-top: 40px;
+    font-size: 18px;
+  }
+
+  .socials-card__handle {
+    max-width: 100%;
+    overflow: hidden;
+    font-size: 13px;
+    text-overflow: ellipsis;
+  }
+}
+
+/* Phones: social cards become rows (logo, name and handle, action) */
+@container (max-width: 520px) {
+  .socials__title {
+    gap: 12px;
+  }
+
+  .socials__title-icon {
+    width: 44px;
+    height: 44px;
+  }
+
+  .socials__title-icon > img {
+    width: 36px;
+    height: auto;
+  }
+
+  .socials__title h2 {
+    font-size: 18px;
+  }
+
+  .socials__status {
+    align-self: flex-start;
+  }
+
+  .socials__cards {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .socials-card {
+    display: grid;
+    grid-template-columns: 52px minmax(0, 1fr) auto;
+    grid-template-rows: auto auto;
+    column-gap: 14px;
+    align-items: center;
+    height: auto;
+    padding: 14px 16px;
+    text-align: left;
+  }
+
+  .socials-card__shade,
+  .socials-card > .socials-card__live {
+    display: none;
+  }
+
+  .socials-card__logo {
+    grid-row: 1 / 3;
+    width: 52px;
+    height: 52px;
+    margin: 0;
+  }
+
+  .socials-card__logo img {
+    max-width: 100%;
+    height: 44px;
+  }
+
+  .socials-card__name {
+    margin: 0;
+    font-size: 17px;
+    line-height: 20px;
+  }
+
+  .socials-card__handle {
+    grid-column: 2;
+    margin: 0;
+  }
+
+  .socials-card__action {
+    grid-column: 3;
+    grid-row: 1 / 3;
+    width: auto;
+    height: 32px;
+    margin: 0;
+    padding: 0 14px;
+  }
+
+  .socials__vods {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .vod-card__title {
+    font-size: 13.5px;
+  }
+
+  .socials__offline {
+    padding-bottom: 12px;
+  }
+
+  .socials__offline-card {
+    max-width: 100%;
+    padding: 10px 12px;
+  }
+
+  .socials__offline-title {
+    display: none;
+  }
+
+  .socials__offline-actions {
+    margin-top: 0;
+  }
+
+  .socials__offline-text {
+    display: none;
+  }
+}

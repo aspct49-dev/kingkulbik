@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import bg from '../assets/leaderboard/bg.png'
+import bg from '../assets/leaderboard/bg.webp'
 import LeaderboardHero from '../components/leaderboard/LeaderboardHero'
 import Podium from '../components/leaderboard/Podium'
 import Countdown from '../components/leaderboard/Countdown'

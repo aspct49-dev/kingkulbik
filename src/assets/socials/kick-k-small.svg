@@ -1,0 +1,21 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="18" height="23" viewBox="0 0 18 23" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Kick Game Livestream 1" filter="url(#filter0_i_0_8)">
+<g clip-path="url(#clip0_0_8)">
+<path id="Vector" fill-rule="evenodd" clip-rule="evenodd" d="M0 0H6.44516V4.67841H8.59355V2.34356H10.7419V0.00871265H17.1871V7.02197H15.0387V9.35682H12.8903V11.6917H15.0387V14.0265H17.1871V21.0398H10.7419V18.7136H8.59355V16.3788H6.44516V21.0572H0V0ZM42.9512 0H49.3963V4.67841H51.5447V2.34356H53.6931V0.00871265H60.1383V7.02197H57.9816V9.35682H55.8332V11.6917H57.9816V14.0265H60.13V21.0398H53.6848V18.7136H51.5364V16.3788H49.388V21.0572H42.9429V0H42.9512ZM19.3272 0H25.7724V21.0485H19.3272V0ZM34.3576 0H30.0608V2.33485H27.9124V18.7136H30.0608V21.0485H34.3576H40.8028V14.0352H34.3576V7.02197H40.8028V0.00871265H34.3576V0Z" fill="#53FC18"/>
+</g>
+</g>
+<defs>
+<filter id="filter0_i_0_8" x="0" y="0" width="18" height="23" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+<feFlood flood-opacity="0" result="BackgroundImageFix"/>
+<feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
+<feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+<feOffset dx="0.476443" dy="0.476443"/>
+<feComposite in2="hardAlpha" operator="arithmetic" k2="-1" k3="1"/>
+<feColorMatrix type="matrix" values="0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.3 0"/>
+<feBlend mode="normal" in2="shape" result="effect1_innerShadow_0_8"/>
+</filter>
+<clipPath id="clip0_0_8">
+<rect width="18" height="23" fill="white"/>
+</clipPath>
+</defs>
+</svg>

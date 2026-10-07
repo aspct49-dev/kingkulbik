@@ -137,7 +137,7 @@ export default function RewardsPage() {
         <header className="rewards__banner" style={{ backgroundImage: `url(${bannerBg})` }}>
           <h1 className="rewards__title">
             <span className="rewards__title-top">RANK UP</span>
-            <span className="rewards__title-main">REWARDS</span>
+            <span className="rewards__title-main">MILESTONES</span>
           </h1>
           <p className="visually-hidden">
             Claims must be submitted within seven days of ranking up and are normally paid within 48 hours.

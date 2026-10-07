@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { Hunt, PublicGiveaway, PublicGuessRound, RaffleWin, Tournament } from '../../shared/events'
 import type { PublicRaffle } from '../../shared/raffles'
+import type { KickSocials } from '../../shared/socials'
 
 type Polled<T> = { status: 'loading' | 'ready' | 'error'; data: T | null; refresh: () => void }
 
@@ -36,4 +37,6 @@ export const useGuessRound = (every = 10_000) => usePolled<{ round: PublicGuessR
 export const useTournaments = (every = 10_000) => usePolled<{ tournaments: Tournament[] }>('/api/events/tournaments', every)
 export const useGiveaway = (every = 5_000) =>
   usePolled<{ giveaway: PublicGiveaway; history: RaffleWin[] }>('/api/events/giveaway', every)
+/** The Kick channel and its recent streams (the server reads Kick about once a minute) */
+export const useKickSocials = (every = 60_000) => usePolled<KickSocials>('/api/socials/kick', every)
 export const useRaffles = (every = 5_000) => usePolled<{ raffles: PublicRaffle[] }>('/api/raffles', every)

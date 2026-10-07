@@ -1,6 +1,6 @@
 import { Suspense, lazy, useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
-import { BrowserRouter, Route, Routes, useLocation } from 'react-router'
+import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router'
 import Header from './components/Header'
 import Sidebar from './components/Sidebar'
 import Footer from './components/Footer'
@@ -25,12 +25,13 @@ const TournamentsPage = lazy(() => import('./pages/TournamentsPage'))
 const RafflesPage = lazy(() => import('./pages/RafflesPage'))
 const OverlayPage = lazy(() => import('./pages/OverlayPage'))
 const RafflePreviewPage = lazy(() => import('./pages/RafflePreviewPage'))
+const SocialsPage = lazy(() => import('./pages/SocialsPage'))
 
 /** Browser tab title per page */
 const TITLES: Record<string, string> = {
   '/': 'King Kulbik',
   '/leaderboard': 'Leaderboard',
-  '/rewards': 'Rewards',
+  '/milestones': 'Milestones',
   '/challenges': 'Challenges',
   '/raffles': 'Raffles',
   '/item-store': 'Item Store',
@@ -40,6 +41,7 @@ const TITLES: Record<string, string> = {
   '/bonus-hunt': 'Bonus Hunt',
   '/guess-the-balance': 'Guess the Balance',
   '/tournaments': 'Tournaments',
+  '/socials': 'Socials & Video',
   '/coinflip': 'Coinflip',
   '/keno': 'Keno',
 }
@@ -85,7 +87,9 @@ function Layout() {
               <Route path="/leaderboard" element={<LeaderboardPage />} />
               <Route path="/keno" element={<KenoPage />} />
               <Route path="/coinflip" element={<CoinflipPage />} />
-              <Route path="/rewards" element={<RewardsPage />} />
+              <Route path="/milestones" element={<RewardsPage />} />
+              {/* The page's old address */}
+              <Route path="/rewards" element={<Navigate to="/milestones" replace />} />
               <Route path="/account" element={<AccountPage />} />
               <Route path="/admin" element={<AdminPage />} />
               <Route path="/challenges" element={<ChallengesPage />} />
@@ -111,6 +115,7 @@ function Layout() {
               <Route path="/bonus-hunt" element={<BonusHuntPage />} />
               <Route path="/guess-the-balance" element={<GuessTheBalancePage />} />
               <Route path="/tournaments" element={<TournamentsPage />} />
+              <Route path="/socials" element={<SocialsPage />} />
               <Route path="*" element={<NotFoundPage />} />
             </Routes>
           </Suspense>

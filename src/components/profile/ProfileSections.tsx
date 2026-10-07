@@ -66,7 +66,7 @@ export function ProfileHeader({ profile, admin }: { profile: PlayerProfile; admi
   )
 }
 
-/** Rank Up Rewards: the highest rank reached and the way to the next */
+/** Rank Up Milestones: the highest rank reached and the way to the next */
 export function MilestoneStatus({
   wagered,
   stake,
@@ -83,7 +83,7 @@ export function MilestoneStatus({
     return (
       <section className="profile-card profile-milestone">
         <p className="profile-empty">
-          {own ? 'Link your Stake username above to track your Rank Up Rewards.' : 'No Stake account linked.'}
+          {own ? 'Link your Stake username above to track your Rank Up Milestones.' : 'No Stake account linked.'}
         </p>
       </section>
     )
@@ -136,8 +136,8 @@ export function MilestoneStatus({
           'Every rank reached.'
         )}{' '}
         {own && (
-          <Link className="profile-link" to="/rewards">
-            See all rewards
+          <Link className="profile-link" to="/milestones">
+            See all milestones
           </Link>
         )}
       </p>

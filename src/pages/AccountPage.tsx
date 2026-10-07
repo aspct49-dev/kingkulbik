@@ -55,7 +55,7 @@ function StakeLink() {
         <span className="account-link__detail">
           {stake
             ? `${stake.username}${progress.data ? ` · ${usd(progress.data.wagered)} wagered` : ''}`
-            : 'Track your Rank Up Rewards progress'}
+            : 'Track your Rank Up Milestones progress'}
         </span>
       </span>
       {stake ? (
@@ -264,7 +264,7 @@ export default function AccountPage() {
               <p className="account-note account-note--quiet">Need to change a linked account? Ask in the Discord.</p>
             )}
 
-            <h2 className="account-section">Rank Up Rewards</h2>
+            <h2 className="account-section">Rank Up Milestones</h2>
             <MilestoneStatus
               stake={user.stake?.username ?? null}
               wagered={stakeProgress.data?.wagered ?? null}

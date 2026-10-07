@@ -47,12 +47,14 @@ export default function LeaderboardHero({ board, onBoardChange }: LeaderboardHer
         src={symbolHigh3}
         size={56.184}
         rotation={-10.1}
+        idle={0}
       />
       <FloatingSymbol
         className="lb-hero__symbol lb-hero__symbol--m2"
         src={symbolM2}
         size={34.434}
         rotation={14.2}
+        idle={2.1}
       />
 
       <div className="lb-hero__picker" role="radiogroup" aria-label="Leaderboard site">

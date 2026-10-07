@@ -36,18 +36,13 @@ export default function RankingTable({ entries, prizes }: RankingTableProps) {
       </div>
 
       {places.map(({ place, prize, entry }) => {
-        const avatar = rowAvatar(place)
         return (
           <div className="ranking-table__row" role="row" key={place}>
             <span role="cell">
               <span className="ranking-table__place">{place}</span>
             </span>
             <span role="cell" className="ranking-table__user">
-              <img
-                className={`ranking-table__avatar ranking-table__avatar--${avatar.shape}`}
-                src={avatar.src}
-                alt=""
-              />
+              <img className="ranking-table__avatar" src={rowAvatar} alt="" />
               <span className="ranking-table__name">{entry?.name ?? '—'}</span>
             </span>
             <span role="cell" className="ranking-table__wagered">

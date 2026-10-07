@@ -169,7 +169,7 @@ function PlayerDetail({
             </p>
           </section>
           <section className="admin-card">
-            <h2 className="admin-card__title">Rank Up Rewards</h2>
+            <h2 className="admin-card__title">Rank Up Milestones</h2>
             <MilestoneStatus stake={view.profile.stake?.username ?? null} wagered={view.wagered} />
           </section>
           <section className="admin-card">

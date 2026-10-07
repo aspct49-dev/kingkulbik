@@ -81,21 +81,13 @@
   font-weight: 600;
 }
 
+/* The design's 40px ringed circle, overlapping its 38px slot by 1px all round */
 .ranking-table__avatar {
   flex: none;
-  width: 38px;
-  height: 38px;
-  object-fit: cover;
-}
-
-.ranking-table__avatar--square {
-  border-radius: 6px;
-}
-
-.ranking-table__avatar--circle {
   width: 40px;
   height: 40px;
   margin: -1px;
+  object-fit: cover;
 }
 
 .ranking-table__name {
@@ -167,11 +159,6 @@
   }
 
   .ranking-table__avatar {
-    width: 32px;
-    height: 32px;
-  }
-
-  .ranking-table__avatar--circle {
     width: 34px;
     height: 34px;
   }

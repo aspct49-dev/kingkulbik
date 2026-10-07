@@ -5,7 +5,8 @@ import homeActiveIcon from '../assets/sidebar/home.svg'
 import homeIcon from '../assets/sidebar/home-inactive.svg'
 import leaderboardIcon from '../assets/sidebar/leaderboard.svg'
 import leaderboardActiveIcon from '../assets/sidebar/leaderboard-active.svg'
-import rewardsIcon from '../assets/sidebar/rewards.svg'
+import milestonesIcon from '../assets/sidebar/milestones.svg'
+import milestonesActiveIcon from '../assets/sidebar/milestones-active.svg'
 import challengesIcon from '../assets/sidebar/challenges.svg'
 import rafflesIcon from '../assets/sidebar/raffles.svg'
 import itemStoreIcon from '../assets/sidebar/item-store.svg'
@@ -69,7 +70,12 @@ const sections: NavSection[] = [
   {
     title: 'VIP Program',
     items: [
-      { label: 'Rewards', href: '/rewards', icon: svgIcon(rewardsIcon, 21, 21) },
+      {
+        label: 'Milestones',
+        href: '/milestones',
+        icon: svgIcon(milestonesIcon, 12, 16),
+        activeIcon: svgIcon(milestonesActiveIcon, 12, 16),
+      },
       { label: 'Challenges', href: '/challenges', icon: svgIcon(challengesIcon, 16, 16) },
       { label: 'Raffles', href: '/raffles', icon: svgIcon(rafflesIcon, 16, 16) },
       { label: 'Item Store', href: '/item-store', icon: svgIcon(itemStoreIcon, 16, 16) },
@@ -93,7 +99,7 @@ const sections: NavSection[] = [
   {
     title: 'Socials & Media',
     items: [
-      { label: 'Socials & Video', href: '#socials', icon: svgIcon(videocamIcon, 17, 17) },
+      { label: 'Socials & Video', href: '/socials', icon: svgIcon(videocamIcon, 17, 17) },
       { label: 'Watch live now', href: socials.kick.url, icon: svgIcon(kickIcon, 12, 15) },
       { label: 'Follow on X', href: socials.x.url, icon: svgIcon(xIcon, 15, 14) },
       { label: 'Join Discord', href: socials.discord.url, icon: svgIcon(discordIcon, 19, 14) },

@@ -1,4 +1,3 @@
-import avatar from '../assets/leaderboard/avatar.png'
 import avatarCircle from '../assets/leaderboard/avatar-circle.png'
 import avatar1st from '../assets/leaderboard/avatar-1st.png'
 import avatar2nd from '../assets/leaderboard/avatar-2nd.png'
@@ -12,10 +11,8 @@ export const AFFILIATE_CODE = 'Kingkulbik'
  */
 export const podiumAvatars: Record<1 | 2 | 3, string> = { 1: avatar1st, 2: avatar2nd, 3: avatar3rd }
 
-export const rowAvatar = (place: number) =>
-  place === 4
-    ? { src: avatarCircle, shape: 'circle' as const }
-    : { src: avatar, shape: 'square' as const }
+/** Every table row shows the same round avatar */
+export const rowAvatar = avatarCircle
 
 export const formatUsd = (value: number, fractionDigits = 0) =>
   value.toLocaleString('en-US', {
