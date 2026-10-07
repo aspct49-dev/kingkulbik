@@ -1,0 +1,29 @@
+# systemd service for the King Kulbik Node server.
+# Installed by deploy/setup.sh as /etc/systemd/system/kingkulbik.service.
+#   sudo systemctl status kingkulbik      is it running
+#   sudo journalctl -u kingkulbik -f      live logs
+
+[Unit]
+Description=King Kulbik site (Node)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=kingkulbik
+Group=kingkulbik
+WorkingDirectory=/opt/kingkulbik
+Environment=NODE_ENV=production
+ExecStart=/usr/bin/node --env-file=.env dist-server/server.mjs
+Restart=always
+RestartSec=3
+
+# Hardening: the app can only write to its data folder
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/kingkulbik
+
+[Install]
+WantedBy=multi-user.target

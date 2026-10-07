@@ -22,6 +22,11 @@ as long as `api.stake.com` is reachable from your network.
    token from Affiliate Program → API) for Production and Preview.
 3. Deploy. `vercel.json` routes every page to the app and leaves `/api/*` to the serverless function.
 
+## Deploy on a VPS
+
+See [deploy/README.md](deploy/README.md): one Node server behind nginx, set up with `deploy/setup.sh` and
+updated with `deploy/update.sh`.
+
 ## Leaderboard
 
 - `api/leaderboard.ts` — Vercel Function. Calls Stake's

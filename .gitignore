@@ -9,3 +9,6 @@ dist
 
 # Local content store (admin edits, uploads, bet feed) until there is a database
 /data
+
+# VPS build of the server
+dist-server

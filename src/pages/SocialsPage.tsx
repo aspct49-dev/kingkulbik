@@ -197,10 +197,10 @@ function LiveBadge({ channel }: { channel: KickChannelInfo | null }) {
   )
 }
 
-/** Kick's player while live; the offline banner (with a way to the VODs) when not */
+/** Kick's player while live; the channel's offline banner when not */
 function LivePlayer({ channel, loaded }: { channel: KickChannelInfo | null; loaded: boolean }) {
-  // Without channel data (Kick unreachable) the player still works: it shows Kick's own offline screen
-  const showPlayer = !loaded || !channel || channel.live
+  // Without channel data (Kick unreachable) or a banner, Kick's player shows its own offline screen
+  const showPlayer = !loaded || !channel || channel.live || !channel.offlineBanner
   return (
     <div className="socials__player-wrap">
       <div className="socials__player">
@@ -212,23 +212,9 @@ function LivePlayer({ channel, loaded }: { channel: KickChannelInfo | null; load
             allowFullScreen
           />
         ) : (
-          <div className="socials__offline">
-            {channel.offlineBanner && (
-              <img src={channel.offlineBanner} alt="" onError={(e) => (e.currentTarget.style.display = 'none')} />
-            )}
-            <div className="socials__offline-card">
-              <p className="socials__offline-title">Stream is offline</p>
-              <p className="socials__offline-text">Follow on Kick to get notified when King Kulbik goes live.</p>
-              <div className="socials__offline-actions">
-                <a className="kk-button socials__offline-follow" href={KICK_URL} target="_blank" rel="noopener noreferrer">
-                  Follow on Kick
-                </a>
-                <a className="socials__dark-button" href="#socials-vods">
-                  Past streams
-                </a>
-              </div>
-            </div>
-          </div>
+          <a className="socials__offline" href={KICK_URL} target="_blank" rel="noopener noreferrer" aria-label="King Kulbik on Kick (offline)">
+            <img src={channel.offlineBanner ?? ''} alt="" onError={(e) => (e.currentTarget.style.display = 'none')} />
+          </a>
         )}
       </div>
       {channel?.live && (
