@@ -82,7 +82,7 @@ export default function LeaderboardHero({ board, onBoardChange }: LeaderboardHer
         <span className="lb-hero__title-line lb-hero__title-line--top">
           <PrizePool amount={BOARDS[board].prizes.reduce((sum, prize) => sum + prize, 0)} />{' '}
           <span className="lb-hero__silver">MONTHLY</span>
-        </span>
+        </span>{' '}
         <span className="lb-hero__title-line lb-hero__title-line--main lb-hero__gold">LEADERBOARD</span>
       </h1>
 

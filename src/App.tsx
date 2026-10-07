@@ -11,6 +11,7 @@ import ChallengesPage from './pages/ChallengesPage'
 import ItemStorePage, { StoreHeroArt } from './pages/ItemStorePage'
 import ComingSoonPage from './pages/ComingSoonPage'
 import { useAuth } from './hooks/useAuth'
+import { applySeo } from './seo'
 import ReferralPage from './pages/ReferralPage'
 import RewardsPage from './pages/RewardsPage'
 import AccountPage from './pages/AccountPage'
@@ -26,25 +27,6 @@ const RafflesPage = lazy(() => import('./pages/RafflesPage'))
 const OverlayPage = lazy(() => import('./pages/OverlayPage'))
 const RafflePreviewPage = lazy(() => import('./pages/RafflePreviewPage'))
 const SocialsPage = lazy(() => import('./pages/SocialsPage'))
-
-/** Browser tab title per page */
-const TITLES: Record<string, string> = {
-  '/': 'King Kulbik',
-  '/leaderboard': 'Leaderboard',
-  '/milestones': 'Milestones',
-  '/challenges': 'Challenges',
-  '/raffles': 'Raffles',
-  '/item-store': 'Item Store',
-  '/referral': '$1,000 Referral',
-  '/account': 'Your Account',
-  '/admin': 'Admin Panel',
-  '/bonus-hunt': 'Bonus Hunt',
-  '/guess-the-balance': 'Guess the Balance',
-  '/tournaments': 'Tournaments',
-  '/socials': 'Socials & Video',
-  '/coinflip': 'Coinflip',
-  '/keno': 'Keno',
-}
 
 /**
  * A section that's built but not launched: players see Coming Soon, admins
@@ -71,8 +53,7 @@ function Layout() {
   useEffect(() => {
     setMenuOpen(false)
     window.scrollTo(0, 0)
-    const title = TITLES[pathname] ?? 'Page not found'
-    document.title = pathname === '/' ? title : `${title} | King Kulbik`
+    applySeo(pathname)
   }, [pathname])
 
   return (

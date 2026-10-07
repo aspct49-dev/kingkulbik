@@ -53,6 +53,8 @@ type Tables = {
   pfStates: Record<string, PfState>
   /** Originals wins BotRix couldn't pay yet */
   owedPayouts: OwedPayout[]
+  /** Stake links an admin removed: Discord id → when (seconds); older links in cookies stop counting */
+  stakeUnlinks: Record<string, number>
 }
 
 const DEFAULTS: Tables = {
@@ -74,6 +76,7 @@ const DEFAULTS: Tables = {
   shopSettings: DEFAULT_SHOP_SETTINGS,
   pfStates: {},
   owedPayouts: [],
+  stakeUnlinks: {},
 }
 
 export class StoreError extends Error {

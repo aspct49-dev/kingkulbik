@@ -9,6 +9,7 @@
  *   GET  /api/profile                    your profile, bets and redemptions
  *   GET  /api/admin/players?q=           players, most recently seen first
  *   GET  /api/admin/players/<id>         one player's profile, bets and redemptions
+ *   POST /api/admin/players/<id>/unlink-stake   remove their Stake link
  */
 
 import { randomBytes } from 'node:crypto'
@@ -16,6 +17,7 @@ import type { PlayerBet, PlayerProfile, ProfileView } from '../shared/profiles.j
 import { isAdmin, json, readSession } from './auth.js'
 import type { AuthEnv, AuthRequest, AuthResponse, SessionUser } from './auth.js'
 import { lookupStakePlayer } from './stakeLink.js'
+import { unlinkStake } from './stakeUnlinks.js'
 import { read, StoreError, update } from './store.js'
 
 /** History kept across all players (oldest drop out first) */
@@ -125,6 +127,15 @@ export async function handleProfileRequest(req: AuthRequest, env: AuthEnv): Prom
         .sort((a, b) => b.lastSeen - a.lastSeen)
         .slice(0, 200)
       return json(200, { players })
+    }
+
+    // Remove a player's Stake link (their cookie drops it on their next visit)
+    const unlink = path.match(/^\/api\/admin\/players\/(\d{5,25})\/unlink-stake$/)
+    if (unlink) {
+      if (req.method !== 'POST') return json(405, { error: 'Use POST.' })
+      await unlinkStake(unlink[1])
+      const v = await view(unlink[1], 500, env)
+      return v ? json(200, { view: v }) : json(404, { error: 'No player with that id.' })
     }
 
     const one = path.match(/^\/api\/admin\/players\/(\d{5,25})$/)

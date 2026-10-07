@@ -6,7 +6,7 @@
 
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import { handleAdminRequest } from './admin.js'
-import { handleAuthRequest, json, readSession } from './auth.js'
+import { handleAuthRequest, json, readSession, SESSION_COOKIE } from './auth.js'
 import { handleEventsRequest } from './events.js'
 import type { AuthEnv, AuthRequest, AuthResponse } from './auth.js'
 import { handleOriginalsRequest } from './originals.js'
@@ -14,18 +14,22 @@ import { handleProfileRequest, touchProfile } from './profiles.js'
 import { handleRaffleRequest } from './raffles.js'
 import { handleShopRequest } from './shop.js'
 import { handleSocialsRequest } from './socials.js'
+import { applyStakeUnlink } from './stakeUnlinks.js'
 
 /** Image uploads are base64 JSON (3 MB of image ≈ 4 MB of text); everything else is small */
 const bodyLimit = (url: string) => (url.startsWith('/api/admin/upload') ? 4_300_000 : 64_000)
 
 export async function handleApiRequest(req: AuthRequest, env: AuthEnv): Promise<AuthResponse | null> {
   try {
+    // A Stake link an admin removed is dropped before anything reads the session
+    const replacedSession = await applyStakeUnlink(req, env)
+
     // Every page load asks who's signed in: that keeps their profile current
     if (req.url.startsWith('/api/auth/me')) {
       const user = readSession(req, env)
       if (user) await touchProfile(user).catch(() => undefined)
     }
-    return (
+    const result =
       (await handleAuthRequest(req, env)) ??
       (await handleOriginalsRequest(req, env)) ??
       (await handleEventsRequest(req, env)) ??
@@ -34,7 +38,14 @@ export async function handleApiRequest(req: AuthRequest, env: AuthEnv): Promise<
       (await handleProfileRequest(req, env)) ??
       (await handleRaffleRequest(req, env)) ??
       (await handleAdminRequest(req, env))
-    )
+
+    // Give the player their updated session, unless the route set one itself (sign-in, linking, sign-out)
+    if (result && replacedSession) {
+      const set = result.headers['Set-Cookie']
+      const list = set === undefined ? [] : Array.isArray(set) ? set : [set]
+      if (!list.some((c) => c.startsWith(`${SESSION_COOKIE}=`))) result.headers['Set-Cookie'] = [...list, replacedSession]
+    }
+    return result
   } catch (err) {
     console.error('[api] unhandled:', err)
     return json(500, { error: 'Something went wrong. Please try again.' })

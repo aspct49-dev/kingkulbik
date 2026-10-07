@@ -4,6 +4,8 @@ import { Avatar, BetHistory, MilestoneStatus, ProfileHeader, RedemptionList } fr
 import { formatPoints } from '../../components/keno/format'
 import type { PlayerProfile, ProfileView } from '../../../shared/profiles'
 import RedemptionActions from './RedemptionActions'
+import { adminPost } from './api'
+import { ConfirmButton } from './ui'
 import type { Redemption } from '../../../shared/profiles'
 
 const ago = (at: number) => {
@@ -138,6 +140,16 @@ function PlayerDetail({
       .catch((err: Error) => setError(err.message))
   }, [id])
 
+  const unlinkStake = async () => {
+    try {
+      const res = await adminPost<{ view: ProfileView }>(`players/${id}/unlink-stake`)
+      setView(res.view)
+      notify('Stake unlinked. It drops from their session on their next visit.')
+    } catch (err) {
+      notify(err instanceof Error ? err.message : 'Could not unlink.')
+    }
+  }
+
   const replace = (next: Redemption[]) =>
     setView((v) => (v ? { ...v, redemptions: next.filter((r) => r.userId === id) } : v))
 
@@ -156,11 +168,20 @@ function PlayerDetail({
           <section className="admin-card">
             <div className="admin-card__head">
               <h2 className="admin-card__title">Linked accounts</h2>
-              {view.profile.kick && (
-                <button type="button" className="admin-button" onClick={() => onPoints(view.profile.kick!.username)}>
-                  King Points
-                </button>
-              )}
+              <div className="admin-row__actions">
+                {view.profile.stake && (
+                  <ConfirmButton
+                    label="Unlink Stake"
+                    confirm={`Unlink ${view.profile.stake.username}?`}
+                    onConfirm={() => void unlinkStake()}
+                  />
+                )}
+                {view.profile.kick && (
+                  <button type="button" className="admin-button" onClick={() => onPoints(view.profile.kick!.username)}>
+                    King Points
+                  </button>
+                )}
+              </div>
             </div>
             <p className="admin-note">
               Discord <strong className="admin-strong">@{view.profile.username}</strong> · Kick{' '}

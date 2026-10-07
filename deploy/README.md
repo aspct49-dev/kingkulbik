@@ -48,6 +48,7 @@ Paste the values from Vercel / `.env.local`. On the VPS also set:
 
 ```
 AUTH_URL=https://yourdomain.com
+SITE_URL=https://yourdomain.com
 DATA_DIR=/var/lib/kingkulbik
 PORT=3000
 ```
@@ -60,6 +61,9 @@ sudo bash /opt/kingkulbik/deploy/update.sh
 
 It pulls `main`, installs, builds and restarts, then checks the site answers. Open
 `https://yourdomain.com`.
+
+`SITE_URL` puts your domain in the search and share tags (sitemap, link previews). Once the site
+is live, submit `https://yourdomain.com/sitemap.xml` in Google Search Console.
 
 ## Updating later
 

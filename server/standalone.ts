@@ -47,6 +47,7 @@ const TYPES: Record<string, string> = {
   '.wav': 'audio/wav',
   '.mp4': 'video/mp4',
   '.txt': 'text/plain; charset=utf-8',
+  '.xml': 'application/xml; charset=utf-8',
 }
 
 /** A file inside dist/, or null (never anything outside it) */
@@ -63,8 +64,8 @@ async function findFile(urlPath: string) {
   return info?.isFile() ? { file, size: info.size } : null
 }
 
-async function sendFile(req: IncomingMessage, res: ServerResponse, file: string, size: number, cache: string) {
-  res.statusCode = 200
+async function sendFile(req: IncomingMessage, res: ServerResponse, file: string, size: number, cache: string, status = 200) {
+  res.statusCode = status
   res.setHeader('Content-Type', TYPES[path.extname(file).toLowerCase()] ?? 'application/octet-stream')
   res.setHeader('Content-Length', size)
   res.setHeader('Cache-Control', cache)
@@ -80,6 +81,9 @@ async function serveStatic(req: IncomingMessage, res: ServerResponse, pathname: 
     const cache = pathname.startsWith('/assets/') ? 'public, max-age=31536000, immutable' : 'public, max-age=3600'
     return sendFile(req, res, found.file, found.size, cache)
   }
+  // A page with its own HTML (title, description and share tags written by the build): /leaderboard → leaderboard.html
+  const page = !path.extname(pathname) && pathname !== '/' && (await findFile(pathname.replace(/\/+$/, '') + '.html'))
+  if (page) return sendFile(req, res, page.file, page.size, 'no-cache')
   // A missing file with an extension is a real 404, not a page
   if (path.extname(pathname)) {
     res.statusCode = 404
@@ -92,8 +96,15 @@ async function serveStatic(req: IncomingMessage, res: ServerResponse, pathname: 
     res.statusCode = 500
     return void res.end('The site is not built: run npm run build')
   }
-  return sendFile(req, res, index.file, index.size, 'no-cache')
+  await sendFile(req, res, index.file, index.size, 'no-cache', isAppRoute(pathname) ? 200 : 404)
 }
+
+/**
+ * App routes without a page of their own in shared/seo.ts. Any other unknown
+ * path still gets the app (it shows "page not found") but with a 404 status,
+ * so search engines don't index it.
+ */
+const isAppRoute = (pathname: string) => pathname === '/' || pathname === '/rewards' || pathname.startsWith('/overlay/')
 
 async function handle(req: IncomingMessage, res: ServerResponse) {
   const url = new URL(req.url ?? '/', 'http://localhost')

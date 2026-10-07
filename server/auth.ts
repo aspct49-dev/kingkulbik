@@ -85,7 +85,7 @@ export function isAdmin(user: SessionUser | null, env: AuthEnv) {
 
 export const SESSION_COOKIE = 'kk_session'
 const STATE_COOKIE = 'kk_oauth'
-const SESSION_DAYS = 30
+export const SESSION_DAYS = 30
 const STATE_MINUTES = 10
 
 const DISCORD_AUTHORIZE = 'https://discord.com/oauth2/authorize'
