@@ -1,11 +1,12 @@
 /*
  * The footer is its own band: full width across the content area, a
  * slightly lighter background and a top border, so it is clearly separated
- * from the page above. The content sits in a bordered card inside it.
+ * from the page above. The content sits in a card that rises from the
+ * bottom of the page: big rounded top corners, flat bottom on the edge.
  */
 .footer {
   margin: auto calc(-1 * var(--page-gutter)) 0;
-  padding: 20px var(--page-gutter);
+  padding: 20px var(--page-gutter) 0;
   border-top: 1px solid #1f2734;
   background: #12171f;
 }
@@ -13,9 +14,10 @@
 .footer__card {
   max-width: 1400px;
   margin: 0 auto;
-  padding: 28px 28px 20px;
+  padding: 28px 28px 24px;
   border: 1px solid #252e3d;
-  border-radius: 12px;
+  border-bottom: 0;
+  border-radius: 32px 32px 0 0;
   background: #0f131a;
 }
 
@@ -205,11 +207,12 @@
 
 @media (max-width: 600px) {
   .footer {
-    padding: 16px var(--page-gutter);
+    padding: 16px var(--page-gutter) 0;
   }
 
   .footer__card {
     padding: 22px 18px 18px;
+    border-radius: 22px 22px 0 0;
   }
 
   .footer__col a {
@@ -229,3 +232,4 @@
   outline-offset: 3px;
   border-radius: 4px;
 }
+
