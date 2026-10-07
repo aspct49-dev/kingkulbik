@@ -37,6 +37,12 @@ export const PAGES: Record<string, PageSeo> = {
       'Live Stake leaderboard for code KINGKULBIK. Wager under the code to climb the $30,000 weighted race and the $10,000 Stake Exclusive board every month.',
     index: true,
   },
+  '/rewards': {
+    title: 'Kulbik Rewards',
+    description:
+      'Every reward for playing under code KINGKULBIK: tripled weekly bonus, 10% weekly lossback, wager milestones, a free $21 on sign up, weekly $1,000 raffles and the $40K race.',
+    index: true,
+  },
   '/milestones': {
     title: 'Rank Up Milestones',
     description:

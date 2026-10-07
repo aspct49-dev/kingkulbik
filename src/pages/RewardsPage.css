@@ -1,311 +1,341 @@
-/* Page frame (.section-page) comes from ChallengesPage.css */
-.rewards {
+/*
+ * Kulbik Rewards (Figma: "Bonuses"). Page frame (.section-page) from
+ * ChallengesPage.css. Measurements are the design's, at its 1920 px frame.
+ */
+
+/* Full-bleed across the main column, so the background and symbols reach its edges */
+.rewards-hub-page {
+  position: relative;
+  margin: 0 calc(-1 * var(--page-gutter));
+  padding: 45px var(--page-gutter) 64px;
+  overflow: clip;
+}
+
+/* The design's background (70%), its top hidden under the header as in the frame */
+.rewards-hub__bg {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 1665px;
+  max-width: none;
+  height: 629px;
+  object-fit: cover;
+  object-position: center bottom;
+  opacity: 0.7;
+  translate: -50% 0;
+  pointer-events: none;
+}
+
+/* Wider than the artwork: fade its sides into the page */
+@media (min-width: 1925px) {
+  .rewards-hub__bg {
+    mask-image: linear-gradient(to right, transparent, #000 12%, #000 88%, transparent);
+    -webkit-mask-image: linear-gradient(to right, transparent, #000 12%, #000 88%, transparent);
+  }
+}
+
+.rewards-hub__symbol {
+  z-index: 0;
+}
+
+.rewards-hub {
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-direction: column;
-  max-width: 1032px;
+  align-items: center;
+  max-width: 927px;
   margin: 0 auto;
 }
 
-/* The design's 1032 × 196 banner: the artwork scaled to cover it */
-/* 1032 × 196: the backdrop art, with the title as live Titan One text (silver over gold) */
-.rewards__banner {
-  display: grid;
-  place-items: center;
-  height: 196px;
-  border-radius: 8px;
-  background-color: #10172a;
-  background-position: center;
-  background-size: cover;
-  overflow: hidden;
-  container-type: inline-size;
+/* ---------------------------------------------------------------- title */
+
+.rewards-hub__head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
 }
 
-.rewards__title {
+.rewards-hub__title {
   display: flex;
   flex-direction: column;
   align-items: center;
   margin: 0;
   font-family: var(--font-logo);
+  font-size: 76px;
   font-weight: 400;
-  line-height: 1;
-  filter: drop-shadow(0 4px 6px rgb(0 0 0 / 0.35));
+  line-height: 87px;
 }
 
-.rewards__title-top,
-.rewards__title-main {
+.rewards-hub__title-top,
+.rewards-hub__title-main {
   background-clip: text;
   -webkit-background-clip: text;
   color: transparent;
 }
 
-.rewards__title-top {
-  font-size: clamp(32px, 6.4cqi, 66px);
-  background-image: linear-gradient(180deg, #f9f9f9, #aaa);
+.rewards-hub__title-top {
+  background-image: linear-gradient(to bottom, #e3e3e3, #c5c5c5);
 }
 
-.rewards__title-main {
-  margin-top: -0.2em;
-  font-size: clamp(36px, 7.3cqi, 75px);
-  background-image: linear-gradient(0deg, #a88600, #e4de2c);
+.rewards-hub__title-main {
+  margin-top: -26px;
+  background-image: linear-gradient(to bottom, #e4de2c, #a88600);
 }
 
-/* Tracking strip between the banner and the list (the rewards cards' style) */
-.rewards-track {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  min-height: 66px;
-  margin-top: 20px;
-  padding: 12px 18px 12px 14px;
-  border-radius: 10px;
-  background: #171f2c;
-  box-shadow: inset 0 1.5px 0 0 rgb(255 255 255 / 0.07);
-}
-
-.rewards-track__logo {
-  display: grid;
-  flex: none;
-  place-items: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: #1a2c38;
-}
-
-.rewards-track__logo img {
-  width: 28px;
-  height: auto;
-}
-
-.rewards-track__text {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  min-width: 0;
-}
-
-.rewards-track__title {
+.rewards-hub__subtitle {
+  margin: 4px 0 0;
   font-size: 14px;
-  font-weight: 700;
-  color: var(--color-text);
+  font-weight: 600;
+  line-height: 18px;
+  color: #6d7a96;
 }
 
-.rewards-track__accent {
+.rewards-hub__accent {
   color: var(--color-accent);
 }
 
-.rewards-track__detail {
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--color-text-muted);
+.rewards-hub__actions {
+  margin-top: 15px;
 }
 
-.rewards-track__action {
-  flex: none;
-  width: 124px;
-  height: 34px;
-  font-size: 14px;
-}
+/* ---------------------------------------------------------------- cards */
 
-/* Rows 66px tall with 19px between, so each badge's line meets the next badge */
-.rewards__list {
-  display: flex;
-  flex-direction: column;
-  gap: 19px;
-  margin: 20px 0 0;
+.rewards-hub__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 297px);
+  column-gap: 18px;
+  row-gap: 26px;
+  justify-content: center;
+  margin: 55px 0 0;
   padding: 0;
   list-style: none;
 }
 
-.milestone {
-  --tone: #cd9d70;
-  display: flex;
-  gap: 16px;
+.bonus-card {
+  position: relative;
+  width: 297px;
+  height: 503px;
 }
 
-.milestone--silver {
-  --tone: #bababa;
-}
-
-.milestone--gold {
-  --tone: #ffca72;
-}
-
-.milestone--platinum {
-  --tone: #67d2d9;
-}
-
-.milestone__badge {
-  flex: none;
-  align-self: flex-start;
-  margin-top: 1px;
-  /* The line part hangs into the gap below */
-  margin-bottom: -21px;
-}
-
-.milestone__card {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 124px;
-  grid-template-rows: auto auto;
-  column-gap: 17px;
-  align-content: start;
-  align-items: center;
-  flex: 1;
-  min-width: 0;
-  height: 66px;
-  padding: 14px 18px 0 15px;
+/* The gold tab: its top 29 px shows above the box */
+.bonus-card__ribbon {
+  position: absolute;
+  top: 0;
+  left: 22px;
+  width: 253px;
+  height: 65px;
+  padding-top: 7px;
   border-radius: 10px;
-  background: #171f2c;
-  box-shadow: inset 0 1.5px 0 0 rgb(255 255 255 / 0.07);
-}
-
-.milestone__head {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
-  padding-left: 5px;
-  font-size: 14px;
-  line-height: 18px;
+  background: linear-gradient(to bottom, #e4de2c, #a88600);
+  font-family: 'Montserrat', var(--font-body);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 15px;
+  color: #171f2c;
+  text-align: center;
   white-space: nowrap;
 }
 
-.milestone__head > img {
+.bonus-card__box {
+  position: absolute;
+  top: 29px;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 297px;
+  height: 474px;
+  /* The design's stroke: gold at the top, fading to navy by 14% of the way down */
+  border: 2px solid transparent;
+  border-radius: 10px;
+  background:
+    linear-gradient(#171f2c, #171f2c) padding-box,
+    linear-gradient(to bottom, #cab719, #1f2a3b 13.94%) border-box;
+  text-align: center;
+}
+
+.bonus-card__icon {
+  position: relative;
   flex: none;
+  width: 245.813px;
+  height: 237.76px;
+  margin-top: -2px;
 }
 
-.milestone__title {
-  margin: 0;
-  font-size: 14px;
+.bonus-card__icon img {
+  position: absolute;
+}
+
+.bonus-card__hexagon {
+  inset: 0;
+}
+
+/* 3x and 10%: gold figures centred in the hexagon */
+.bonus-card__figure {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-family: var(--font-display);
   font-weight: 700;
-  color: var(--color-text);
+  background: linear-gradient(to bottom, #e4de2c, #a88600);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
 }
 
-.milestone__rank {
-  color: var(--tone);
+.bonus-card__figure--big {
+  font-size: 88px;
+  letter-spacing: -7.04px;
 }
 
-.milestone__wager {
-  margin-left: 6px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  font-weight: 500;
-  color: var(--color-text-muted);
+.bonus-card__figure--mid {
+  font-size: 64px;
+  letter-spacing: -5.12px;
 }
 
-.milestone__prize {
-  margin-left: auto;
-  padding-left: 12px;
-  font-weight: 600;
-  color: var(--color-text-muted);
+.bonus-card__star {
+  left: 66.906px;
+  top: 57.88px;
 }
 
-.milestone__prize strong {
+.bonus-card__diamond {
+  left: 54.406px;
+  top: 50.88px;
+}
+
+.bonus-card__name {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 2px 0 0;
+  font-family: var(--font-display);
   font-weight: 700;
-  color: var(--color-text);
+  line-height: normal;
+  white-space: nowrap;
 }
 
-.milestone__accent {
-  font-weight: 700;
+.bonus-card__name-top {
+  font-size: 32px;
+  letter-spacing: 0.32px;
+  color: #dadada;
+}
+
+.bonus-card__name-main {
+  margin-top: -5px;
+  font-size: 40px;
+  letter-spacing: 0.4px;
   color: var(--color-accent);
 }
 
-.milestone__bar {
-  grid-column: 1;
-  height: 11px;
-  margin-top: 7px;
-  border-radius: 5.5px;
-  background: #202b3d;
-  overflow: hidden;
-}
-
-.milestone__fill {
-  display: block;
-  height: 100%;
-  border-radius: inherit;
-  background: var(--tone);
-  transition: width 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-
-/* Claim / Locked sit in the right column, centred on the card */
-.milestone__action {
-  grid-column: 2;
-  grid-row: 1 / span 2;
-  align-self: start;
-  height: 34px;
-  margin-top: 2px;
+.bonus-card__text {
+  margin: 21px 0 0;
+  font-family: 'Montserrat', var(--font-body);
   font-size: 14px;
+  font-weight: 600;
+  line-height: normal;
+  color: #afafaf;
+  white-space: nowrap;
 }
 
-.milestone__action--locked {
+/* The site's gold button at the design's size, with its gold top edge */
+.bonus-card__button {
+  position: absolute;
+  bottom: 29px;
+  left: calc(50% - 88.5px);
+  gap: 9px;
+  width: 177px;
+  height: 33px;
+  border-radius: 8px;
+  box-shadow: inset 0 1px 0 0 var(--color-accent-button-highlight);
+  font-size: 16px;
+  color: #dadada;
+}
+
+/* The design's triangle, turned to point right */
+.bonus-card__arrow {
+  rotate: 90deg;
+}
+
+/* ---------------------------------------------------------------- extras */
+
+.rewards-hub__extras {
   display: flex;
-  align-items: center;
   justify-content: center;
-  border-radius: var(--radius-sm);
-  /* Flat; only the Claim button carries the inner highlight */
-  background: var(--color-border);
-  font-weight: 700;
-  color: var(--color-text-muted);
-  cursor: not-allowed;
+  margin: 49px 0 0;
+  padding: 0;
+  list-style: none;
+  text-align: center;
+  white-space: nowrap;
 }
 
-@media (max-width: 600px) {
-  .rewards-track {
-    flex-wrap: wrap;
-  }
-
-  .rewards-track__action {
-    width: 100%;
-  }
-
-  .rewards__banner {
-    height: 120px;
-  }
+.rewards-hub__extras li {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
-/* Narrow: drop the timeline and let each card grow to fit */
-@container (max-width: 700px) {
-  .milestone__badge {
+.rewards-hub__extras li + li {
+  margin-left: 58px;
+}
+
+.rewards-hub__extra-title {
+  font-size: 24px;
+  font-weight: 900;
+  line-height: 31px;
+  color: var(--color-accent);
+}
+
+.rewards-hub__extra-text {
+  margin-top: -2px;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 20px;
+  color: #6d7a96;
+}
+
+/* ---------------------------------------------------------------- narrow */
+
+/* The symbols sit far out to the sides; without the room they'd cover the cards */
+@container (max-width: 1100px) {
+  .rewards-hub__symbol {
     display: none;
   }
+}
 
-  .rewards__list {
-    gap: 10px;
-  }
-
-  .milestone__card {
-    grid-template-columns: minmax(0, 1fr) 96px;
-    height: auto;
-    padding: 12px 12px 12px 10px;
-    row-gap: 2px;
-  }
-
-  .milestone__head {
-    flex-wrap: wrap;
-    row-gap: 2px;
-    padding-left: 0;
-  }
-
-  /* Wager and prize each on their own line, under the rank name */
-  .milestone__wager,
-  .milestone__prize {
-    flex-basis: 100%;
-    margin-left: 0;
-    padding-left: 26px;
-  }
-
-  .milestone__bar {
-    margin-top: 8px;
-  }
-
-  .milestone__action {
-    align-self: center;
-    margin-top: 0;
+@container (max-width: 960px) {
+  .rewards-hub__grid {
+    grid-template-columns: repeat(2, 297px);
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .milestone__fill {
-    transition: none;
+@container (max-width: 640px) {
+  .rewards-hub__grid {
+    grid-template-columns: 297px;
+  }
+
+  .rewards-hub__title {
+    font-size: 56px;
+    line-height: 64px;
+  }
+
+  .rewards-hub__title-main {
+    margin-top: -19px;
+  }
+
+  .rewards-hub__subtitle {
+    max-width: 300px;
+    font-size: 13px;
+  }
+
+  .rewards-hub__extras {
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  .rewards-hub__extras li + li {
+    margin-left: 0;
   }
 }

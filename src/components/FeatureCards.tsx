@@ -23,8 +23,8 @@ const features: Feature[] = [
   {
     kicker: 'CLAIM YOUR',
     title: 'BONUSES',
-    cta: 'MILESTONES',
-    href: '/milestones',
+    cta: 'REWARDS',
+    href: '/rewards',
     art: <img className="feature-card__gift" src={giftImg} alt="" />,
   },
   {
@@ -55,7 +55,7 @@ const features: Feature[] = [
     kicker: 'JOIN',
     title: 'GIVEAWAYS',
     cta: 'RAFFLES',
-    href: '#raffles',
+    href: '/raffles',
     art: (
       <div className="feature-card__ticket">
         <img src={ticketImg} alt="" />

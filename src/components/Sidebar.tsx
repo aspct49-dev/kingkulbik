@@ -5,6 +5,8 @@ import homeActiveIcon from '../assets/sidebar/home.svg'
 import homeIcon from '../assets/sidebar/home-inactive.svg'
 import leaderboardIcon from '../assets/sidebar/leaderboard.svg'
 import leaderboardActiveIcon from '../assets/sidebar/leaderboard-active.svg'
+import rewardsIcon from '../assets/sidebar/rewards.svg'
+import rewardsActiveIcon from '../assets/sidebar/rewards-active.svg'
 import milestonesIcon from '../assets/sidebar/milestones.svg'
 import milestonesActiveIcon from '../assets/sidebar/milestones-active.svg'
 import challengesIcon from '../assets/sidebar/challenges.svg'
@@ -70,6 +72,12 @@ const sections: NavSection[] = [
   {
     title: 'VIP Program',
     items: [
+      {
+        label: 'Rewards',
+        href: '/rewards',
+        icon: svgIcon(rewardsIcon, 21, 21),
+        activeIcon: svgIcon(rewardsActiveIcon, 21, 21),
+      },
       {
         label: 'Milestones',
         href: '/milestones',

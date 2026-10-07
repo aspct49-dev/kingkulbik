@@ -85,6 +85,7 @@ export default function Footer() {
           <Link to="/leaderboard">Leaderboard</Link>
           <Link to="/keno">Keno</Link>
           <Link to="/coinflip">Coinflip</Link>
+          <Link to="/rewards">Rewards</Link>
           <Link to="/milestones">Milestones</Link>
           <Link to="/item-store">Item Store</Link>
           <a href={STAKE_URL} target="_blank" rel="noopener noreferrer">

@@ -1,0 +1,55 @@
+.stake-actions {
+  display: flex;
+  gap: 4px;
+}
+
+/* Size only; the look comes from the shared CopyCodeButton */
+.stake-actions__code {
+  width: 218px;
+  height: 40px;
+  gap: 16px;
+  font-size: 16px;
+}
+
+.stake-actions__visit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  width: 133px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  background: linear-gradient(to right, #a88600, #e4de2c);
+  box-shadow: inset 0 1px 0 0 #eedb4a;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 20px;
+  color: #0e1218;
+  transition:
+    filter 0.15s ease,
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.stake-actions__visit:active {
+  transform: translateY(1px);
+}
+
+.stake-actions__visit:focus-visible {
+  outline: 2px solid #e6d218;
+  outline-offset: 2px;
+}
+
+/* Gold button: darkens on hover, like every gold button on the site */
+@media (hover: hover) and (pointer: fine) {
+  .stake-actions__visit:hover {
+    background: linear-gradient(to right, #7a6200, #a6a11f);
+  }
+}
+
+@media (max-width: 600px) {
+  .stake-actions {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+}

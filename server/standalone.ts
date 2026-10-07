@@ -104,7 +104,7 @@ async function serveStatic(req: IncomingMessage, res: ServerResponse, pathname: 
  * path still gets the app (it shows "page not found") but with a 404 status,
  * so search engines don't index it.
  */
-const isAppRoute = (pathname: string) => pathname === '/' || pathname === '/rewards' || pathname.startsWith('/overlay/')
+const isAppRoute = (pathname: string) => pathname === '/' || pathname.startsWith('/overlay/')
 
 async function handle(req: IncomingMessage, res: ServerResponse) {
   const url = new URL(req.url ?? '/', 'http://localhost')

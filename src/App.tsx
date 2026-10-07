@@ -1,6 +1,6 @@
 import { Suspense, lazy, useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
-import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router'
+import { BrowserRouter, Route, Routes, useLocation } from 'react-router'
 import Header from './components/Header'
 import Sidebar from './components/Sidebar'
 import Footer from './components/Footer'
@@ -14,6 +14,7 @@ import { useAuth } from './hooks/useAuth'
 import { applySeo } from './seo'
 import ReferralPage from './pages/ReferralPage'
 import RewardsPage from './pages/RewardsPage'
+import MilestonesPage from './pages/MilestonesPage'
 import AccountPage from './pages/AccountPage'
 import NotFoundPage from './pages/NotFoundPage'
 
@@ -68,9 +69,8 @@ function Layout() {
               <Route path="/leaderboard" element={<LeaderboardPage />} />
               <Route path="/keno" element={<KenoPage />} />
               <Route path="/coinflip" element={<CoinflipPage />} />
-              <Route path="/milestones" element={<RewardsPage />} />
-              {/* The page's old address */}
-              <Route path="/rewards" element={<Navigate to="/milestones" replace />} />
+              <Route path="/rewards" element={<RewardsPage />} />
+              <Route path="/milestones" element={<MilestonesPage />} />
               <Route path="/account" element={<AccountPage />} />
               <Route path="/admin" element={<AdminPage />} />
               <Route path="/challenges" element={<ChallengesPage />} />

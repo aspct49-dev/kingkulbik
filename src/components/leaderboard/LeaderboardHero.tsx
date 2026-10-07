@@ -1,11 +1,9 @@
 import stakeLogo from '../../assets/leaderboard/stake-logo.svg'
 import stakeLogoMuted from '../../assets/leaderboard/stake-logo-muted.svg'
-import stakeLogoDark from '../../assets/leaderboard/stake-logo-dark.svg'
 import symbolCoin from '../../assets/leaderboard/symbol-coin.webp'
 import symbolRune from '../../assets/leaderboard/symbol-rune.webp'
-import CopyCodeButton from '../CopyCodeButton'
 import FloatingSymbol from '../FloatingSymbol'
-import { STAKE_URL } from '../../data/links'
+import StakeActions from '../StakeActions'
 import { BOARDS } from '../../../shared/leaderboard'
 import type { BoardId } from '../../../shared/leaderboard'
 import './LeaderboardHero.css'
@@ -91,13 +89,7 @@ export default function LeaderboardHero({ board, onBoardChange }: LeaderboardHer
         big rewards!
       </p>
 
-      <div className="lb-hero__actions">
-        <CopyCodeButton className="lb-hero__code" />
-        <a className="lb-hero__visit" href={STAKE_URL} target="_blank" rel="noopener noreferrer">
-          Visit
-          <img src={stakeLogoDark} width={35} height={17} alt="Stake" />
-        </a>
-      </div>
+      <StakeActions className="lb-hero__actions" />
 
     </section>
   )
