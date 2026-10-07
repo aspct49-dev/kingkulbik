@@ -206,12 +206,83 @@ html.is-overlay #root {
   overflow: hidden;
 }
 
-.ov-hunt__window .ov-list {
-  transition: transform 0.7s cubic-bezier(0.45, 0, 0.2, 1);
+/* The reel: rolls one copy of the list up, then the second copy is in the same place */
+.ov-list--reel {
+  animation: ov-reel var(--reel-duration) linear infinite;
 }
 
-.ov-hunt__window .ov-list--jump {
-  transition: none;
+@keyframes ov-reel {
+  to {
+    transform: translateY(calc(-1 * var(--reel-distance)));
+  }
+}
+
+/* The bonus being opened: gold, gently pulsing */
+.ov-hunt__window .ov-list__row--current {
+  background: linear-gradient(to right, #3d3a18, #1d2433);
+  box-shadow: inset 0 0 0 1.5px var(--color-accent);
+  animation: ov-now 1.6s ease-in-out infinite;
+}
+
+@keyframes ov-now {
+  50% {
+    box-shadow:
+      inset 0 0 0 1.5px var(--color-accent),
+      0 0 14px rgb(230 210 24 / 0.35);
+  }
+}
+
+.ov-hunt__now {
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--color-accent);
+  font-size: 11px;
+  font-weight: 800;
+  color: #151b25;
+}
+
+/* Pinned above the reel, so the current bonus is always on screen */
+.ov-hunt__opening {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  height: 40px;
+  padding: 0 10px;
+  border-radius: 8px;
+  background: linear-gradient(to right, #3d3a18, #171f2c);
+  box-shadow: inset 0 0 0 1.5px rgb(230 210 24 / 0.6);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.ov-hunt__opening img {
+  width: 21px;
+  height: 28px;
+  border-radius: 3px;
+  object-fit: cover;
+}
+
+.ov-hunt__opening-label {
+  flex: none;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+}
+
+.ov-hunt__opening-game {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: #fff;
+}
+
+.ov-hunt__opening-bet {
+  flex: none;
+  color: var(--color-text-muted);
 }
 
 .ov-list__row--head {

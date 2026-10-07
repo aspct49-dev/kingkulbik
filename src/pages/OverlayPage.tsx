@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import type { CSSProperties } from 'react'
 import { useParams, useSearchParams } from 'react-router'
 import Bracket from '../components/events/Bracket'
 import RaffleMachine from '../components/raffle/RaffleMachine'
@@ -54,8 +55,10 @@ function HuntPanel({ hunt }: { hunt: Hunt }) {
   const s = huntStats(hunt)
   // Amounts in the hunt's own currency (the other panels stay in dollars)
   const usd = (v: number) => huntMoney(v, hunt.currency)
-  const next = hunt.bonuses.findIndex((b) => b.payout === null)
-  const step = useTicker(hunt.bonuses.length)
+  // The bonus being opened right now: the first without a result, while the hunt is opening
+  const next = hunt.status === 'opening' ? hunt.bonuses.findIndex((b) => b.payout === null) : -1
+  const current = next >= 0 ? hunt.bonuses[next] : null
+  const reel = hunt.bonuses.length > HUNT_SHOWN
 
   return (
     <section className="ov-panel ov-hunt">
@@ -79,6 +82,16 @@ function HuntPanel({ hunt }: { hunt: Hunt }) {
           value={s.luckyWin ? `${x(bonusMultiplier(s.luckyWin))} (${usd(s.luckyWin.payout ?? 0)})` : null}
         />
       </div>
+      {current && (
+        <div className="ov-hunt__opening">
+          <span className="ov-hunt__opening-label">▶ Opening now</span>
+          {current.image && <img src={current.image.replace('w=300', 'w=80')} width={21} height={28} alt="" />}
+          <span className="ov-hunt__opening-game">
+            <span className="ov-list__n">#{next + 1}</span> {current.game}
+          </span>
+          <span className="ov-hunt__opening-bet">{usd(current.bet)}</span>
+        </div>
+      )}
       {hunt.bonuses.length > 0 && (
         <>
           <div className="ov-list__row ov-list__row--head" aria-hidden>
@@ -88,17 +101,22 @@ function HuntPanel({ hunt }: { hunt: Hunt }) {
             <span className="ov-list__bet">Bet size</span>
             <span className="ov-list__multi">Payout</span>
           </div>
-          {/* Five rows show; longer lists glide down a row at a time and loop round */}
+          {/* Five rows show; longer lists roll slowly upward on a loop (drawn twice, so the wrap is seamless) */}
           <div className="ov-hunt__window">
-            <ol className={`ov-list${step.jump ? ' ov-list--jump' : ''}`} style={{ transform: `translateY(${-step.index * HUNT_ROW}px)` }} onTransitionEnd={step.onEnd}>
-              {(step.looping ? [...hunt.bonuses, ...hunt.bonuses.slice(0, HUNT_SHOWN)] : hunt.bonuses).map((b, i) => {
+            <ol
+              key={hunt.bonuses.length}
+              className={`ov-list${reel ? ' ov-list--reel' : ''}`}
+              style={reel ? ({ '--reel-distance': `${hunt.bonuses.length * HUNT_ROW}px`, '--reel-duration': `${hunt.bonuses.length * HUNT_ROW_S}s` } as CSSProperties) : undefined}
+            >
+              {(reel ? [...hunt.bonuses, ...hunt.bonuses] : hunt.bonuses).map((b, i) => {
                 const n = i % hunt.bonuses.length
                 const m = bonusMultiplier(b)
+                const now = n === next
                 return (
                   <li
                     key={`${b.id}-${i}`}
                     aria-hidden={i >= hunt.bonuses.length || undefined}
-                    className={`ov-list__row${n === next ? ' ov-list__row--current' : ''}${s.luckyWin?.id === b.id ? ' ov-list__row--best' : ''}`}
+                    className={`ov-list__row${now ? ' ov-list__row--current' : ''}${s.luckyWin?.id === b.id ? ' ov-list__row--best' : ''}`}
                   >
                     <span className="ov-list__n">{n + 1}</span>
                     {b.image ? <img src={b.image.replace('w=300', 'w=80')} width={21} height={28} alt="" /> : <span className="ov-list__art" />}
@@ -107,7 +125,9 @@ function HuntPanel({ hunt }: { hunt: Hunt }) {
                       {b.badge && <span className="ov-hunt__badge">{b.badge}</span>}
                     </span>
                     <span className="ov-list__bet">{usd(b.bet)}</span>
-                    <span className={`ov-list__multi${m !== null && m >= 100 ? ' ov-gold' : ''}`}>{b.payout === null ? '' : usd(b.payout)}</span>
+                    <span className={`ov-list__multi${m !== null && m >= 100 ? ' ov-gold' : ''}`}>
+                      {now ? <span className="ov-hunt__now">NOW</span> : b.payout === null ? '' : usd(b.payout)}
+                    </span>
                   </li>
                 )
               })}
@@ -119,43 +139,10 @@ function HuntPanel({ hunt }: { hunt: Hunt }) {
   )
 }
 
-/** Rows on show at once, and one row's height plus the gap (.ov-list__row, .ov-list) */
+/** Rows on show at once, one row's height plus the gap (.ov-list__row, .ov-list), and seconds per row */
 const HUNT_SHOWN = 5
 const HUNT_ROW = 39
-const HUNT_STEP_MS = 2500
-
-/**
- * Which row is at the top. Longer lists step down one row at a time; the
- * first five are drawn again after the last, so when the copy reaches the
- * top the list snaps back to the start (without a transition) unseen.
- */
-function useTicker(count: number) {
-  const looping = count > HUNT_SHOWN
-  const [index, setIndex] = useState(0)
-  const [jump, setJump] = useState(false)
-
-  useEffect(() => {
-    if (!looping) {
-      setIndex(0)
-      return
-    }
-    const id = window.setInterval(() => {
-      setJump(false)
-      setIndex((i) => (i >= count ? 1 : i + 1))
-    }, HUNT_STEP_MS)
-    return () => window.clearInterval(id)
-  }, [looping, count])
-
-  // Reached the copy of the first rows: snap back to the real ones
-  const onEnd = () => {
-    if (looping && index >= count) {
-      setJump(true)
-      setIndex(0)
-    }
-  }
-
-  return { index: looping ? Math.min(index, count) : 0, jump, looping, onEnd }
-}
+const HUNT_ROW_S = 3
 
 function HuntFigure({ label, value }: { label: string; value: string }) {
   return (
