@@ -12,6 +12,7 @@ import ItemStorePage, { StoreHeroArt } from './pages/ItemStorePage'
 import ComingSoonPage from './pages/ComingSoonPage'
 import { useAuth } from './hooks/useAuth'
 import { applySeo } from './seo'
+import { prefetchPolled } from './hooks/useEvents'
 import ReferralPage from './pages/ReferralPage'
 import RewardsPage from './pages/RewardsPage'
 import MilestonesPage from './pages/MilestonesPage'
@@ -28,6 +29,27 @@ const RafflesPage = lazy(() => import('./pages/RafflesPage'))
 const OverlayPage = lazy(() => import('./pages/OverlayPage'))
 const RafflePreviewPage = lazy(() => import('./pages/RafflePreviewPage'))
 const SocialsPage = lazy(() => import('./pages/SocialsPage'))
+
+/**
+ * Once the first page is up and the browser is idle, fetch what the other
+ * pages need (their code, the 3D models, their data) so opening them is instant.
+ * Skipped when the visitor asks to save data.
+ */
+function prefetchSite() {
+  const connection = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection
+  if (connection?.saveData) return
+  const pages = [
+    () => import('./pages/RafflesPage'),
+    () => import('./pages/CoinflipPage'),
+    () => import('./pages/BonusHuntPage'),
+    () => import('./pages/GuessTheBalancePage'),
+    () => import('./pages/TournamentsPage'),
+    () => import('./pages/SocialsPage'),
+  ]
+  for (const load of pages) load().catch(() => undefined)
+  for (const model of ['/models/raffle-machine.glb', '/models/king-kulbik-coin.glb']) fetch(model).catch(() => undefined)
+  for (const url of ['/api/raffles', '/api/events/hunt', '/api/events/tournaments', '/api/socials/kick']) prefetchPolled(url)
+}
 
 /**
  * A section that's built but not launched: players see Coming Soon, admins
@@ -47,6 +69,13 @@ function SoonForPlayers({ page, soon }: { page: ReactNode; soon: ReactNode }) {
 }
 
 function Layout() {
+  useEffect(() => {
+    const idle = window.requestIdleCallback ?? ((run: () => void) => window.setTimeout(run, 2000))
+    const cancel = window.cancelIdleCallback ?? window.clearTimeout
+    const id = idle(prefetchSite, { timeout: 4000 })
+    return () => cancel(id)
+  }, [])
+
   // Mobile navigation drawer (the sidebar is always visible on desktop)
   const [menuOpen, setMenuOpen] = useState(false)
   const { pathname } = useLocation()

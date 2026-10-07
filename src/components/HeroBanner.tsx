@@ -1,5 +1,5 @@
-import bg1 from '../assets/banner/bg-1.png'
-import bg2 from '../assets/banner/bg-2.png'
+import bg1 from '../assets/banner/bg-1.webp'
+import bg2 from '../assets/banner/bg-2.webp'
 import boxRewards from '../assets/banner/box-rewards.svg'
 import boxItemStore from '../assets/banner/box-item-store.svg'
 import boxLeaderboard from '../assets/banner/box-leaderboard.svg'

@@ -101,11 +101,13 @@ async function botrixTop(): Promise<BotrixRow[]> {
 async function watchNow(): Promise<Map<string, BotrixRow>> {
   const out = new Map<string, BotrixRow>()
   for (const r of await botrixTop()) out.set(r.name.toLowerCase(), r)
-  const linked = (await read('players')).map((p) => p.kick?.username).filter((n): n is string => Boolean(n))
-  for (const name of linked) {
-    if (out.has(name.toLowerCase())) continue
-    const v = await getBotrixViewer(name).catch(() => null)
-    if (v) out.set(v.name.toLowerCase(), { name: v.name, watchtime: v.watchtime })
+  const linked = (await read('players'))
+    .map((p) => p.kick?.username)
+    .filter((n): n is string => Boolean(n) && !out.has(n!.toLowerCase()))
+  // Eight lookups at a time: quick with many linked viewers, gentle on BotRix
+  for (let i = 0; i < linked.length; i += 8) {
+    const found = await Promise.all(linked.slice(i, i + 8).map((name) => getBotrixViewer(name).catch(() => null)))
+    for (const v of found) if (v) out.set(v.name.toLowerCase(), { name: v.name, watchtime: v.watchtime })
   }
   return out
 }
@@ -138,22 +140,45 @@ async function watchTotals(at = Date.now(), reset = false) {
 
 const liveCache = new Map<string, { at: number; entries: RaffleEntry[]; countingFrom: number | null }>()
 
-/** Open raffles: tickets from the live source. Locked/complete: the frozen list */
-async function entriesOf(r: Raffle, env: AuthEnv): Promise<{ entries: RaffleEntry[]; countingFrom: number | null }> {
-  if (r.status !== 'open') return { entries: r.entries, countingFrom: null }
-  const key = `${r.id}:${r.ticketUnit}:${r.start}:${r.end}`
-  const hit = liveCache.get(key)
-  if (hit && Date.now() - hit.at < CACHE_MS) return hit
-  if (r.kind === 'wager') {
-    const entries = freezeEntries(await wagerTotals(r.start, r.end, env), r.ticketUnit)
-    const v = { at: Date.now(), entries, countingFrom: null }
-    liveCache.set(key, v)
-    return v
-  }
-  const { rows, countingFrom } = await watchTotals(r.start)
-  const v = { at: Date.now(), entries: freezeEntries(rows, r.ticketUnit), countingFrom }
+type LiveEntries = { at: number; entries: RaffleEntry[]; countingFrom: number | null }
+const recounting = new Map<string, Promise<LiveEntries>>()
+/** Past the minute, a count this old is still shown at once while the next one runs */
+const STALE_OK_MS = 30 * 60_000
+
+async function countNow(r: Raffle, env: AuthEnv, key: string): Promise<LiveEntries> {
+  const v: LiveEntries =
+    r.kind === 'wager'
+      ? { at: Date.now(), entries: freezeEntries(await wagerTotals(r.start, r.end, env), r.ticketUnit), countingFrom: null }
+      : await watchTotals(r.start).then(({ rows, countingFrom }) => ({
+          at: Date.now(),
+          entries: freezeEntries(rows, r.ticketUnit),
+          countingFrom,
+        }))
   liveCache.set(key, v)
   return v
+}
+
+/**
+ * Open raffles: tickets from the live source. Locked/complete: the frozen list.
+ * Visitors get the last count at once while a recount runs behind it; `fresh`
+ * (locking) always waits for a new count.
+ */
+async function entriesOf(r: Raffle, env: AuthEnv, fresh = false): Promise<{ entries: RaffleEntry[]; countingFrom: number | null }> {
+  if (r.status !== 'open') return { entries: r.entries, countingFrom: null }
+  const key = `${r.id}:${r.ticketUnit}:${r.start}:${r.end}`
+  if (fresh) return countNow(r, env, key)
+  const hit = liveCache.get(key)
+  if (hit && Date.now() - hit.at < CACHE_MS) return hit
+  let pending = recounting.get(key)
+  if (!pending) {
+    pending = countNow(r, env, key).finally(() => recounting.delete(key))
+    recounting.set(key, pending)
+  }
+  if (hit && Date.now() - hit.at < STALE_OK_MS) {
+    pending.catch(() => undefined)
+    return hit
+  }
+  return pending
 }
 
 function withOdds(entries: RaffleEntry[]) {
@@ -307,7 +332,7 @@ export async function handleRaffleRequest(req: AuthRequest, env: AuthEnv): Promi
     if (action === 'lock') {
       if (current.status !== 'open') throw new InputError('This raffle is already locked.')
       liveCache.clear()
-      const { entries } = await entriesOf(current, env)
+      const { entries } = await entriesOf(current, env, true)
       if (!entries.length) throw new InputError('Nobody has a ticket yet.')
       const seed = randomBytes(32).toString('hex')
       const next: Raffle = {

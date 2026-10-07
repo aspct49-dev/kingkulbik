@@ -1,7 +1,8 @@
 /*
  * Socials & Video: the Kick channel (live or not, followers) and its recent
  * streams, read from Kick's public API. Kept for a minute so the page never
- * calls Kick more than about once a minute; if Kick can't be reached, the
+ * calls Kick more than about once a minute (an older copy is served at once
+ * while the next one loads); if Kick can't be reached, the
  * last copy is served (or an empty one, and the page still links to Kick).
  *
  *   GET /api/socials/kick
@@ -113,7 +114,9 @@ export async function handleSocialsRequest(req: AuthRequest): Promise<AuthRespon
   if (!req.url.startsWith('/api/socials/kick')) return null
   if (!cache || Date.now() - cache.at > FRESH_MS) {
     pending ??= load().finally(() => (pending = null))
-    await pending.catch(() => undefined)
+    // With a copy in hand, answer now and let the refresh land for the next visitor
+    if (cache) pending.catch(() => undefined)
+    else await pending.catch(() => undefined)
   }
   const body = cache ?? { channel: null, vods: [], at: Date.now() }
   return {

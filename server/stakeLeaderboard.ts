@@ -115,18 +115,44 @@ export function parseLeaderboardCsv(csv: string) {
 }
 
 const cache = new Map<string, { at: number; data: LeaderboardResponse }>()
+const refreshing = new Map<string, Promise<LeaderboardResponse>>()
+/** Past the minute, a copy this old is still served at once while a fresh one is fetched behind it */
+const STALE_OK_MS = 30 * 60_000
+
+type FetchOptions = { now?: number; fetchImpl?: typeof fetch; apiUrl?: string }
 
 export async function getLeaderboard(
   boardId: BoardId,
   token: string,
-  { now = Date.now(), fetchImpl = fetch, apiUrl = STAKE_LEADERBOARD_URL } = {},
+  options: FetchOptions = {},
+): Promise<LeaderboardResponse> {
+  const now = options.now ?? Date.now()
+  const cacheKey = `${boardId}:${getRaceWindow(now).start}`
+  const hit = cache.get(cacheKey)
+  if (hit && now - hit.at < CACHE_TTL_MS) return hit.data
+
+  // One request to Stake at a time per board, however many visitors arrive
+  let pending = refreshing.get(cacheKey)
+  if (!pending) {
+    pending = fetchLeaderboard(boardId, token, cacheKey, options).finally(() => refreshing.delete(cacheKey))
+    refreshing.set(cacheKey, pending)
+  }
+  // A recent copy answers straight away; the fresh one replaces it when Stake replies
+  if (hit && now - hit.at < STALE_OK_MS) {
+    pending.catch(() => undefined)
+    return hit.data
+  }
+  return pending
+}
+
+async function fetchLeaderboard(
+  boardId: BoardId,
+  token: string,
+  cacheKey: string,
+  { now = Date.now(), fetchImpl = fetch, apiUrl = STAKE_LEADERBOARD_URL }: FetchOptions,
 ): Promise<LeaderboardResponse> {
   const board = BOARDS[boardId]
   const window = getRaceWindow(now)
-  const cacheKey = `${boardId}:${window.start}`
-
-  const hit = cache.get(cacheKey)
-  if (hit && now - hit.at < CACHE_TTL_MS) return hit.data
 
   const url = new URL(apiUrl)
   url.search = new URLSearchParams({

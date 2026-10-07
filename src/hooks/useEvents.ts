@@ -9,13 +9,31 @@ type Polled<T> = { status: 'loading' | 'ready' | 'error'; data: T | null; refres
  * A public event endpoint, re-read every `every` ms while the tab is visible
  * (pages refresh gently; stream overlays faster).
  */
+/** Last answer per endpoint: coming back to a page shows it at once while it refreshes */
+const lastSeen = new Map<string, unknown>()
+
+/** Fetch an endpoint ahead of time (e.g. while the visitor is on another page) */
+export function prefetchPolled(url: string) {
+  if (lastSeen.has(url)) return
+  fetch(url, { credentials: 'same-origin' })
+    .then((r) => (r.ok ? r.json() : null))
+    .then((data) => data && !lastSeen.has(url) && lastSeen.set(url, data))
+    .catch(() => undefined)
+}
+
 function usePolled<T>(url: string, every: number): Polled<T> {
-  const [state, setState] = useState<{ status: Polled<T>['status']; data: T | null }>({ status: 'loading', data: null })
+  const [state, setState] = useState<{ status: Polled<T>['status']; data: T | null }>(() => {
+    const seen = lastSeen.get(url) as T | undefined
+    return seen ? { status: 'ready', data: seen } : { status: 'loading', data: null }
+  })
 
   const refresh = useCallback(() => {
     fetch(url, { credentials: 'same-origin' })
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
-      .then((data: T) => setState({ status: 'ready', data }))
+      .then((data: T) => {
+        lastSeen.set(url, data)
+        setState({ status: 'ready', data })
+      })
       .catch(() => setState((s) => ({ status: s.data ? 'ready' : 'error', data: s.data })))
   }, [url])
 

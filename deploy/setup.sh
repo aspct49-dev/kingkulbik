@@ -84,6 +84,9 @@ systemctl enable kingkulbik
 echo "==> HTTPS certificate"
 if [ -n "$EMAIL" ]; then
   if certbot --nginx -n --agree-tos -m "$EMAIL" --redirect -d "$DOMAIN" -d "www.$DOMAIN"; then
+    # HTTP/2: a page's many files load side by side over one connection
+    sed -i 's/listen 443 ssl;/listen 443 ssl http2;/; s/listen \[::\]:443 ssl ipv6only=on;/listen [::]:443 ssl http2 ipv6only=on;/' /etc/nginx/sites-available/kingkulbik
+    nginx -t && systemctl reload nginx
     echo "HTTPS is on."
   else
     echo "Certificate failed: point $DOMAIN and www.$DOMAIN at this server's IP, wait for DNS, then run:"

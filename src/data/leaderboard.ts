@@ -1,7 +1,7 @@
-import avatarCircle from '../assets/leaderboard/avatar-circle.png'
-import avatar1st from '../assets/leaderboard/avatar-1st.png'
-import avatar2nd from '../assets/leaderboard/avatar-2nd.png'
-import avatar3rd from '../assets/leaderboard/avatar-3rd.png'
+import avatarCircle from '../assets/leaderboard/avatar-circle.webp'
+import avatar1st from '../assets/leaderboard/avatar-1st.webp'
+import avatar2nd from '../assets/leaderboard/avatar-2nd.webp'
+import avatar3rd from '../assets/leaderboard/avatar-3rd.webp'
 
 export const AFFILIATE_CODE = 'Kingkulbik'
 
