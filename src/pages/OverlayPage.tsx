@@ -3,7 +3,7 @@ import { useParams, useSearchParams } from 'react-router'
 import Bracket from '../components/events/Bracket'
 import RaffleMachine from '../components/raffle/RaffleMachine'
 import type { RaffleDrawShow } from '../components/raffle/RaffleMachine'
-import { bonusMultiplier, huntStats } from '../../shared/events'
+import { bonusMultiplier, huntMoney, huntStats } from '../../shared/events'
 import type { Hunt, PublicGiveaway } from '../../shared/events'
 import { useGiveaway, useGuessRound, useHunt, useRaffles, useTournaments } from '../hooks/useEvents'
 import './OverlayPage.css'
@@ -52,6 +52,8 @@ function HuntOverlay() {
 
 function HuntPanel({ hunt }: { hunt: Hunt }) {
   const s = huntStats(hunt)
+  // Amounts in the hunt's own currency (the other panels stay in dollars)
+  const usd = (v: number) => huntMoney(v, hunt.currency)
   // Show the bonuses around the next one to open
   const next = hunt.bonuses.findIndex((b) => b.payout === null)
   const from = Math.max(0, Math.min((next < 0 ? hunt.bonuses.length : next) - 3, hunt.bonuses.length - 10))

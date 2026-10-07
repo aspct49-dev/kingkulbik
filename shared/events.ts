@@ -26,6 +26,36 @@ export type HuntBonus = {
   badge?: string
 }
 
+/** Currencies a hunt can be run in */
+export const HUNT_CURRENCIES = [
+  { code: 'USD', name: 'US Dollar' },
+  { code: 'EUR', name: 'Euro' },
+  { code: 'GBP', name: 'British Pound' },
+  { code: 'CAD', name: 'Canadian Dollar' },
+  { code: 'AUD', name: 'Australian Dollar' },
+  { code: 'NZD', name: 'New Zealand Dollar' },
+  { code: 'BRL', name: 'Brazilian Real' },
+  { code: 'TRY', name: 'Turkish Lira' },
+  { code: 'INR', name: 'Indian Rupee' },
+  { code: 'JPY', name: 'Japanese Yen' },
+] as const
+
+const formats = new Map<string, Intl.NumberFormat>()
+const format = (currency: string) => {
+  let f = formats.get(currency)
+  if (!f) {
+    f = new Intl.NumberFormat('en-US', { style: 'currency', currency, minimumFractionDigits: 2, maximumFractionDigits: 2 })
+    formats.set(currency, f)
+  }
+  return f
+}
+
+/** An amount in the hunt's currency: $1,200.00, €1,200.00, CA$1,200.00… */
+export const huntMoney = (value: number, currency = 'USD') => format(currency).format(value)
+
+/** The currency's sign for input fields: $, €, £, CA$… */
+export const currencySymbol = (currency = 'USD') => format(currency).formatToParts(0).find((p) => p.type === 'currency')?.value ?? '$'
+
 /** The badges offered when adding a bonus (any other text is a custom badge) */
 export const HUNT_BADGES = ['Super Bonus', '5 Scatter'] as const
 
@@ -37,8 +67,8 @@ export type Hunt = {
   name: string
   /** Dollars spent collecting the bonuses */
   startBalance: number
-  /** Where it's played, e.g. Stake */
-  casino?: string
+  /** What the start cost, bets and payouts are in (ISO code, USD when missing) */
+  currency?: string
   /** Running number, shown as #1, #2… (older hunts have none) */
   number?: number
   status: HuntStatus

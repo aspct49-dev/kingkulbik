@@ -1,13 +1,12 @@
 import huntIcon from '../assets/events/hunt-icon.svg'
 import PageHeading from '../components/PageHeading'
 import EventsEmpty from '../components/events/EventsEmpty'
-import { bonusMultiplier, huntStats } from '../../shared/events'
+import { bonusMultiplier, huntMoney, huntStats } from '../../shared/events'
 import type { Hunt } from '../../shared/events'
 import { useHunt } from '../hooks/useEvents'
 import './ChallengesPage.css'
 import './EventsPages.css'
 
-const usd = (v: number) => `$${v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 const x = (v: number | null) => (v === null ? '—' : `${v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}×`)
 
 const STAGE = { collecting: 'Collecting bonuses', opening: 'Opening now', finished: 'Finished' } as const
@@ -43,13 +42,13 @@ export default function BonusHuntPage() {
 
 function HuntView({ hunt }: { hunt: Hunt }) {
   const s = huntStats(hunt)
+  const usd = (v: number) => huntMoney(v, hunt.currency)
   return (
     <>
       <div className="events-title">
         <h2 className="events-title__name">
           {hunt.number && <span className="events-accent">#{hunt.number} </span>}
           {hunt.name}
-          {hunt.casino && <span className="events-muted"> · {hunt.casino}</span>}
         </h2>
         <span className={`events-chip events-chip--${hunt.status}`}>{STAGE[hunt.status]}</span>
       </div>
@@ -64,7 +63,7 @@ function HuntView({ hunt }: { hunt: Hunt }) {
         <Stat label="Lucky win" value={s.luckyWin ? x(bonusMultiplier(s.luckyWin)) : '—'} detail={s.luckyWin?.game} />
         <Stat
           label="Profit/Loss"
-          value={s.opened ? `${s.profit < 0 ? '-' : ''}${usd(Math.abs(s.profit))}` : '—'}
+          value={s.opened ? usd(s.profit) : '—'}
           tone={s.opened ? (s.profit >= 0 ? 'up' : 'down') : undefined}
         />
       </ul>

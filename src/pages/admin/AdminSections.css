@@ -646,13 +646,6 @@
   color: var(--color-text-muted);
 }
 
-.hunt-board__casino {
-  margin: -8px 0 0;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--color-text-subtle);
-}
-
 .hunt-board__actions {
   display: flex;
   flex-wrap: wrap;

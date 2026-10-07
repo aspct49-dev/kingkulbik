@@ -41,6 +41,7 @@ import { randomBytes, randomInt } from 'node:crypto'
 import {
   buildBracket,
   championOf,
+  HUNT_CURRENCIES,
   huntStats,
   isBracketSize,
   KICK_CHANNEL,
@@ -136,6 +137,12 @@ function normaliseBonus(raw: unknown): HuntBonus {
   }
 }
 
+const currencyCode = (v: unknown) => {
+  const code = String(v ?? 'USD').toUpperCase()
+  if (!HUNT_CURRENCIES.some((c) => c.code === code)) throw new InputError('Pick a currency from the list.')
+  return code
+}
+
 function normaliseHunt(body: Record<string, unknown>, current: Hunt): Hunt {
   const status = HUNT_STATUSES.includes(body.status as HuntStatus) ? (body.status as HuntStatus) : current.status
   const bonuses = Array.isArray(body.bonuses) ? body.bonuses.slice(0, 300).map(normaliseBonus) : current.bonuses
@@ -143,7 +150,7 @@ function normaliseHunt(body: Record<string, unknown>, current: Hunt): Hunt {
     ...current,
     name: 'name' in body ? text(body.name, 'Name', 60) : current.name,
     startBalance: 'startBalance' in body ? money(body.startBalance, 'Start balance') : current.startBalance,
-    casino: 'casino' in body ? text(body.casino, 'Casino', 40, false) : current.casino,
+    currency: 'currency' in body ? currencyCode(body.currency) : current.currency,
     status,
     bonuses,
     finishedAt: status === 'finished' ? (current.finishedAt ?? Date.now()) : null,
@@ -333,7 +340,7 @@ export async function handleEventsRequest(req: AuthRequest, env: AuthEnv): Promi
           id: newId(),
           name: text(body.name, 'Name', 60),
           startBalance: money(body.startBalance, 'Start balance'),
-          casino: text(body.casino, 'Casino', 40, false),
+          currency: currencyCode(body.currency),
           status: 'collecting',
           bonuses: [],
           createdAt: Date.now(),

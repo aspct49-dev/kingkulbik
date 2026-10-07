@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
-import { bonusMultiplier, HUNT_BADGES, huntStats } from '../../../shared/events'
+import { bonusMultiplier, currencySymbol, HUNT_BADGES, HUNT_CURRENCIES, huntMoney, huntStats } from '../../../shared/events'
 import type { Hunt, HuntBonus, HuntStatus } from '../../../shared/events'
 import { adminPost } from './api'
 import SlotPicker from './SlotPicker'
@@ -14,8 +14,6 @@ const STATUSES: { id: HuntStatus; label: string }[] = [
   { id: 'finished', label: 'Finished' },
 ]
 
-const usd = (v: number) => `${v < 0 ? '-' : ''}$${Math.abs(v).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-const money = (v: number | null) => (v === null ? '—' : usd(v))
 const x = (v: number | null) => (v === null ? '—' : `${v.toFixed(2)}×`)
 const day = (t: number) => new Date(t).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })
 
@@ -30,7 +28,7 @@ export default function HuntAdmin({
   notify: (message: string) => void
 }) {
   const [selected, setSelected] = useState<string | null>(hunts[0]?.id ?? null)
-  const [form, setForm] = useState({ name: '', startBalance: '', casino: 'Stake' })
+  const [form, setForm] = useState({ name: '', startBalance: '', currency: 'USD' })
   const [error, setError] = useState<string | null>(null)
   const hunt = hunts.find((h) => h.id === selected) ?? null
 
@@ -41,7 +39,7 @@ export default function HuntAdmin({
     if (!form.name.trim()) return setError('Name the hunt.')
     if (!(startBalance >= 0)) return setError('Enter the start cost in dollars.')
     try {
-      const res = await adminPost<{ hunts: Hunt[] }>('hunts', { name: form.name.trim(), startBalance, casino: form.casino.trim() })
+      const res = await adminPost<{ hunts: Hunt[] }>('hunts', { name: form.name.trim(), startBalance, currency: form.currency })
       onChange(res.hunts)
       setSelected(res.hunts[0].id)
       setForm((f) => ({ ...f, name: '', startBalance: '' }))
@@ -60,10 +58,16 @@ export default function HuntAdmin({
             <Input value={form.name} onChange={(v) => setForm((f) => ({ ...f, name: v }))} placeholder="Friday night hunt" maxLength={60} />
           </Field>
           <Field label="Start cost">
-            <Input value={form.startBalance} onChange={(v) => setForm((f) => ({ ...f, startBalance: v }))} unit="$" inputMode="decimal" placeholder="0.00" />
+            <Input
+              value={form.startBalance}
+              onChange={(v) => setForm((f) => ({ ...f, startBalance: v }))}
+              unit={currencySymbol(form.currency)}
+              inputMode="decimal"
+              placeholder="0.00"
+            />
           </Field>
-          <Field label="Casino">
-            <Input value={form.casino} onChange={(v) => setForm((f) => ({ ...f, casino: v }))} placeholder="Stake" maxLength={40} />
+          <Field label="Currency">
+            <CurrencySelect value={form.currency} onChange={(currency) => setForm((f) => ({ ...f, currency }))} />
           </Field>
         </div>
         {error && <p className="admin-error" role="alert">{error}</p>}
@@ -136,6 +140,9 @@ function HuntEditor({
   const [search, setSearch] = useState('')
   const [start, setStart] = useState(String(initial.startBalance))
   const s = huntStats(hunt)
+  const currency = hunt.currency ?? 'USD'
+  const usd = (v: number) => huntMoney(v, currency)
+  const money = (v: number | null) => (v === null ? '—' : usd(v))
 
   useEffect(() => setStart(String(initial.startBalance)), [initial.id, initial.startBalance])
 
@@ -155,7 +162,6 @@ function HuntEditor({
           </h2>
           <SaveBadge state={state} error={error} />
         </div>
-        {hunt.casino && <p className="hunt-board__casino">{hunt.casino}</p>}
 
         <div className="hunt-board__actions">
           <button type="button" className="kk-button admin-submit" onClick={() => setAdding(true)}>
@@ -193,12 +199,12 @@ function HuntEditor({
                   const n = num(v)
                   if (n >= 0) change((h) => ({ ...h, startBalance: n }))
                 }}
-                unit="$"
+                unit={currencySymbol(currency)}
                 inputMode="decimal"
               />
             </Field>
-            <Field label="Casino">
-              <Input value={hunt.casino ?? ''} onChange={(v) => change((h) => ({ ...h, casino: v }))} maxLength={40} />
+            <Field label="Currency">
+              <CurrencySelect value={currency} onChange={(c) => change((h) => ({ ...h, currency: c }))} />
             </Field>
           </div>
         )}
@@ -246,6 +252,7 @@ function HuntEditor({
                 bonus={b}
                 best={s.bestWin?.id === b.id}
                 lucky={s.luckyWin?.id === b.id}
+                symbol={currencySymbol(currency)}
                 onChange={(patch) => setBonus(b.id, patch)}
                 onRemove={() => change((h) => ({ ...h, bonuses: h.bonuses.filter((x) => x.id !== b.id) }))}
               />
@@ -258,6 +265,7 @@ function HuntEditor({
       </section>
 
       <AddBonusDialog
+        symbol={currencySymbol(currency)}
         open={adding}
         onClose={() => setAdding(false)}
         onAdd={(bonus) => {
@@ -288,7 +296,17 @@ function SmallStat({ label, value }: { label: string; value: string }) {
 }
 
 /** "Add Bonus to Hunt": slot, bet size, an optional note and badge */
-function AddBonusDialog({ open, onClose, onAdd }: { open: boolean; onClose: () => void; onAdd: (bonus: HuntBonus) => void }) {
+function AddBonusDialog({
+  symbol,
+  open,
+  onClose,
+  onAdd,
+}: {
+  symbol: string
+  open: boolean
+  onClose: () => void
+  onAdd: (bonus: HuntBonus) => void
+}) {
   const ref = useRef<HTMLDialogElement>(null)
   const [pick, setPick] = useState<SlotGame | null>(null)
   // The bet is kept between bonuses: hunts are usually bought at one size
@@ -363,7 +381,7 @@ function AddBonusDialog({ open, onClose, onAdd }: { open: boolean; onClose: () =
             )}
           </Field>
           <Field label="Bet size">
-            <Input value={bet} onChange={setBet} unit="$" inputMode="decimal" placeholder="0.00" />
+            <Input value={bet} onChange={setBet} unit={symbol} inputMode="decimal" placeholder="0.00" />
           </Field>
           <Field label="Note (optional)">
             <Input value={note} onChange={setNote} placeholder="Add any notes about this bonus…" maxLength={80} />
@@ -409,6 +427,7 @@ function BonusRow({
   bonus,
   best,
   lucky,
+  symbol,
   onChange,
   onRemove,
 }: {
@@ -416,6 +435,7 @@ function BonusRow({
   bonus: HuntBonus
   best: boolean
   lucky: boolean
+  symbol: string
   onChange: (patch: Partial<HuntBonus>) => void
   onRemove: () => void
 }) {
@@ -445,7 +465,7 @@ function BonusRow({
         </span>
       </span>
       <span className="admin-input admin-input--small admin-input--unit admin-input--money">
-        <span className="admin-input__unit">$</span>
+        <span className="admin-input__unit">{symbol}</span>
         <input
           value={bet}
           aria-label={`${bonus.game} bet`}
@@ -458,7 +478,7 @@ function BonusRow({
         />
       </span>
       <span className="admin-input admin-input--small admin-input--unit admin-input--money">
-        <span className="admin-input__unit">$</span>
+        <span className="admin-input__unit">{symbol}</span>
         <input
           value={payout}
           aria-label={`${bonus.game} payout`}
@@ -478,5 +498,19 @@ function BonusRow({
         ×
       </button>
     </li>
+  )
+}
+
+function CurrencySelect({ value, onChange }: { value: string; onChange: (code: string) => void }) {
+  return (
+    <span className="admin-input admin-select">
+      <select value={value} onChange={(e) => onChange(e.target.value)} aria-label="Currency">
+        {HUNT_CURRENCIES.map((c) => (
+          <option key={c.code} value={c.code}>
+            {currencySymbol(c.code)}  {c.code} · {c.name}
+          </option>
+        ))}
+      </select>
+    </span>
   )
 }
