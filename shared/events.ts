@@ -20,7 +20,14 @@ export type HuntBonus = {
   bet: number
   /** What the bonus paid, null until it's opened (0 is a real result) */
   payout: number | null
+  /** Optional note from the streamer, e.g. "max level" */
+  note?: string
+  /** Optional tag on the row: "Super Bonus", "5 Scatter" or anything typed */
+  badge?: string
 }
+
+/** The badges offered when adding a bonus (any other text is a custom badge) */
+export const HUNT_BADGES = ['Super Bonus', '5 Scatter'] as const
 
 /** collecting: buying bonuses · opening: paying them out · finished */
 export type HuntStatus = 'collecting' | 'opening' | 'finished'
@@ -30,6 +37,10 @@ export type Hunt = {
   name: string
   /** Dollars spent collecting the bonuses */
   startBalance: number
+  /** Where it's played, e.g. Stake */
+  casino?: string
+  /** Running number, shown as #1, #2… (older hunts have none) */
+  number?: number
   status: HuntStatus
   bonuses: HuntBonus[]
   createdAt: number
@@ -50,6 +61,18 @@ export type HuntStats = {
   best: HuntBonus | null
   /** totalWon - startBalance, once anything is opened */
   profit: number
+  /** Bonuses still to open */
+  remaining: number
+  /** Dollars each remaining bonus needs to pay, on average, to get the start back */
+  avgRequired: number | null
+  /** Dollars paid per opened bonus so far */
+  currentAverage: number | null
+  /** Everything won over everything bet: the hunt's overall multiplier */
+  totalX: number | null
+  /** Biggest payout in dollars */
+  bestWin: HuntBonus | null
+  /** Biggest multiplier (the same bonus as `best`) */
+  luckyWin: HuntBonus | null
 }
 
 export function huntStats(h: Hunt): HuntStats {
@@ -74,6 +97,12 @@ export function huntStats(h: Hunt): HuntStats {
     average: openedBet > 0 ? totalWon / openedBet : null,
     best,
     profit: totalWon - h.startBalance,
+    remaining: waiting.length,
+    avgRequired: waiting.length > 0 ? Math.max(0, remaining) / waiting.length : null,
+    currentAverage: opened.length > 0 ? totalWon / opened.length : null,
+    totalX: totalBet > 0 && opened.length > 0 ? totalWon / totalBet : null,
+    bestWin: opened.reduce<HuntBonus | null>((top, b) => (!top || (b.payout ?? 0) > (top.payout ?? 0) ? b : top), null),
+    luckyWin: best,
   }
 }
 

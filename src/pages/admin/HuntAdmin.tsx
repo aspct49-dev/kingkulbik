@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
-import { bonusMultiplier, huntStats } from '../../../shared/events'
+import { bonusMultiplier, HUNT_BADGES, huntStats } from '../../../shared/events'
 import type { Hunt, HuntBonus, HuntStatus } from '../../../shared/events'
 import { adminPost } from './api'
 import SlotPicker from './SlotPicker'
@@ -14,10 +14,12 @@ const STATUSES: { id: HuntStatus; label: string }[] = [
   { id: 'finished', label: 'Finished' },
 ]
 
-const usd = (v: number) => `$${v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+const usd = (v: number) => `${v < 0 ? '-' : ''}$${Math.abs(v).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+const money = (v: number | null) => (v === null ? '—' : usd(v))
 const x = (v: number | null) => (v === null ? '—' : `${v.toFixed(2)}×`)
+const day = (t: number) => new Date(t).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })
 
-/** Bonus hunts: buy bonuses (collecting), then enter each payout as it opens */
+/** Bonus hunts: collect bonuses, then enter each payout as it opens */
 export default function HuntAdmin({
   hunts,
   onChange,
@@ -28,7 +30,7 @@ export default function HuntAdmin({
   notify: (message: string) => void
 }) {
   const [selected, setSelected] = useState<string | null>(hunts[0]?.id ?? null)
-  const [form, setForm] = useState({ name: '', startBalance: '' })
+  const [form, setForm] = useState({ name: '', startBalance: '', casino: 'Stake' })
   const [error, setError] = useState<string | null>(null)
   const hunt = hunts.find((h) => h.id === selected) ?? null
 
@@ -37,12 +39,12 @@ export default function HuntAdmin({
     setError(null)
     const startBalance = num(form.startBalance)
     if (!form.name.trim()) return setError('Name the hunt.')
-    if (!(startBalance >= 0)) return setError('Enter the start balance in dollars.')
+    if (!(startBalance >= 0)) return setError('Enter the start cost in dollars.')
     try {
-      const res = await adminPost<{ hunts: Hunt[] }>('hunts', { name: form.name.trim(), startBalance })
+      const res = await adminPost<{ hunts: Hunt[] }>('hunts', { name: form.name.trim(), startBalance, casino: form.casino.trim() })
       onChange(res.hunts)
       setSelected(res.hunts[0].id)
-      setForm({ name: '', startBalance: '' })
+      setForm((f) => ({ ...f, name: '', startBalance: '' }))
       notify('Hunt created')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not save.')
@@ -52,13 +54,16 @@ export default function HuntAdmin({
   return (
     <div className="admin-stack">
       <form className="admin-card" onSubmit={create} noValidate>
-        <h2 className="admin-card__title">New bonus hunt</h2>
+        <h2 className="admin-card__title">Create new hunt</h2>
         <div className="admin-grid">
-          <Field label="Name" wide>
+          <Field label="Hunt name" wide>
             <Input value={form.name} onChange={(v) => setForm((f) => ({ ...f, name: v }))} placeholder="Friday night hunt" maxLength={60} />
           </Field>
-          <Field label="Start balance">
-            <Input value={form.startBalance} onChange={(v) => setForm((f) => ({ ...f, startBalance: v }))} unit="$" inputMode="decimal" placeholder="2,000" />
+          <Field label="Start cost">
+            <Input value={form.startBalance} onChange={(v) => setForm((f) => ({ ...f, startBalance: v }))} unit="$" inputMode="decimal" placeholder="0.00" />
+          </Field>
+          <Field label="Casino">
+            <Input value={form.casino} onChange={(v) => setForm((f) => ({ ...f, casino: v }))} placeholder="Stake" maxLength={40} />
           </Field>
         </div>
         {error && <p className="admin-error" role="alert">{error}</p>}
@@ -80,6 +85,7 @@ export default function HuntAdmin({
               className={`kk-tab${h.id === selected ? ' kk-tab--selected' : ''}`}
               onClick={() => setSelected(h.id)}
             >
+              {h.number ? `#${h.number} ` : ''}
               {h.name}
             </button>
           ))}
@@ -91,6 +97,7 @@ export default function HuntAdmin({
           key={hunt.id}
           hunt={hunt}
           onSaved={onChange}
+          notify={notify}
           onDelete={async () => {
             try {
               const res = await adminPost<{ hunts: Hunt[] }>(`hunts/${hunt.id}/delete`)
@@ -109,131 +116,136 @@ export default function HuntAdmin({
   )
 }
 
-function HuntEditor({ hunt: initial, onSaved, onDelete }: { hunt: Hunt; onSaved: (h: Hunt[]) => void; onDelete: () => void }) {
+function HuntEditor({
+  hunt: initial,
+  onSaved,
+  onDelete,
+  notify,
+}: {
+  hunt: Hunt
+  onSaved: (h: Hunt[]) => void
+  onDelete: () => void
+  notify: (message: string) => void
+}) {
   const { value: hunt, change, state, error } = useAutosave(initial, async (h) => {
     const res = await adminPost<{ hunts: Hunt[] }>(`hunts/${h.id}`, h)
     onSaved(res.hunts)
   })
-  const [pick, setPick] = useState<SlotGame | null>(null)
-  const [bet, setBet] = useState('')
-  const [addError, setAddError] = useState<string | null>(null)
+  const [editing, setEditing] = useState(false)
+  const [adding, setAdding] = useState(false)
+  const [search, setSearch] = useState('')
   const [start, setStart] = useState(String(initial.startBalance))
-  const stats = huntStats(hunt)
+  const s = huntStats(hunt)
 
   useEffect(() => setStart(String(initial.startBalance)), [initial.id, initial.startBalance])
 
   const setBonus = (id: string, patch: Partial<HuntBonus>) =>
     change((h) => ({ ...h, bonuses: h.bonuses.map((b) => (b.id === id ? { ...b, ...patch } : b)) }))
 
-  const add = (e: FormEvent) => {
-    e.preventDefault()
-    const size = num(bet)
-    if (!pick) return setAddError('Pick the slot.')
-    if (!(size > 0)) return setAddError('Enter the bet size.')
-    setAddError(null)
-    change((h) => ({
-      ...h,
-      bonuses: [
-        ...h.bonuses,
-        { id: Math.random().toString(36).slice(2, 10), game: pick.name, slug: pick.slug, image: pick.image, provider: pick.provider, bet: size, payout: null },
-      ],
-    }))
-    setPick(null)
-  }
+  const q = search.trim().toLowerCase()
+  const rows = hunt.bonuses.map((b, i) => ({ b, n: i + 1 })).filter(({ b }) => !q || b.game.toLowerCase().includes(q))
 
   return (
     <>
-      <section className="admin-card">
-        <div className="admin-card__head">
-          <h2 className="admin-card__title">{hunt.name}</h2>
+      <section className="admin-card hunt-board">
+        <div className="hunt-board__head">
+          <h2 className="hunt-board__title">
+            {hunt.number && <span className="hunt-board__number">#{hunt.number}</span>}
+            {hunt.name} <span className="hunt-board__date">- {day(hunt.createdAt)}</span>
+          </h2>
           <SaveBadge state={state} error={error} />
         </div>
-        <div className="admin-grid">
-          <Field label="Name" wide>
-            <Input value={hunt.name} onChange={(v) => change((h) => ({ ...h, name: v }))} maxLength={60} />
-          </Field>
-          <Field label="Start balance">
-            <Input
-              value={start}
-              onChange={(v) => {
-                setStart(v)
-                const n = num(v)
-                if (n >= 0) change((h) => ({ ...h, startBalance: n }))
-              }}
-              unit="$"
-              inputMode="decimal"
-            />
-          </Field>
-          <div className="admin-field">
-            <span className="admin-field__label" id={`hunt-status-${hunt.id}`}>
-              Stage
-            </span>
-            <div className="kk-tabs" role="radiogroup" aria-labelledby={`hunt-status-${hunt.id}`}>
-              {STATUSES.map((s) => (
-                <button
-                  key={s.id}
-                  type="button"
-                  role="radio"
-                  aria-checked={hunt.status === s.id}
-                  className={`kk-tab${hunt.status === s.id ? ' kk-tab--selected' : ''}`}
-                  onClick={() => change((h) => ({ ...h, status: s.id }))}
-                >
-                  {s.label}
-                </button>
-              ))}
-            </div>
+        {hunt.casino && <p className="hunt-board__casino">{hunt.casino}</p>}
+
+        <div className="hunt-board__actions">
+          <button type="button" className="kk-button admin-submit" onClick={() => setAdding(true)}>
+            + Add bonus
+          </button>
+          <button type="button" className="admin-button" aria-expanded={editing} onClick={() => setEditing((v) => !v)}>
+            {editing ? 'Done' : 'Edit'}
+          </button>
+          <div className="kk-tabs" role="radiogroup" aria-label="Stage">
+            {STATUSES.map((st) => (
+              <button
+                key={st.id}
+                type="button"
+                role="radio"
+                aria-checked={hunt.status === st.id}
+                className={`kk-tab${hunt.status === st.id ? ' kk-tab--selected' : ''}`}
+                onClick={() => change((h) => ({ ...h, status: st.id }))}
+              >
+                {st.label}
+              </button>
+            ))}
           </div>
         </div>
 
-        <ul className="admin-stats admin-stats--hunt">
-          <HuntStat label="Bonuses" value={`${stats.opened}/${stats.count} opened`} />
-          <HuntStat label="Total won" value={usd(stats.totalWon)} />
-          <HuntStat label="Break-even" value={x(stats.breakEven)} />
-          <HuntStat label="Needed now" value={x(stats.liveBreakEven)} />
-          <HuntStat label="Average" value={x(stats.average)} />
+        {editing && (
+          <div className="admin-grid hunt-board__edit">
+            <Field label="Hunt name" wide>
+              <Input value={hunt.name} onChange={(v) => change((h) => ({ ...h, name: v }))} maxLength={60} />
+            </Field>
+            <Field label="Start cost">
+              <Input
+                value={start}
+                onChange={(v) => {
+                  setStart(v)
+                  const n = num(v)
+                  if (n >= 0) change((h) => ({ ...h, startBalance: n }))
+                }}
+                unit="$"
+                inputMode="decimal"
+              />
+            </Field>
+            <Field label="Casino">
+              <Input value={hunt.casino ?? ''} onChange={(v) => change((h) => ({ ...h, casino: v }))} maxLength={40} />
+            </Field>
+          </div>
+        )}
+
+        <ul className="hunt-stats">
+          <BigStat label="Bonuses" value={String(s.count)} />
+          <BigStat label="Start cost" value={usd(hunt.startBalance)} />
+          <BigStat label="Winnings" value={usd(s.totalWon)} />
+          <BigStat label="Profit/Loss" value={usd(s.profit)} tone={s.opened ? (s.profit >= 0 ? 'up' : 'down') : undefined} />
+        </ul>
+        <ul className="hunt-stats hunt-stats--small">
+          <SmallStat label="Avg req" value={money(s.avgRequired)} />
+          <SmallStat label="Cur avg" value={money(s.currentAverage)} />
+          <SmallStat label="Total X" value={x(s.totalX)} />
+          <SmallStat label="Req X" value={x(s.liveBreakEven ?? s.breakEven)} />
+          <SmallStat label="Cur avg X" value={x(s.average)} />
         </ul>
       </section>
 
-      <form className="admin-card" onSubmit={add} noValidate>
-        <h2 className="admin-card__title">Add a bonus</h2>
-        <div className="admin-hunt-add">
-          <Field label="Slot">
-            {pick ? (
-              <span className="admin-picked">
-                <img src={pick.image.replace('w=300', 'w=80')} width={24} height={32} alt="" />
-                <span>{pick.name}</span>
-                <button type="button" className="admin-link" onClick={() => setPick(null)}>
-                  Change
-                </button>
-              </span>
-            ) : (
-              <SlotPicker onPick={setPick} />
-            )}
-          </Field>
-          <Field label="Bet size">
-            <Input value={bet} onChange={setBet} unit="$" inputMode="decimal" placeholder="1.00" />
-          </Field>
-          <button type="submit" className="kk-button admin-submit admin-hunt-add__button">
-            Add bonus
-          </button>
-        </div>
-        {addError && <p className="admin-error" role="alert">{addError}</p>}
-      </form>
-
       <section className="admin-card">
-        <h2 className="admin-card__title">
-          Bonuses <span className="admin-count">enter each payout as it opens</span>
-        </h2>
+        <div className="admin-card__head">
+          <h2 className="admin-card__title">
+            Bonuses <span className="admin-count">{s.opened}/{s.count} opened · enter each payout as it opens</span>
+          </h2>
+        </div>
+        {hunt.bonuses.length > 0 && (
+          <span className="admin-input hunt-search">
+            <svg width="15" height="15" viewBox="0 0 16 16" aria-hidden>
+              <circle cx="7" cy="7" r="5.25" fill="none" stroke="currentColor" strokeWidth="1.8" />
+              <path d="m11 11 3.5 3.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+            </svg>
+            <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search for a game…" aria-label="Search bonuses" />
+          </span>
+        )}
         {hunt.bonuses.length === 0 ? (
-          <p className="admin-empty">No bonuses yet.</p>
+          <p className="admin-empty">No bonuses yet. Add the first one above.</p>
+        ) : rows.length === 0 ? (
+          <p className="admin-empty">No bonus matches “{search.trim()}”.</p>
         ) : (
           <ol className="admin-list">
-            {hunt.bonuses.map((b, i) => (
+            {rows.map(({ b, n }) => (
               <BonusRow
                 key={b.id}
-                index={i + 1}
+                index={n}
                 bonus={b}
-                best={stats.best?.id === b.id}
+                best={s.bestWin?.id === b.id}
+                lucky={s.luckyWin?.id === b.id}
                 onChange={(patch) => setBonus(b.id, patch)}
                 onRemove={() => change((h) => ({ ...h, bonuses: h.bonuses.filter((x) => x.id !== b.id) }))}
               />
@@ -244,16 +256,151 @@ function HuntEditor({ hunt: initial, onSaved, onDelete }: { hunt: Hunt; onSaved:
           <ConfirmButton label="Delete hunt" confirm="Delete this hunt?" onConfirm={onDelete} />
         </div>
       </section>
+
+      <AddBonusDialog
+        open={adding}
+        onClose={() => setAdding(false)}
+        onAdd={(bonus) => {
+          change((h) => ({ ...h, bonuses: [...h.bonuses, bonus] }))
+          notify(`${bonus.game} added`)
+        }}
+      />
     </>
   )
 }
 
-function HuntStat({ label, value }: { label: string; value: string }) {
+function BigStat({ label, value, tone }: { label: string; value: string; tone?: 'up' | 'down' }) {
   return (
-    <li className="admin-stat">
-      <span className="admin-stat__label">{label}</span>
-      <span className="admin-stat__value">{value}</span>
+    <li className="hunt-stat">
+      <span className="hunt-stat__label">{label}</span>
+      <span className={`hunt-stat__value${tone ? ` hunt-stat__value--${tone}` : ''}`}>{value}</span>
     </li>
+  )
+}
+
+function SmallStat({ label, value }: { label: string; value: string }) {
+  return (
+    <li className="hunt-stat hunt-stat--small">
+      <span className="hunt-stat__label">{label}</span>
+      <span className="hunt-stat__value">{value}</span>
+    </li>
+  )
+}
+
+/** "Add Bonus to Hunt": slot, bet size, an optional note and badge */
+function AddBonusDialog({ open, onClose, onAdd }: { open: boolean; onClose: () => void; onAdd: (bonus: HuntBonus) => void }) {
+  const ref = useRef<HTMLDialogElement>(null)
+  const [pick, setPick] = useState<SlotGame | null>(null)
+  // The bet is kept between bonuses: hunts are usually bought at one size
+  const [bet, setBet] = useState('')
+  const [note, setNote] = useState('')
+  const [badge, setBadge] = useState<'none' | (typeof HUNT_BADGES)[number] | 'custom'>('none')
+  const [custom, setCustom] = useState('')
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    const dialog = ref.current
+    if (!dialog) return
+    if (open && !dialog.open) {
+      setPick(null)
+      setNote('')
+      setBadge('none')
+      setCustom('')
+      setError(null)
+      dialog.showModal()
+    }
+    if (!open && dialog.open) dialog.close()
+  }, [open])
+
+  const submit = (e: FormEvent) => {
+    e.preventDefault()
+    const size = num(bet)
+    if (!pick) return setError('Pick the slot.')
+    if (!(size > 0)) return setError('Enter the bet size.')
+    const label = badge === 'none' ? '' : badge === 'custom' ? custom.trim() : badge
+    if (badge === 'custom' && !label) return setError('Type the custom badge, or pick None.')
+    onAdd({
+      id: Math.random().toString(36).slice(2, 10),
+      game: pick.name,
+      slug: pick.slug,
+      image: pick.image,
+      provider: pick.provider,
+      bet: size,
+      payout: null,
+      ...(note.trim() ? { note: note.trim() } : {}),
+      ...(label ? { badge: label } : {}),
+    })
+    onClose()
+  }
+
+  return (
+    <dialog ref={ref} className="hunt-dialog" aria-labelledby="hunt-dialog-title" onClose={onClose} onClick={(e) => e.target === ref.current && onClose()}>
+      {open && (
+        <form className="hunt-dialog__body" onSubmit={submit} noValidate>
+          <header className="hunt-dialog__head">
+            <h2 id="hunt-dialog-title" className="hunt-dialog__title">
+              <span aria-hidden>+</span> Add bonus to hunt
+            </h2>
+            <button type="button" className="hunt-dialog__close" aria-label="Close" onClick={onClose}>
+              ×
+            </button>
+          </header>
+
+          <Field label="Search for slot">
+            {pick ? (
+              <span className="admin-picked">
+                <img src={pick.image.replace('w=300', 'w=80')} width={24} height={32} alt="" />
+                <span>
+                  {pick.name}
+                  <span className="admin-row__meta"> · {pick.provider}</span>
+                </span>
+                <button type="button" className="admin-link" onClick={() => setPick(null)}>
+                  Change
+                </button>
+              </span>
+            ) : (
+              <SlotPicker onPick={setPick} placeholder="Search for a slot game…" />
+            )}
+          </Field>
+          <Field label="Bet size">
+            <Input value={bet} onChange={setBet} unit="$" inputMode="decimal" placeholder="0.00" />
+          </Field>
+          <Field label="Note (optional)">
+            <Input value={note} onChange={setNote} placeholder="Add any notes about this bonus…" maxLength={80} />
+          </Field>
+          <div className="admin-field">
+            <span className="admin-field__label" id="hunt-badge-label">
+              Badge (optional)
+            </span>
+            <div className="hunt-badges" role="radiogroup" aria-labelledby="hunt-badge-label">
+              {(['none', ...HUNT_BADGES, 'custom'] as const).map((b) => (
+                <button
+                  key={b}
+                  type="button"
+                  role="radio"
+                  aria-checked={badge === b}
+                  className={`hunt-badge-choice${badge === b ? ' hunt-badge-choice--on' : ''}`}
+                  onClick={() => setBadge(b)}
+                >
+                  {b === 'none' ? 'None' : b === 'custom' ? 'Custom' : b}
+                </button>
+              ))}
+            </div>
+            {badge === 'custom' && <Input value={custom} onChange={setCustom} placeholder="Badge text, e.g. Max level" maxLength={24} />}
+          </div>
+
+          {error && <p className="admin-error" role="alert">{error}</p>}
+          <div className="hunt-dialog__actions">
+            <button type="button" className="admin-button" onClick={onClose}>
+              Cancel <kbd>Esc</kbd>
+            </button>
+            <button type="submit" className="kk-button admin-submit">
+              Add bonus
+            </button>
+          </div>
+        </form>
+      )}
+    </dialog>
   )
 }
 
@@ -261,12 +408,14 @@ function BonusRow({
   index,
   bonus,
   best,
+  lucky,
   onChange,
   onRemove,
 }: {
   index: number
   bonus: HuntBonus
   best: boolean
+  lucky: boolean
   onChange: (patch: Partial<HuntBonus>) => void
   onRemove: () => void
 }) {
@@ -275,7 +424,7 @@ function BonusRow({
   const multi = bonusMultiplier(bonus)
 
   return (
-    <li className={`admin-row${best ? ' admin-row--best' : ''}`}>
+    <li className={`admin-row${best || lucky ? ' admin-row--best' : ''}`}>
       <span className="admin-row__index">{index}</span>
       {bonus.image ? (
         <img className="admin-row__thumb" src={bonus.image.replace('w=300', 'w=80')} width={30} height={40} alt="" loading="lazy" />
@@ -283,8 +432,17 @@ function BonusRow({
         <span className="admin-row__thumb admin-row__thumb--empty" />
       )}
       <span className="admin-row__main">
-        <span className="admin-row__name">{bonus.game}</span>
-        <span className="admin-row__meta">{bonus.provider}</span>
+        <span className="admin-row__name">
+          {bonus.game}
+          {bonus.badge && <span className="hunt-badge">{bonus.badge}</span>}
+          {(best || lucky) && (
+            <span className="hunt-badge hunt-badge--gold">{best && lucky ? 'Best & lucky win' : best ? 'Best win' : 'Lucky win'}</span>
+          )}
+        </span>
+        <span className="admin-row__meta">
+          {bonus.provider}
+          {bonus.note && <> · {bonus.note}</>}
+        </span>
       </span>
       <span className="admin-input admin-input--small admin-input--unit admin-input--money">
         <span className="admin-input__unit">$</span>

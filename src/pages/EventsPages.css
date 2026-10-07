@@ -143,7 +143,8 @@
 
 .events-stats {
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  /* Eight figures: two even rows */
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 8px;
   margin: 0;
   padding: 0;
@@ -182,6 +183,22 @@
 
 .events-stat__value--up {
   color: #7ee25a;
+}
+
+.events-stat__value--down {
+  color: #e5736f;
+}
+
+.events-badge {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.08);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 16px;
+  vertical-align: 1px;
 }
 
 .events-stat__detail {
@@ -476,7 +493,7 @@
 
 @container (max-width: 900px) {
   .events-stats {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 

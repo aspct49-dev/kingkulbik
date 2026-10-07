@@ -131,6 +131,8 @@ function normaliseBonus(raw: unknown): HuntBonus {
     ...(r.provider ? { provider: text(r.provider, 'Provider', 40, false) } : {}),
     bet: money(r.bet, 'Bet size', 1_000_000),
     payout,
+    ...(r.note ? { note: text(r.note, 'Note', 80, false) } : {}),
+    ...(r.badge ? { badge: text(r.badge, 'Badge', 24, false) } : {}),
   }
 }
 
@@ -141,6 +143,7 @@ function normaliseHunt(body: Record<string, unknown>, current: Hunt): Hunt {
     ...current,
     name: 'name' in body ? text(body.name, 'Name', 60) : current.name,
     startBalance: 'startBalance' in body ? money(body.startBalance, 'Start balance') : current.startBalance,
+    casino: 'casino' in body ? text(body.casino, 'Casino', 40, false) : current.casino,
     status,
     bonuses,
     finishedAt: status === 'finished' ? (current.finishedAt ?? Date.now()) : null,
@@ -330,12 +333,18 @@ export async function handleEventsRequest(req: AuthRequest, env: AuthEnv): Promi
           id: newId(),
           name: text(body.name, 'Name', 60),
           startBalance: money(body.startBalance, 'Start balance'),
+          casino: text(body.casino, 'Casino', 40, false),
           status: 'collecting',
           bonuses: [],
           createdAt: Date.now(),
           finishedAt: null,
         }
-        return json(200, { hunts: await update('hunts', (list) => [hunt, ...list]) })
+        const hunts = await update('hunts', (list) => {
+          // Numbered after the highest so far, so deleting one never reuses a number
+          hunt.number = list.reduce((top, h) => Math.max(top, h.number ?? 0), 0) + 1
+          return [hunt, ...list]
+        })
+        return json(200, { hunts })
       }
       const [id, action] = rest.split('/')
       const hunts = await update('hunts', (list) => {

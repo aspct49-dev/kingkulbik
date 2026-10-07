@@ -46,20 +46,26 @@ function HuntView({ hunt }: { hunt: Hunt }) {
   return (
     <>
       <div className="events-title">
-        <h2 className="events-title__name">{hunt.name}</h2>
+        <h2 className="events-title__name">
+          {hunt.number && <span className="events-accent">#{hunt.number} </span>}
+          {hunt.name}
+          {hunt.casino && <span className="events-muted"> · {hunt.casino}</span>}
+        </h2>
         <span className={`events-chip events-chip--${hunt.status}`}>{STAGE[hunt.status]}</span>
       </div>
 
       <ul className="events-stats">
-        <Stat label="Start balance" value={usd(hunt.startBalance)} />
+        <Stat label="Start cost" value={usd(hunt.startBalance)} />
+        <Stat label="Winnings" value={usd(s.totalWon)} tone={s.opened && s.profit >= 0 ? 'up' : undefined} />
         <Stat label="Bonuses" value={`${s.opened}/${s.count} opened`} />
-        <Stat label="Total won" value={usd(s.totalWon)} tone={s.opened ? (s.profit >= 0 ? 'up' : undefined) : undefined} />
-        <Stat label={hunt.status === 'opening' ? 'Needed now' : 'Break-even'} value={x(hunt.status === 'opening' ? s.liveBreakEven : s.breakEven)} />
-        <Stat label="Average" value={x(s.average)} />
+        <Stat label="Req X" value={x(s.liveBreakEven ?? s.breakEven)} detail={s.avgRequired !== null ? `${usd(s.avgRequired)} per bonus` : undefined} />
+        <Stat label="Run average" value={x(s.average)} detail={s.currentAverage !== null ? `${usd(s.currentAverage)} per bonus` : undefined} />
+        <Stat label="Best win" value={s.bestWin ? usd(s.bestWin.payout ?? 0) : '—'} detail={s.bestWin?.game} />
+        <Stat label="Lucky win" value={s.luckyWin ? x(bonusMultiplier(s.luckyWin)) : '—'} detail={s.luckyWin?.game} />
         <Stat
-          label="Best win"
-          value={s.best ? `${x(bonusMultiplier(s.best))}` : '—'}
-          detail={s.best?.game}
+          label="Profit/Loss"
+          value={s.opened ? `${s.profit < 0 ? '-' : ''}${usd(Math.abs(s.profit))}` : '—'}
+          tone={s.opened ? (s.profit >= 0 ? 'up' : 'down') : undefined}
         />
       </ul>
 
@@ -83,7 +89,7 @@ function HuntView({ hunt }: { hunt: Hunt }) {
           {hunt.bonuses.map((b, i) => {
             const m = bonusMultiplier(b)
             return (
-              <div key={b.id} role="row" className={`events-table__row${s.best?.id === b.id ? ' events-table__row--best' : ''}${b.payout === null ? ' events-table__row--waiting' : ''}`}>
+              <div key={b.id} role="row" className={`events-table__row${s.luckyWin?.id === b.id ? ' events-table__row--best' : ''}${b.payout === null ? ' events-table__row--waiting' : ''}`}>
                 <span role="cell" className="events-table__index">
                   {i + 1}
                 </span>
@@ -94,8 +100,15 @@ function HuntView({ hunt }: { hunt: Hunt }) {
                     <span className="events-table__art" aria-hidden />
                   )}
                   <span className="events-table__text">
-                    <span className="events-table__game">{b.game}</span>
-                    {b.provider && <span className="events-table__provider">{b.provider}</span>}
+                    <span className="events-table__game">
+                      {b.game}
+                      {b.badge && <span className="events-badge">{b.badge}</span>}
+                    </span>
+                    {(b.provider || b.note) && (
+                      <span className="events-table__provider">
+                        {[b.provider, b.note].filter(Boolean).join(' · ')}
+                      </span>
+                    )}
                   </span>
                 </span>
                 <span role="cell">{usd(b.bet)}</span>
@@ -114,7 +127,7 @@ function HuntView({ hunt }: { hunt: Hunt }) {
   )
 }
 
-function Stat({ label, value, detail, tone }: { label: string; value: string; detail?: string; tone?: 'up' }) {
+function Stat({ label, value, detail, tone }: { label: string; value: string; detail?: string; tone?: 'up' | 'down' }) {
   return (
     <li className="events-stat">
       <span className="events-stat__label">{label}</span>

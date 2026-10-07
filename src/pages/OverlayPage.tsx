@@ -61,47 +61,75 @@ function HuntPanel({ hunt }: { hunt: Hunt }) {
     <section className="ov-panel ov-hunt">
       <header className="ov-head">
         <span className="ov-head__title">Bonus Hunt</span>
-        <Brand />
+        {hunt.number ? <span className="ov-hunt__number">#{hunt.number}</span> : <Brand />}
       </header>
-      <div className="ov-stats">
-        <span>
-          <em>Start</em>
-          {usd(hunt.startBalance)}
-        </span>
-        <span>
-          <em>Won</em>
-          {usd(s.totalWon)}
-        </span>
-        <span>
-          <em>{hunt.status === 'opening' ? 'Needed' : 'Break-even'}</em>
-          {x(hunt.status === 'opening' ? s.liveBreakEven : s.breakEven)}
-        </span>
-        <span>
-          <em>Opened</em>
-          {s.opened}/{s.count}
-        </span>
+      <dl className="ov-hunt__stats">
+        <HuntFigure label="Start" value={usd(hunt.startBalance)} />
+        <HuntFigure label="Winnings" value={usd(s.totalWon)} />
+        <HuntFigure label="Total bonuses" value={String(s.count)} />
+        <HuntFigure label="Remaining" value={String(s.remaining)} />
+        <HuntFigure label="Run average" value={x(s.average)} />
+        <HuntFigure label="Req average" value={x(s.liveBreakEven ?? s.breakEven)} />
+      </dl>
+      <div className="ov-hunt__wins">
+        <WinCard label="Best win" bonus={s.bestWin} value={s.bestWin ? `${usd(s.bestWin.payout ?? 0)} (${usd(s.bestWin.bet)})` : null} />
+        <WinCard
+          label="Lucky win"
+          bonus={s.luckyWin}
+          value={s.luckyWin ? `${x(bonusMultiplier(s.luckyWin))} (${usd(s.luckyWin.payout ?? 0)})` : null}
+        />
       </div>
-      <ol className="ov-list" start={from + 1}>
-        {shown.map((b, i) => {
-          const m = bonusMultiplier(b)
-          const current = from + i === next
-          return (
-            <li key={b.id} className={`ov-list__row${current ? ' ov-list__row--current' : ''}${s.best?.id === b.id ? ' ov-list__row--best' : ''}`}>
-              <span className="ov-list__n">{from + i + 1}</span>
-              {b.image ? <img src={b.image.replace('w=300', 'w=80')} width={21} height={28} alt="" /> : <span className="ov-list__art" />}
-              <span className="ov-list__game">{b.game}</span>
-              <span className="ov-list__bet">{usd(b.bet)}</span>
-              <span className={`ov-list__multi${m !== null && m >= 100 ? ' ov-gold' : ''}`}>{m === null ? '' : x(m)}</span>
-            </li>
-          )
-        })}
-      </ol>
-      {s.best && (
-        <footer className="ov-foot">
-          Best: <strong>{s.best.game}</strong> {x(bonusMultiplier(s.best))}
-        </footer>
+      {shown.length > 0 && (
+        <ol className="ov-list" start={from + 1}>
+          <li className="ov-list__row ov-list__row--head" aria-hidden>
+            <span className="ov-list__n">#</span>
+            <span />
+            <span className="ov-list__game">Game</span>
+            <span className="ov-list__bet">Bet size</span>
+            <span className="ov-list__multi">Payout</span>
+          </li>
+          {shown.map((b, i) => {
+            const m = bonusMultiplier(b)
+            const current = from + i === next
+            return (
+              <li key={b.id} className={`ov-list__row${current ? ' ov-list__row--current' : ''}${s.luckyWin?.id === b.id ? ' ov-list__row--best' : ''}`}>
+                <span className="ov-list__n">{from + i + 1}</span>
+                {b.image ? <img src={b.image.replace('w=300', 'w=80')} width={21} height={28} alt="" /> : <span className="ov-list__art" />}
+                <span className="ov-list__game ov-list__game--badged">
+                  <span className="ov-list__name">{b.game}</span>
+                  {b.badge && <span className="ov-hunt__badge">{b.badge}</span>}
+                </span>
+                <span className="ov-list__bet">{usd(b.bet)}</span>
+                <span className={`ov-list__multi${m !== null && m >= 100 ? ' ov-gold' : ''}`}>{b.payout === null ? '' : usd(b.payout)}</span>
+              </li>
+            )
+          })}
+        </ol>
       )}
     </section>
+  )
+}
+
+function HuntFigure({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="ov-hunt__figure">
+      <dt>{label}</dt>
+      <dd>{value}</dd>
+    </div>
+  )
+}
+
+/** Best win (biggest payout) and lucky win (biggest multiplier) */
+function WinCard({ label, bonus, value }: { label: string; bonus: Hunt['bonuses'][number] | null; value: string | null }) {
+  return (
+    <div className="ov-hunt__win">
+      {bonus?.image ? <img src={bonus.image.replace('w=300', 'w=120')} width={42} height={56} alt="" /> : <span className="ov-hunt__win-art" />}
+      <span className="ov-hunt__win-text">
+        <span className="ov-hunt__win-label">★ {label}</span>
+        <span className="ov-hunt__win-game">{bonus?.game ?? '—'}</span>
+        <span className="ov-hunt__win-value">{value ?? '—'}</span>
+      </span>
+    </div>
   )
 }
 

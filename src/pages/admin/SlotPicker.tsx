@@ -120,7 +120,9 @@ export default function SlotPicker({
     } else if (e.key === 'Enter' && open && results[active]) {
       e.preventDefault()
       pick(results[active])
-    } else if (e.key === 'Escape') {
+    } else if (e.key === 'Escape' && open) {
+      // Close just the menu, not a dialog the picker sits in
+      e.preventDefault()
       setOpen(false)
     }
   }
