@@ -8,18 +8,18 @@
 }
 
 /* Decorative symbols, positioned from the page centre as in the design */
-.lb-hero__symbol--high3 {
+.lb-hero__symbol--coin {
   left: calc(50% - 366.5px);
   top: 166px;
-  width: 65.166px;
-  height: 65.166px;
+  width: 45.246px;
+  height: 46.577px;
 }
 
-.lb-hero__symbol--m2 {
-  left: calc(50% + 286.5px);
-  top: 82px;
-  width: 41.826px;
-  height: 41.826px;
+.lb-hero__symbol--rune {
+  left: calc(50% + 327.5px);
+  top: 98px;
+  width: 49.844px;
+  height: 49.844px;
 }
 
 .lb-hero__picker {

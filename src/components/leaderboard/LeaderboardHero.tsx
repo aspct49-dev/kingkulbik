@@ -1,8 +1,8 @@
 import stakeLogo from '../../assets/leaderboard/stake-logo.svg'
 import stakeLogoMuted from '../../assets/leaderboard/stake-logo-muted.svg'
 import stakeLogoDark from '../../assets/leaderboard/stake-logo-dark.svg'
-import symbolHigh3 from '../../assets/leaderboard/symbol-high3.png'
-import symbolM2 from '../../assets/leaderboard/symbol-m2.png'
+import symbolCoin from '../../assets/leaderboard/symbol-coin.webp'
+import symbolRune from '../../assets/leaderboard/symbol-rune.webp'
 import CopyCodeButton from '../CopyCodeButton'
 import FloatingSymbol from '../FloatingSymbol'
 import { STAKE_URL } from '../../data/links'
@@ -43,17 +43,17 @@ export default function LeaderboardHero({ board, onBoardChange }: LeaderboardHer
   return (
     <section className="lb-hero">
       <FloatingSymbol
-        className="lb-hero__symbol lb-hero__symbol--high3"
-        src={symbolHigh3}
-        size={56.184}
-        rotation={-10.1}
+        className="lb-hero__symbol lb-hero__symbol--coin"
+        src={symbolCoin}
+        size={{ width: 45.246, height: 44.68 }}
+        rotation={0}
         idle={0}
       />
       <FloatingSymbol
-        className="lb-hero__symbol lb-hero__symbol--m2"
-        src={symbolM2}
-        size={34.434}
-        rotation={14.2}
+        className="lb-hero__symbol lb-hero__symbol--rune"
+        src={symbolRune}
+        size={49.844}
+        rotation={0}
         idle={2.1}
       />
 
