@@ -18,9 +18,10 @@ import './RafflesPage.css'
 
 type Tab = RaffleKind | 'chat'
 
+/** The viewers' watch-time raffle comes first and opens by default */
 const TABS: { id: Tab; label: string }[] = [
-  { id: 'wager', label: 'Wager Raffle' },
   { id: 'watch', label: 'Watch-Time Raffle' },
+  { id: 'wager', label: 'Wager Raffle' },
   { id: 'chat', label: 'Chat Giveaways' },
 ]
 
@@ -37,7 +38,7 @@ export default function RafflesPage() {
   const [params, setParams] = useSearchParams()
   const raffles = data?.raffles ?? []
   const requested = params.get('tab') as Tab | null
-  const tab: Tab = requested && TABS.some((t) => t.id === requested) ? requested : 'wager'
+  const tab: Tab = requested && TABS.some((t) => t.id === requested) ? requested : 'watch'
   const raffle = tab === 'chat' ? null : raffles.find((r) => r.kind === tab) ?? null
 
   return (
@@ -53,7 +54,7 @@ export default function RafflesPage() {
               role="tab"
               aria-selected={tab === t.id}
               className={`kk-tab${tab === t.id ? ' kk-tab--selected' : ''}`}
-              onClick={() => setParams(t.id === 'wager' ? {} : { tab: t.id }, { replace: true })}
+              onClick={() => setParams(t.id === 'watch' ? {} : { tab: t.id }, { replace: true })}
             >
               {t.label}
             </button>
