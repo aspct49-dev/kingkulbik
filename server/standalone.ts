@@ -19,6 +19,7 @@ import { fileURLToPath } from 'node:url'
 import { serveApi } from './api.js'
 import type { AuthEnv } from './auth.js'
 import { handleLeaderboardRequest } from './stakeLeaderboard.js'
+import { storeKind } from './store.js'
 
 const PORT = Number(process.env.PORT) || 3000
 const HOST = process.env.HOST || '127.0.0.1'
@@ -148,5 +149,5 @@ createServer((req, res) => {
 }).listen(PORT, HOST, () => {
   console.log(`[server] King Kulbik on http://${HOST}:${PORT} (serving ${ROOT})`)
   if (!env.SESSION_SECRET) console.warn('[server] SESSION_SECRET is not set: sign-in will not work')
-  console.log(`[server] store: ${process.env.DATABASE_URL ? 'Neon Postgres' : `files in ${process.env.DATA_DIR || 'data/'}`}`)
+  console.log(`[server] store: ${storeKind()}`)
 })

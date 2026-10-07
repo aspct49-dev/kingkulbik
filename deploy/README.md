@@ -65,6 +65,31 @@ It pulls `main`, installs, builds and restarts, then checks the site answers. Op
 `SITE_URL` puts your domain in the search and share tags (sitemap, link previews). Once the site
 is live, submit `https://yourdomain.com/sitemap.xml` in Google Search Console.
 
+## Database on the VPS
+
+The data (players, bets, King Points history, shop, raffles, events) lives in PostgreSQL on the
+VPS itself. Set it up once:
+
+```bash
+sudo bash /opt/kingkulbik/deploy/postgres.sh
+```
+
+It installs PostgreSQL (reachable only from the server), creates the `kingkulbik` database,
+writes `DATABASE_URL` into `.env`, and takes a backup every day into
+`/var/lib/kingkulbik/backups` (14 days kept).
+
+To bring existing data over from another database (e.g. the old Neon one) — read only, nothing
+is changed there — and download uploaded images from Vercel Blob onto the server:
+
+```bash
+cd /opt/kingkulbik
+sudo -u kingkulbik node --env-file=.env deploy/copy-data.mjs 'postgresql://…old database URL…'
+systemctl restart kingkulbik
+```
+
+`journalctl -u kingkulbik -n 5 --no-pager | grep store` should then say `PostgreSQL`.
+Restore a backup with `sudo -u postgres pg_restore --clean -d kingkulbik /var/lib/kingkulbik/backups/kingkulbik-YYYY-MM-DD.dump`.
+
 ## Updating later
 
 After pushing to GitHub: `sudo bash /opt/kingkulbik/deploy/update.sh`. If a build fails, the restart

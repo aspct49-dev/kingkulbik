@@ -3,11 +3,12 @@
  * feed, stream events (hunts, guesses, tournaments, giveaway) and uploaded
  * images.
  *
- * With DATABASE_URL (Neon Postgres) each table is one jsonb row in kk_store,
- * read fresh on every call (Vercel runs many instances, so nothing is cached).
- * Writes are optimistic: a row carries a version, and update() retries if
- * another instance saved in between. Neon is reached over HTTPS, which also
- * works where port 5432 is blocked.
+ * With DATABASE_URL each table is one jsonb row in kk_store, read fresh on
+ * every call (Vercel runs many instances, so nothing is cached). Writes are
+ * optimistic: a row carries a version, and update() retries if another
+ * instance saved in between. A Neon address (*.neon.tech) is reached over
+ * HTTPS, which also works where port 5432 is blocked; any other address is a
+ * regular PostgreSQL server (the VPS's own, deploy/postgres.sh).
  *
  * With BLOB_READ_WRITE_TOKEN, uploads go to the public Vercel Blob store and
  * are referenced by their Blob URL.
@@ -20,6 +21,7 @@
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { neon } from '@neondatabase/serverless'
+import pg from 'pg'
 import { put } from '@vercel/blob'
 import { DEFAULT_CHALLENGES, DEFAULT_STORE_ITEMS } from '../shared/content.js'
 import type { Challenge, StoreItem } from '../shared/content.js'
@@ -90,14 +92,39 @@ export const uploadsDir = () => path.join(dataDir(), 'uploads')
 
 // ---------------------------------------------------------------- database
 
-type Sql = ReturnType<typeof neon>
+/** What the store needs from a database: run a statement, get its rows */
+type Sql = { query: (text: string, params?: unknown[]) => Promise<Record<string, unknown>[]> }
 let client: Sql | null | undefined
 let schema: Promise<unknown> | null = null
 
-/** The Neon client, or null when DATABASE_URL isn't set (file mode) */
+const isNeon = (url: string) => {
+  try {
+    return new URL(url).hostname.endsWith('.neon.tech')
+  } catch {
+    return false
+  }
+}
+
+/** The database (Neon over HTTPS, or a regular PostgreSQL server), or null when DATABASE_URL isn't set (file mode) */
 function db(): Sql | null {
-  if (client === undefined) client = process.env.DATABASE_URL ? neon(process.env.DATABASE_URL) : null
+  if (client !== undefined) return client
+  const url = process.env.DATABASE_URL
+  if (!url) return (client = null)
+  if (isNeon(url)) {
+    const sql = neon(url)
+    client = { query: async (text, params = []) => (await sql.query(text, params)) as Record<string, unknown>[] }
+  } else {
+    const pool = new pg.Pool({ connectionString: url, max: 10 })
+    pool.on('error', (err) => console.error('[store] database connection error:', err.message))
+    client = { query: async (text, params = []) => (await pool.query(text, params)).rows as Record<string, unknown>[] }
+  }
   return client
+}
+
+/** Which store is in use, for the startup log */
+export const storeKind = () => {
+  const url = process.env.DATABASE_URL
+  return !url ? `files in ${dataDir()}` : isNeon(url) ? 'Neon Postgres' : 'PostgreSQL'
 }
 
 async function query(sql: Sql, text: string, params: unknown[] = []): Promise<Record<string, unknown>[]> {
@@ -116,7 +143,7 @@ async function query(sql: Sql, text: string, params: unknown[] = []): Promise<Re
     })
   try {
     await schema
-    return (await sql.query(text, params)) as Record<string, unknown>[]
+    return await sql.query(text, params)
   } catch (err) {
     console.error('[store] database error:', err)
     throw new StoreError('Could not reach the database. Please try again.')
