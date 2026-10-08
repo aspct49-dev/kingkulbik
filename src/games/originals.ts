@@ -81,7 +81,7 @@ export function usePlayBalance(returnTo: string) {
   const { status, user } = useAuth()
   const points = usePoints()
   let gate: PlayGate = null
-  if (status === 'ready' && !user) gate = { label: 'Sign in to play', href: signInUrl(returnTo), reason: 'Sign in with Discord to play with your King Points.' }
+  if (status === 'ready' && !user) gate = { label: 'Sign in to play', href: signInUrl(returnTo), reason: 'Sign in with Kick to play with your King Points.' }
   else if (user && !user.kick) gate = { label: 'Link Kick to play', href: linkKickUrl(returnTo), reason: 'King Points live on Kick: link your Kick account to play.' }
   const ready = status === 'ready' && Boolean(user?.kick) && points.status === 'ready' && points.data !== null
   return {

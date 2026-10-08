@@ -1,11 +1,21 @@
 import { useEffect, useSyncExternalStore } from 'react'
 
 export type AuthUser = {
-  discord: { id: string; username: string; name: string; avatar: string | null }
-  kick: { id: string; username: string } | null
+  /** Accounts made with Kick: kick-<Kick user id> (accounts made with Discord use the Discord id) */
+  id?: string
+  /** null: made with Kick, Discord not linked */
+  discord: { id: string; username: string; name: string; avatar: string | null } | null
+  kick: { id: string; username: string; avatar?: string | null } | null
   stake?: { username: string; linkedAt: number } | null
   signedInAt: number
+  /** How this browser signed in (older sessions: Discord) */
+  via?: 'discord' | 'kick'
 }
+
+/** The name shown for a player: Discord's, else Kick's */
+export const userName = (user: AuthUser) => user.discord?.name ?? user.kick?.username ?? 'Player'
+
+export const userAvatar = (user: AuthUser) => user.discord?.avatar ?? user.kick?.avatar ?? null
 
 type AuthState = { status: 'loading' | 'ready'; user: AuthUser | null; /** In ADMIN_DISCORD_IDS */ admin: boolean }
 
@@ -50,18 +60,24 @@ function subscribe(listener: () => void) {
   return () => listeners.delete(listener)
 }
 
-/** The signed-in user (Discord, plus a linked Kick account), or null */
+/** The signed-in user (Kick and/or Discord), or null */
 export function useAuth() {
   return useSyncExternalStore(subscribe, () => state)
 }
 
-/** Full-page redirect into Discord sign-in, coming back to `returnTo` (defaults to here) */
+/** The sign-in page (Kick or Discord), coming back to `returnTo` (defaults to here) */
 export function signInUrl(returnTo = window.location.pathname) {
-  return `/api/auth/discord/login?return=${encodeURIComponent(returnTo)}`
+  return `/account?return=${encodeURIComponent(returnTo)}`
 }
 
+/** Full-page redirect into Kick: signs in, or links Kick when already signed in */
 export function linkKickUrl(returnTo = window.location.pathname) {
   return `/api/auth/kick/login?return=${encodeURIComponent(returnTo)}`
+}
+
+/** Full-page redirect into Discord: signs in, or links Discord to a Kick sign-in */
+export function discordUrl(returnTo = window.location.pathname) {
+  return `/api/auth/discord/login?return=${encodeURIComponent(returnTo)}`
 }
 
 export async function signOut() {

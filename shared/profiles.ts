@@ -1,6 +1,6 @@
 /*
  * Player profiles: what the server remembers about each signed-in player
- * (Discord, linked accounts, originals totals), their originals bet history
+ * (Discord and Kick, linked accounts, originals totals), their originals bet history
  * and their Item Store redemptions. Shared by the server, the account page
  * and the admin panel.
  */
@@ -9,12 +9,15 @@ import type { GameId } from './originals.js'
 import type { ItemTier } from './content.js'
 
 export type PlayerProfile = {
-  /** Discord user id */
+  /** Account id: the Discord id (accounts made with Discord), or kick-<Kick user id> (made with Kick) */
   id: string
+  /** The linked Discord (null: none). Older profiles leave it out: their id is the Discord id */
+  discordId?: string | null
+  /** Discord name, username and avatar; Kick's when no Discord is linked */
   name: string
   username: string
   avatar: string | null
-  kick: { id: string; username: string } | null
+  kick: { id: string; username: string; avatar?: string | null } | null
   stake: { username: string } | null
   firstSeen: number
   lastSeen: number

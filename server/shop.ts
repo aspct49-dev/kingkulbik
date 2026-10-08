@@ -21,6 +21,7 @@
 
 import { randomBytes } from 'node:crypto'
 import type { PointsLogEntry, Redemption } from '../shared/profiles.js'
+import { accountId, displayName } from './accounts.js'
 import { isAdmin, json, readSession } from './auth.js'
 import type { AuthEnv, AuthRequest, AuthResponse } from './auth.js'
 import { adjustBotrixPoints, BotrixError, getBotrixViewer } from './botrix.js'
@@ -142,7 +143,7 @@ export async function handleShopRequest(req: AuthRequest, env: AuthEnv): Promise
       const { cooldownDays } = await read('shopSettings')
       if (cooldownDays > 0 && !isAdmin(user, env)) {
         const last = (await read('redemptions'))
-          .filter((r) => r.userId === user.discord.id && (r.status === 'pending' || r.status === 'fulfilled'))
+          .filter((r) => r.userId === accountId(user) && (r.status === 'pending' || r.status === 'fulfilled'))
           .sort((a, b) => b.at - a.at)[0]
         const wait = last ? last.at + cooldownDays * DAY - Date.now() : 0
         if (wait > 0) {
@@ -171,15 +172,15 @@ export async function handleShopRequest(req: AuthRequest, env: AuthEnv): Promise
       } catch (err) {
         await restock(item.id, 1)
         const message = err instanceof Error ? err.message : 'Could not take the points.'
-        await log({ kick, delta: -item.price, kind: 'redeem', reason: item.name, by: user.discord.name, ok: false, error: message })
+        await log({ kick, delta: -item.price, kind: 'redeem', reason: item.name, by: displayName(user), ok: false, error: message })
         throw new InputError(err instanceof BotrixError && err.code === 'insufficient' ? 'You don’t have enough King Points.' : message, 502)
       }
-      await log({ kick, delta: -item.price, kind: 'redeem', reason: item.name, by: user.discord.name, ok: true })
+      await log({ kick, delta: -item.price, kind: 'redeem', reason: item.name, by: displayName(user), ok: true })
 
       const redemption: Redemption = {
         id: randomBytes(6).toString('hex'),
-        userId: user.discord.id,
-        player: user.discord.name,
+        userId: accountId(user),
+        player: displayName(user),
         kick,
         itemId: item.id,
         itemName: item.name,
@@ -207,16 +208,16 @@ export async function handleShopRequest(req: AuthRequest, env: AuthEnv): Promise
     if (cancel) {
       if (req.method !== 'POST') return json(405, { error: 'Use POST.' })
       if (!user) return json(401, { error: 'Sign in with Discord first.' })
-      await closeWithRefund(cancel[1], 'cancelled', user.discord.name, env, '', user.discord.id)
+      await closeWithRefund(cancel[1], 'cancelled', displayName(user), env, '', accountId(user))
       const viewer = user.kick ? await getBotrixViewer(user.kick.username, true).catch(() => null) : null
-      return json(200, { redemptions: (await read('redemptions')).filter((r) => r.userId === user.discord.id), points: viewer?.points ?? null })
+      return json(200, { redemptions: (await read('redemptions')).filter((r) => r.userId === accountId(user)), points: viewer?.points ?? null })
     }
 
     if (isShop) return json(404, { error: 'Not found.' })
 
     // ---- admin
     if (!isAdmin(user, env)) return json(user ? 403 : 401, { error: 'Admins only.' })
-    const admin = user!.discord.name
+    const admin = displayName(user!)
 
     if (path === '/api/admin/redemptions') return json(200, { redemptions: await read('redemptions') })
 

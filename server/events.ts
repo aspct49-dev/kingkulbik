@@ -61,6 +61,7 @@ import type {
   PublicGuessRound,
   Tournament,
 } from '../shared/events.js'
+import { accountId, displayName, userAvatar } from './accounts.js'
 import { isAdmin, json, readSession } from './auth.js'
 import type { AuthEnv, AuthRequest, AuthResponse } from './auth.js'
 import { getBotrixViewer } from './botrix.js'
@@ -303,12 +304,12 @@ export async function handleEventsRequest(req: AuthRequest, env: AuthEnv): Promi
           const round = rounds.find((r) => r.status !== 'drawn') ?? rounds[0]
           if (!round) throw new InputError('There is no round right now.')
           if (round.status !== 'open') throw new InputError('Entries are closed for this round.')
-          round.guesses = round.guesses.filter((g) => g.userId !== user.discord.id)
-          round.guesses.push({ userId: user.discord.id, name: user.discord.name, avatar: user.discord.avatar, value, at: Date.now() })
+          round.guesses = round.guesses.filter((g) => g.userId !== accountId(user))
+          round.guesses.push({ userId: accountId(user), name: displayName(user), avatar: userAvatar(user), value, at: Date.now() })
           return rounds
         })
       }
-      return json(200, { round: await publicGuessRound(user?.discord.id ?? null) })
+      return json(200, { round: await publicGuessRound((user ? accountId(user) : null)) })
     }
 
     const admin = path.match(/^\/api\/admin\/(hunts|guess|tournaments|giveaway|kick)(?:\/(.*))?$/)

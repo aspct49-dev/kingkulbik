@@ -57,6 +57,23 @@
   color: var(--color-text);
 }
 
+/* Kick's green, with its glyph in the page's dark */
+.account-button--kick {
+  background: #53fc18;
+  box-shadow: inset 0 1px 0 0 #8dff66;
+  color: #0e1219;
+}
+
+.account-button--kick .account-glyph {
+  background: #0e1219;
+}
+
+.account-signin__buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
 .account-button--dark {
   background: var(--nav-item-from);
   box-shadow: inset 0 1px 0 0 #364151;
@@ -67,6 +84,10 @@
 @media (hover: hover) and (pointer: fine) {
   .account-button--discord:hover {
     background: linear-gradient(to right, #2e3f7a, #4f63a8);
+  }
+
+  .account-button--kick:hover {
+    background: #43cc13;
   }
 
   .account-button--dark:hover {

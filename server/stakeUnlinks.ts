@@ -2,11 +2,12 @@
  * Admin unlinks of a player's Stake username.
  *
  * The link lives in the player's signed session cookie, which only their
- * browser holds, so an unlink is recorded here (Discord id → when) and applied
+ * browser holds, so an unlink is recorded here (account id → when) and applied
  * on the player's next request: a link made before the unlink is dropped and
  * the cookie is rewritten without it. Linking again afterwards works as usual.
  */
 
+import { accountId } from './accounts.js'
 import type { AuthEnv, AuthRequest, SessionUser } from './auth.js'
 import { cookie, origin, parseCookies, readSession, seal, SESSION_COOKIE, SESSION_DAYS } from './auth.js'
 import { read, update } from './store.js'
@@ -20,11 +21,11 @@ async function unlinks() {
 }
 
 /** Remove a player's Stake link (admin): from their profile now, from their cookie on their next visit */
-export async function unlinkStake(discordId: string) {
+export async function unlinkStake(id: string) {
   const at = Math.floor(Date.now() / 1000)
-  const next = await update('stakeUnlinks', (all) => ({ ...all, [discordId]: at }))
+  const next = await update('stakeUnlinks', (all) => ({ ...all, [id]: at }))
   cache = { at: Date.now(), unlinks: next }
-  await update('players', (players) => players.map((p) => (p.id === discordId ? { ...p, stake: null } : p)))
+  await update('players', (players) => players.map((p) => (p.id === id ? { ...p, stake: null } : p)))
 }
 
 /**
@@ -35,7 +36,7 @@ export async function unlinkStake(discordId: string) {
 export async function applyStakeUnlink(req: AuthRequest, env: AuthEnv): Promise<string | null> {
   const user = readSession(req, env)
   if (!user?.stake || !env.SESSION_SECRET) return null
-  const unlinkedAt = (await unlinks().catch(() => ({}) as Record<string, number>))[user.discord.id]
+  const unlinkedAt = (await unlinks().catch(() => ({}) as Record<string, number>))[accountId(user)]
   if (!unlinkedAt || user.stake.linkedAt > unlinkedAt) return null
 
   const session: SessionUser = { ...user, stake: null }

@@ -6,7 +6,7 @@ import coinIcon from '../assets/coin.svg'
 import gemIcon from '../assets/keno/gem.svg'
 import PageHeading from '../components/PageHeading'
 import Toast, { useToast } from '../components/Toast'
-import { signInUrl } from '../hooks/useAuth'
+import { discordUrl } from '../hooks/useAuth'
 import { setChallenges, setOriginalsRules, setStoreItems } from '../hooks/useContent'
 import { useLiveBets } from '../hooks/useLiveBets'
 import { formatPoints } from '../components/keno/format'
@@ -115,14 +115,26 @@ export default function AdminPage() {
 
         {status.kind === 'signed-out' && (
           <Gate title="Sign in to continue" text="The admin panel is for the King Kulbik team. Sign in with Discord.">
-            <a className="kk-button store-gate__button" href={signInUrl('/admin')}>
+            <a className="kk-button store-gate__button" href={discordUrl('/admin')}>
               Sign in with Discord
             </a>
           </Gate>
         )}
 
         {status.kind === 'forbidden' && (
-          <Gate title="Admins only" text="This Discord account isn't on the admin list.">
+          <Gate
+            title="Admins only"
+            text={
+              status.discordId
+                ? 'This account isn’t on the admin list, or it signed in with Kick: admins sign in with Discord.'
+                : 'Admins sign in with Discord.'
+            }
+          >
+            {!status.discordId && (
+              <a className="kk-button store-gate__button" href={discordUrl('/admin')}>
+                Sign in with Discord
+              </a>
+            )}
             {status.discordId && (
               <p className="admin-gate__id">
                 Your Discord ID: <code>{status.discordId}</code>

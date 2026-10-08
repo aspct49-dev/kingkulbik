@@ -23,9 +23,13 @@
     #171f2c;
 }
 
+/* Sized like the raffle page's sign-in button */
 .gtb-guess__signin {
   align-self: flex-start;
+  height: 34px;
   margin-top: 16px;
+  padding: 0 18px;
+  font-size: 14px;
 }
 
 .gtb-label {

@@ -37,6 +37,7 @@ import {
 } from '../shared/originals.js'
 import type { FairnessState, FeedBet, OwedPayout, PfState } from '../shared/originals.js'
 import type { PointsLogEntry } from '../shared/profiles.js'
+import { accountId, displayName } from './accounts.js'
 import { json, readSession } from './auth.js'
 import type { AuthEnv, AuthRequest, AuthResponse, SessionUser } from './auth.js'
 import { adjustBotrixPoints, BotrixError } from './botrix.js'
@@ -113,7 +114,7 @@ async function takeBet(user: Player, bet: number, env: AuthEnv) {
 /** Give a bet back when the game couldn't go ahead after it was taken */
 async function returnBet(user: Player, bet: number, env: AuthEnv) {
   await adjustBotrixPoints(user.kick.username, bet, env.BOTRIX_BID).catch((err) =>
-    logPoints({ kick: user.kick.username, delta: bet, kind: 'originals', reason: 'Bet returned', by: user.discord.name, ok: false, error: err instanceof Error ? err.message : 'Failed' }),
+    logPoints({ kick: user.kick.username, delta: bet, kind: 'originals', reason: 'Bet returned', by: displayName(user), ok: false, error: err instanceof Error ? err.message : 'Failed' }),
   )
 }
 
@@ -157,7 +158,7 @@ async function payOwed(o: OwedPayout, by: string, env: AuthEnv) {
  */
 async function payWin(user: Player, amount: number, reason: string, env: AuthEnv) {
   if (amount <= 0) return
-  const owed: OwedPayout = { id: randomBytes(6).toString('hex'), userId: user.discord.id, kick: user.kick.username, amount, reason, at: Date.now(), attempts: 0 }
+  const owed: OwedPayout = { id: randomBytes(6).toString('hex'), userId: accountId(user), kick: user.kick.username, amount, reason, at: Date.now(), attempts: 0 }
   try {
     await update('owedPayouts', (list) => [...list, owed])
   } catch {
@@ -165,13 +166,13 @@ async function payWin(user: Player, amount: number, reason: string, env: AuthEnv
     await adjustBotrixPoints(user.kick.username, amount, env.BOTRIX_BID)
     return
   }
-  later(payOwed(owed, user.discord.name, env))
+  later(payOwed(owed, displayName(user), env))
 }
 
 /** Pay anything still owed to this player */
 async function settleOwed(user: Player, env: AuthEnv) {
-  const mine = (await read('owedPayouts')).filter((o) => o.userId === user.discord.id)
-  for (const o of mine) await payOwed(o, user.discord.name, env).catch(() => undefined)
+  const mine = (await read('owedPayouts')).filter((o) => o.userId === accountId(user))
+  for (const o of mine) await payOwed(o, displayName(user), env).catch(() => undefined)
 }
 
 // ---------------------------------------------------------------- helpers
@@ -219,12 +220,12 @@ export async function handleOriginalsRequest(req: AuthRequest, env: AuthEnv): Pr
     if (!session) throw new GameError('Sign in with Discord to play.', 401)
     if (!session.kick) throw new GameError('Link your Kick account to play with King Points.', 403)
     const user = session as Player
-    const player = user.discord.name
+    const player = displayName(user)
 
     const [rules] = await Promise.all([read('rules'), settleOwed(user, env)])
 
     if (route === 'fairness') {
-      const { state } = await withState(user.discord.id, () => undefined)
+      const { state } = await withState(accountId(user), () => undefined)
       return json(200, { fairness: await fairness(state) })
     }
 
@@ -234,7 +235,7 @@ export async function handleOriginalsRequest(req: AuthRequest, env: AuthEnv): Pr
       const body = parseBody<{ clientSeed?: string }>(req.body)
       const requested = String(body?.clientSeed ?? '').trim()
       if (requested && !/^[\w-]{1,32}$/.test(requested)) throw new GameError('Client seed: up to 32 letters, numbers, - or _.')
-      const { state } = await withState(user.discord.id, (s) => {
+      const { state } = await withState(accountId(user), (s) => {
         if (s.coinflip) throw new GameError('Finish your Coinflip game before changing seeds.', 409)
         s.previous = { serverSeed: s.serverSeed, clientSeed: s.clientSeed, nonce: s.nonce }
         s.serverSeed = newSeed()
@@ -262,7 +263,7 @@ export async function handleOriginalsRequest(req: AuthRequest, env: AuthEnv): Pr
       let claim: { serverSeed: string; clientSeed: string; nonce: number }
       let state: PfState
       try {
-        ;({ result: claim, state } = await withState(user.discord.id, (s) => ({ serverSeed: s.serverSeed, clientSeed: s.clientSeed, nonce: s.nonce++ })))
+        ;({ result: claim, state } = await withState(accountId(user), (s) => ({ serverSeed: s.serverSeed, clientSeed: s.clientSeed, nonce: s.nonce++ })))
       } catch (err) {
         await returnBet(user, bet, env)
         throw err
@@ -299,18 +300,18 @@ export async function handleOriginalsRequest(req: AuthRequest, env: AuthEnv): Pr
       const action = body?.action
 
       if (action === 'state') {
-        const { state } = await withState(user.discord.id, () => undefined)
+        const { state } = await withState(accountId(user), () => undefined)
         return json(200, { game: state.coinflip })
       }
 
       if (action === 'start') {
         if (!r.enabled) throw new GameError('Coinflip is closed right now.', 403)
         const bet = wholeBet(body?.bet, r.minBet, r.maxBet)
-        const current = (await read('pfStates'))[user.discord.id]
+        const current = (await read('pfStates'))[accountId(user)]
         if (current?.coinflip) throw new GameError('You already have a game in progress.', 409, { game: current.coinflip })
         await takeBet(user, bet, env)
         try {
-          const { result: game } = await withState(user.discord.id, (s) => {
+          const { result: game } = await withState(accountId(user), (s) => {
             if (s.coinflip) throw new GameError('You already have a game in progress.', 409, { game: s.coinflip })
             s.coinflip = { id: randomBytes(8).toString('hex'), bet, streak: 0, calls: [], results: [], nonces: [] }
             return s.coinflip
@@ -325,7 +326,7 @@ export async function handleOriginalsRequest(req: AuthRequest, env: AuthEnv): Pr
 
       /** End the game (only if it's still the one we think) and pay what it won */
       const settle = async (gameId: string, multiplier: number, final: { calls: string[]; results: string[]; nonces: number[] }) => {
-        const { result: game, state } = await withState(user.discord.id, (s) => {
+        const { result: game, state } = await withState(accountId(user), (s) => {
           if (!s.coinflip || s.coinflip.id !== gameId) throw new GameError('That game is already over.', 409)
           const g = s.coinflip
           s.coinflip = null
@@ -355,7 +356,7 @@ export async function handleOriginalsRequest(req: AuthRequest, env: AuthEnv): Pr
         const side = body?.side
         if (side !== 'heads' && side !== 'tails') throw new GameError('Call heads or tails.')
         // Claim this flip's nonce on the game as it stands
-        const { result: claim } = await withState(user.discord.id, (s) => {
+        const { result: claim } = await withState(accountId(user), (s) => {
           if (!s.coinflip) throw new GameError('Start a game first.', 409)
           return { game: { ...s.coinflip }, serverSeed: s.serverSeed, clientSeed: s.clientSeed, nonce: s.nonce++ }
         })
@@ -374,7 +375,7 @@ export async function handleOriginalsRequest(req: AuthRequest, env: AuthEnv): Pr
         const streak = claim.game.streak + 1
         const multiplier = coinflipMultiplier(streak, r.houseEdge)
         // Record the win on the game (if it's still this game at this streak)
-        const { state } = await withState(user.discord.id, (s) => {
+        const { state } = await withState(accountId(user), (s) => {
           const g = s.coinflip
           if (!g || g.id !== claim.game.id || g.streak !== claim.game.streak) throw new GameError('That game moved on. Refresh to continue.', 409)
           Object.assign(g, { streak }, history)
@@ -388,7 +389,7 @@ export async function handleOriginalsRequest(req: AuthRequest, env: AuthEnv): Pr
       }
 
       if (action === 'cashout') {
-        const current = (await read('pfStates'))[user.discord.id]?.coinflip
+        const current = (await read('pfStates'))[accountId(user)]?.coinflip
         if (!current) throw new GameError('Start a game first.', 409)
         if (current.streak < 1) throw new GameError('Win a call before cashing out.')
         const multiplier = coinflipMultiplier(current.streak, r.houseEdge)

@@ -161,7 +161,7 @@ export async function handleAdminRequest(req: AuthRequest, env: AuthEnv): Promis
   if (route === 'status') {
     const admin = isAdmin(user, env)
     // 200 either way: the page shows the right gate without a failed request in the console
-    if (!admin) return json(200, { admin: false, signedIn: Boolean(user), discordId: user?.discord.id ?? null })
+    if (!admin) return json(200, { admin: false, signedIn: Boolean(user), discordId: user?.discord && user.via !== 'kick' ? user.discord.id : null })
     const [challenges, shop, feed, rules, hunts, guesses, tournaments, giveaway, redemptions, players] = await Promise.all([
       read('challenges'),
       read('shop'),
@@ -176,7 +176,7 @@ export async function handleAdminRequest(req: AuthRequest, env: AuthEnv): Promis
     ])
     return json(200, {
       admin: true,
-      discordId: user!.discord.id,
+      discordId: user!.discord!.id,
       challenges,
       shop,
       rules,

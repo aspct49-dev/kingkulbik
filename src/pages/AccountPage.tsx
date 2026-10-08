@@ -9,7 +9,17 @@ import stakeLogo from '../assets/leaderboard/stake-logo.svg'
 import PageHeading from '../components/PageHeading'
 import Toast, { useToast } from '../components/Toast'
 import { BetHistory, MilestoneStatus, ProfileHeader, RedemptionList } from '../components/profile/ProfileSections'
-import { linkKickUrl, linkStake, setPointsBalance, signInUrl, signOut, useAuth, usePoints, useStakeProgress } from '../hooks/useAuth'
+import {
+  discordUrl,
+  linkKickUrl,
+  linkStake,
+  setPointsBalance,
+  signOut,
+  useAuth,
+  userName,
+  usePoints,
+  useStakeProgress,
+} from '../hooks/useAuth'
 import { useProfile } from '../hooks/useProfile'
 import './ChallengesPage.css'
 import './AccountPage.css'
@@ -142,7 +152,10 @@ function CancelRedemption({ id, onDone }: { id: string; onDone: (message: string
 
 const hours = (minutes: number) => `${Math.floor(minutes / 60).toLocaleString('en-US')}h ${minutes % 60}m`
 
-/** Sign in with Discord, link Kick, see your King Points */
+/** Only same-site paths, so ?return= can't send anyone elsewhere */
+const safeReturn = (value: string | null) => (value && value.startsWith('/') && !value.startsWith('//') ? value : '/account')
+
+/** Sign in with Kick or Discord, link the other, see your King Points */
 export default function AccountPage() {
   const { status, user } = useAuth()
   const points = usePoints()
@@ -154,6 +167,8 @@ export default function AccountPage() {
 
   // Errors come back from the sign-in routes as ?auth_error=…
   const authError = params.get('auth_error')
+  // Sent here to sign in from another page: back there afterwards
+  const returnTo = safeReturn(params.get('return'))
   useEffect(() => {
     if (!authError) return
     show(authError)
@@ -168,23 +183,31 @@ export default function AccountPage() {
         <PageHeading icon={accountIcon} gold="YOUR" rest="ACCOUNT">
           {user ? (
             <>
-              Signed in with Discord as <span className="page-heading__accent">{user.discord.name}</span>
+              Signed in with {user.via === 'kick' ? 'Kick' : 'Discord'} as{' '}
+              <span className="page-heading__accent">{userName(user)}</span>
             </>
           ) : (
-            'Sign in to link your Kick and use your King Points'
+            'Sign in to use your King Points and get raffle tickets'
           )}
         </PageHeading>
 
         {!user ? (
           <section className="account-signin">
-            <h2 className="account-signin__title">Sign in with Discord</h2>
+            <h2 className="account-signin__title">Sign in</h2>
             <p className="account-signin__text">
-              One click with your Discord account. Then link your Kick to see your King Points and use the Item Store.
+              Sign in with Kick: your King Points, raffle tickets and the Item Store are ready straight away. Signed in
+              with Discord before? Use Discord and everything&rsquo;s still there.
             </p>
-            <a className="account-button account-button--discord" href={signInUrl('/account')}>
-              <img src={discordIcon} width={20} height={16} alt="" />
-              Continue with Discord
-            </a>
+            <div className="account-signin__buttons">
+              <a className="account-button account-button--kick" href={linkKickUrl(returnTo)}>
+                <Glyph src={kickIcon} width={12} height={15} />
+                Continue with Kick
+              </a>
+              <a className="account-button account-button--discord" href={discordUrl(returnTo)}>
+                <img src={discordIcon} width={20} height={16} alt="" />
+                Continue with Discord
+              </a>
+            </div>
           </section>
         ) : (
           <>
@@ -234,9 +257,17 @@ export default function AccountPage() {
                 </span>
                 <span className="account-link__text">
                   <span className="account-link__name">Discord</span>
-                  <span className="account-link__detail">@{user.discord.username}</span>
+                  <span className="account-link__detail">
+                    {user.discord ? `@${user.discord.username}` : 'Optional: sign in with either one'}
+                  </span>
                 </span>
-                <span className="account-link__status account-link__status--on">Connected</span>
+                {user.discord ? (
+                  <span className="account-link__status account-link__status--on">Connected</span>
+                ) : (
+                  <a className="kk-button account-link__action" href={discordUrl('/account')}>
+                    Link Discord
+                  </a>
+                )}
               </li>
 
               <li className="account-link">

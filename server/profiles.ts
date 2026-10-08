@@ -14,6 +14,7 @@
 
 import { randomBytes } from 'node:crypto'
 import type { PlayerBet, PlayerProfile, ProfileView } from '../shared/profiles.js'
+import { accountId, displayName, userAvatar } from './accounts.js'
 import { isAdmin, json, readSession } from './auth.js'
 import type { AuthEnv, AuthRequest, AuthResponse, SessionUser } from './auth.js'
 import { lookupStakePlayer } from './stakeLink.js'
@@ -30,12 +31,14 @@ class InputError extends Error {}
 export async function touchProfile(user: SessionUser): Promise<PlayerProfile> {
   const now = Date.now()
   const players = await read('players')
-  const current = players.find((p) => p.id === user.discord.id)
+  const id = accountId(user)
+  const current = players.find((p) => p.id === id)
   const next: PlayerProfile = {
-    id: user.discord.id,
-    name: user.discord.name,
-    username: user.discord.username,
-    avatar: user.discord.avatar,
+    id,
+    discordId: user.discord?.id ?? null,
+    name: displayName(user),
+    username: user.discord?.username ?? user.kick?.username ?? '',
+    avatar: userAvatar(user),
     kick: user.kick,
     stake: user.stake ? { username: user.stake.username } : null,
     firstSeen: current?.firstSeen ?? now,
@@ -59,13 +62,13 @@ export async function touchProfile(user: SessionUser): Promise<PlayerProfile> {
 
 /** Add a settled original to the player's history and totals */
 export async function recordPlayerBet(user: SessionUser, bet: Omit<PlayerBet, 'id' | 'userId' | 'at'>) {
-  const entry: PlayerBet = { ...bet, id: randomBytes(6).toString('hex'), userId: user.discord.id, at: Date.now() }
+  const entry: PlayerBet = { ...bet, id: randomBytes(6).toString('hex'), userId: accountId(user), at: Date.now() }
   try {
     await touchProfile(user)
     await update('bets', (list) => [entry, ...list].slice(0, BET_HISTORY))
     await update('players', (list) =>
       list.map((p) =>
-        p.id === user.discord.id
+        p.id === accountId(user)
           ? {
               ...p,
               bets: p.bets + 1,
@@ -110,7 +113,7 @@ export async function handleProfileRequest(req: AuthRequest, env: AuthEnv): Prom
     if (path === '/api/profile') {
       if (!user) return json(200, { view: null })
       await touchProfile(user)
-      return json(200, { view: await view(user.discord.id, 100, env) })
+      return json(200, { view: await view(accountId(user), 100, env) })
     }
 
     // ---- admin
@@ -130,7 +133,7 @@ export async function handleProfileRequest(req: AuthRequest, env: AuthEnv): Prom
     }
 
     // Remove a player's Stake link (their cookie drops it on their next visit)
-    const unlink = path.match(/^\/api\/admin\/players\/(\d{5,25})\/unlink-stake$/)
+    const unlink = path.match(/^\/api\/admin\/players\/(\d{5,25}|kick-\d{1,20})\/unlink-stake$/)
     if (unlink) {
       if (req.method !== 'POST') return json(405, { error: 'Use POST.' })
       await unlinkStake(unlink[1])
@@ -138,7 +141,7 @@ export async function handleProfileRequest(req: AuthRequest, env: AuthEnv): Prom
       return v ? json(200, { view: v }) : json(404, { error: 'No player with that id.' })
     }
 
-    const one = path.match(/^\/api\/admin\/players\/(\d{5,25})$/)
+    const one = path.match(/^\/api\/admin\/players\/(\d{5,25}|kick-\d{1,20})$/)
     if (one) {
       const v = await view(one[1], 500, env)
       return v ? json(200, { view: v }) : json(404, { error: 'No player with that id.' })

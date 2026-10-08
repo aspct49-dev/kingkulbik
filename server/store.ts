@@ -51,11 +51,11 @@ type Tables = {
   /** Every BotRix points change made from the site (newest first) */
   pointsLog: PointsLogEntry[]
   shopSettings: ShopSettings
-  /** Originals: each player's seeds, bet counter and Coinflip game, by Discord id */
+  /** Originals: each player's seeds, bet counter and Coinflip game, by account id */
   pfStates: Record<string, PfState>
   /** Originals wins BotRix couldn't pay yet */
   owedPayouts: OwedPayout[]
-  /** Stake links an admin removed: Discord id → when (seconds); older links in cookies stop counting */
+  /** Stake links an admin removed: account id → when (seconds); older links in cookies stop counting */
   stakeUnlinks: Record<string, number>
 }
 

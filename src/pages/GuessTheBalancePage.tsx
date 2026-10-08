@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
 import guessIcon from '../assets/events/guess-icon.svg'
-import discordIcon from '../assets/sidebar/discord.svg'
 import EventBanner from '../components/events/EventBanner'
 import { socials } from '../data/links'
 import type { PublicGuessRound } from '../../shared/events'
@@ -158,9 +157,8 @@ function GuessCard({ round, onGuessed }: { round: PublicGuessRound; onGuessed: (
     return (
       <section className="ev-card gtb-guess">
         <h2 className="ev-card__title">Make your guess</h2>
-        <p className="ev-card__text">Sign in with Discord to enter. One guess per account, free to play.</p>
-        <a className="account-button account-button--discord gtb-guess__signin" href={signInUrl('/guess-the-balance')}>
-          <img src={discordIcon} width={20} height={16} alt="" />
+        <p className="ev-card__text">Sign in with Kick or Discord to enter. One guess per account, free to play.</p>
+        <a className="kk-button gtb-guess__signin" href={signInUrl('/guess-the-balance')}>
           Sign in to guess
         </a>
       </section>

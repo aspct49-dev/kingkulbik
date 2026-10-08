@@ -1,5 +1,5 @@
 /*
- * Sign in with Discord, link a Kick account.
+ * Sign in with Kick or Discord, and link the other (server/accounts.ts).
  *
  * No database yet, so the session is a signed cookie: the payload is readable
  * JSON, and an HMAC over it with SESSION_SECRET means nobody can edit it (a
@@ -10,9 +10,9 @@
  * Routes (served by api/auth.ts on Vercel and by the Vite dev server locally):
  *   GET  /api/auth/me                  → { user } or { user: null }
  *   GET  /api/auth/discord/login       → redirect to Discord
- *   GET  /api/auth/discord/callback    → sign in, back to the page
- *   GET  /api/auth/kick/login          → redirect to Kick (signed in only)
- *   GET  /api/auth/kick/callback       → link Kick, back to /account
+ *   GET  /api/auth/discord/callback    → sign in (or link Discord to a Kick sign-in), back to the page
+ *   GET  /api/auth/kick/login          → redirect to Kick
+ *   GET  /api/auth/kick/callback       → sign in (or link Kick when signed in), back to the page
  *   POST /api/auth/logout              → clear the session
  *   GET  /api/auth/points              → the linked Kick account's BotRix points
  *   POST /api/auth/stake {username}    → link a Stake username under the code
@@ -23,6 +23,14 @@
  */
 
 import { createHash, createHmac, randomBytes, timingSafeEqual } from 'node:crypto'
+import {
+  accountId,
+  findByDiscord,
+  findByKick,
+  mergeAccounts,
+  profileDiscordId,
+  sessionFromProfile,
+} from './accounts.js'
 import { getBotrixViewer } from './botrix.js'
 import { lookupStakePlayer, StakeLinkError, validStakeName } from './stakeLink.js'
 
@@ -44,12 +52,17 @@ export type AuthEnv = {
 }
 
 export type SessionUser = {
-  discord: { id: string; username: string; name: string; avatar: string | null }
-  kick: { id: string; username: string } | null
+  /** The account's id when it isn't the Discord id: kick-<Kick user id> on accounts made with Kick */
+  id?: string
+  /** null on an account made with Kick that hasn't linked Discord */
+  discord: { id: string; username: string; name: string; avatar: string | null } | null
+  kick: { id: string; username: string; avatar?: string | null } | null
   /** Stake username under the code (checked against the affiliate API when linked) */
   stake?: { username: string; linkedAt: number } | null
   /** Unix seconds */
   signedInAt: number
+  /** How this browser signed in (older cookies: Discord). Only a Discord sign-in opens the admin panel */
+  via?: 'discord' | 'kick'
 }
 
 export type AuthRequest = {
@@ -73,12 +86,18 @@ export type AuthResponse = {
 /** The signed-in user from the session cookie, or null */
 export function readSession(req: AuthRequest, env: AuthEnv): SessionUser | null {
   if (!env.SESSION_SECRET) return null
-  return unseal<SessionUser>(parseCookies(req.cookie)[SESSION_COOKIE], env.SESSION_SECRET)
+  return sessionUser(parseCookies(req.cookie)[SESSION_COOKIE], env.SESSION_SECRET)
 }
 
-/** Admins come from ADMIN_DISCORD_IDS, checked on every request (no stored roles) */
+/** A session cookie's user, if it names an account */
+function sessionUser(token: string | undefined, secret: string) {
+  const user = unseal<SessionUser>(token, secret)
+  return user && accountId(user) ? user : null
+}
+
+/** Admins come from ADMIN_DISCORD_IDS, checked on every request (no stored roles); signed in with Discord */
 export function isAdmin(user: SessionUser | null, env: AuthEnv) {
-  if (!user) return false
+  if (!user?.discord || user.via === 'kick') return false
   const ids = (env.ADMIN_DISCORD_IDS ?? '').split(/[\s,]+/).filter((id) => /^\d{5,25}$/.test(id))
   return ids.includes(user.discord.id)
 }
@@ -149,6 +168,8 @@ export function unseal<T>(token: string | undefined, secret: string): T | null {
 
 type OAuthState = {
   provider: 'discord' | 'kick'
+  /** Kick: sign in, or link to the signed-in account */
+  mode?: 'signin' | 'link'
   state: string
   /** PKCE verifier (Kick) */
   verifier?: string
@@ -206,7 +227,7 @@ export async function handleAuthRequest(req: AuthRequest, env: AuthEnv): Promise
   const base = origin(req, env)
   const secure = base.startsWith('https://')
   const cookies = parseCookies(req.cookie)
-  const user = unseal<SessionUser>(cookies[SESSION_COOKIE], secret)
+  const user = sessionUser(cookies[SESSION_COOKIE], secret)
   const clearState = cookie(STATE_COOKIE, '', 0, secure)
   const route = url.pathname.slice('/api/auth/'.length)
 
@@ -217,7 +238,7 @@ export async function handleAuthRequest(req: AuthRequest, env: AuthEnv): Promise
 
   if (route === 'stake') {
     if (req.method !== 'POST') return json(405, { error: 'Use POST.' })
-    if (!user) return json(401, { error: 'Sign in with Discord first.' })
+    if (!user) return json(401, { error: 'Sign in first.' })
     // Changing a linked name goes through an admin, like Kick
     if (user.stake) return json(409, { error: 'You already linked a Stake account. Ask in the Discord to change it.' })
     let name = ''
@@ -339,17 +360,39 @@ export async function handleAuthRequest(req: AuthRequest, env: AuthEnv): Promise
       if (!meRes.ok || !me?.id || !me.username)
         return failBack(returnTo, 'Discord would not say who you are.', [clearState])
 
-      // Signing in again keeps an already-linked Kick account (same Discord id only)
-      const session: SessionUser = {
-        discord: {
-          id: me.id,
-          username: me.username,
-          name: me.global_name || me.username,
-          avatar: me.avatar ? `https://cdn.discordapp.com/avatars/${me.id}/${me.avatar}.png?size=128` : null,
-        },
-        kick: user?.discord.id === me.id ? user.kick : null,
-        stake: user?.discord.id === me.id ? (user.stake ?? null) : null,
-        signedInAt: now(),
+      const discord = {
+        id: me.id,
+        username: me.username,
+        name: me.global_name || me.username,
+        avatar: me.avatar ? `https://cdn.discordapp.com/avatars/${me.id}/${me.avatar}.png?size=128` : null,
+      }
+      // The account this Discord already belongs to, if any
+      const owner = await findByDiscord(me.id)
+      let session: SessionUser
+      if (user && !user.discord) {
+        // Signed in with Kick: Discord joins this account
+        if (owner && owner.id !== accountId(user)) {
+          if (owner.kick && owner.kick.id !== user.kick?.id) {
+            return failBack(returnTo, 'That Discord already has an account here with another Kick. Ask in the Discord to sort it out.', [clearState])
+          }
+          // Its account is the older one: this Kick-made account moves into it
+          await mergeAccounts(accountId(user), owner.id)
+          const merged = sessionFromProfile(owner, 'discord')
+          session = { ...merged, discord, kick: user.kick, stake: merged.stake ?? user.stake ?? null }
+        } else session = { ...user, discord, via: 'discord' }
+      } else {
+        // Signing in again on this browser keeps its links; elsewhere they come from the account
+        const same = user?.discord?.id === me.id
+        const restored = owner ? sessionFromProfile(owner, 'discord') : null
+        const id = same ? user!.id : restored?.id
+        session = {
+          ...(id ? { id } : {}),
+          discord,
+          kick: same ? user!.kick : (restored?.kick ?? null),
+          stake: same ? (user!.stake ?? null) : (restored?.stake ?? null),
+          signedInAt: now(),
+          via: 'discord',
+        }
       }
       return redirect(returnTo, [
         clearState,
@@ -361,15 +404,15 @@ export async function handleAuthRequest(req: AuthRequest, env: AuthEnv): Promise
     }
   }
 
-  // ---- Kick: link to the signed-in account
+  // ---- Kick: sign in, or link to the signed-in account
   if (route === 'kick/login') {
-    if (!user) return redirect('/account?auth_error=' + encodeURIComponent('Sign in with Discord first.'))
-    if (!env.KICK_CLIENT_ID || !env.KICK_CLIENT_SECRET) return json(500, { error: 'Kick linking is not configured.' })
+    if (!env.KICK_CLIENT_ID || !env.KICK_CLIENT_SECRET) return json(500, { error: 'Kick sign-in is not configured.' })
     // One Kick account per site account: changing it later goes through an admin
-    if (user.kick) return redirect('/account')
+    if (user?.kick) return redirect(safeReturn(url.searchParams.get('return'), '/account'))
     const verifier = randomBytes(48).toString('base64url')
     const state: OAuthState = {
       provider: 'kick',
+      mode: user ? 'link' : 'signin',
       state: randomBytes(16).toString('base64url'),
       verifier,
       returnTo: safeReturn(url.searchParams.get('return'), '/account'),
@@ -389,8 +432,7 @@ export async function handleAuthRequest(req: AuthRequest, env: AuthEnv): Promise
   if (route === 'kick/callback') {
     const saved = unseal<OAuthState>(cookies[STATE_COOKIE], secret)
     const returnTo = saved?.returnTo ?? '/account'
-    if (!user) return failBack('/account', 'Sign in with Discord first.', [clearState])
-    if (url.searchParams.get('error')) return failBack(returnTo, 'Kick linking was cancelled.', [clearState])
+    if (url.searchParams.get('error')) return failBack(returnTo, 'Kick sign-in was cancelled.', [clearState])
     if (
       !saved ||
       saved.provider !== 'kick' ||
@@ -402,7 +444,7 @@ export async function handleAuthRequest(req: AuthRequest, env: AuthEnv): Promise
     }
     const code = url.searchParams.get('code')
     if (!code || !env.KICK_CLIENT_ID || !env.KICK_CLIENT_SECRET)
-      return failBack(returnTo, 'Kick linking failed.', [clearState])
+      return failBack(returnTo, 'Kick sign-in failed.', [clearState])
 
     try {
       const tokenRes = await fetch(KICK_TOKEN, {
@@ -424,28 +466,49 @@ export async function handleAuthRequest(req: AuthRequest, env: AuthEnv): Promise
       const token = (await tokenRes.json().catch(() => null)) as { access_token?: string } | null
       if (!tokenRes.ok || !token?.access_token) {
         console.error('[auth] Kick token exchange failed:', tokenRes.status)
-        return failBack(returnTo, 'Kick would not link your account. Please try again.', [clearState])
+        return failBack(returnTo, 'Kick would not sign you in. Please try again.', [clearState])
       }
       const meRes = await fetch(KICK_USERS, {
         headers: { Authorization: `Bearer ${token.access_token}`, Accept: 'application/json', 'User-Agent': KICK_UA },
       })
       // The endpoint answers with the token's own user, as a one-item list
-      const body = (await meRes.json().catch(() => null)) as {
-        data?: { user_id?: number; name?: string }[] | { user_id?: number; name?: string }
-      } | null
+      type KickMe = { user_id?: number; name?: string; profile_picture?: string }
+      const body = (await meRes.json().catch(() => null)) as { data?: KickMe[] | KickMe } | null
       const me = Array.isArray(body?.data) ? body?.data[0] : body?.data
       if (!meRes.ok || !me?.user_id) return failBack(returnTo, 'Kick would not say who you are.', [clearState])
 
-      const session: SessionUser = {
-        ...user,
-        kick: { id: String(me.user_id), username: me.name ?? `kick-${me.user_id}` },
+      const picture = me.profile_picture
+      const kick = {
+        id: String(me.user_id),
+        username: me.name ?? `kick-${me.user_id}`,
+        avatar: typeof picture === 'string' && picture.startsWith('https://') ? picture : null,
+      }
+      // The account this Kick already belongs to, if any
+      const owner = await findByKick(kick.id)
+      let session: SessionUser
+      if (user) {
+        // Signed in (with Discord): link Kick to this account
+        if (user.kick) return redirect(returnTo, [clearState])
+        if (owner && owner.id !== accountId(user)) {
+          if (profileDiscordId(owner)) {
+            return failBack(returnTo, 'That Kick is linked to another account here. Ask in the Discord to move it.', [clearState])
+          }
+          // An account made by signing in with this Kick: it moves into this one
+          await mergeAccounts(owner.id, accountId(user))
+        }
+        session = { ...user, kick }
+      } else if (owner) {
+        session = { ...sessionFromProfile(owner, 'kick'), kick }
+      } else {
+        // First time here: a new account, made with Kick
+        session = { id: `kick-${kick.id}`, discord: null, kick, stake: null, signedInAt: now(), via: 'kick' }
       }
       return redirect(returnTo, [
         clearState,
         cookie(SESSION_COOKIE, seal(session, secret), SESSION_DAYS * 86400, secure),
       ])
     } catch (err) {
-      console.error('[auth] Kick linking threw:', err)
+      console.error('[auth] Kick sign-in threw:', err)
       return failBack(returnTo, 'Could not reach Kick. Please try again.', [clearState])
     }
   }

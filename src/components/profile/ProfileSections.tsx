@@ -29,6 +29,10 @@ export function Avatar({ src, name, size }: { src: string | null; name: string; 
   )
 }
 
+/** The linked Discord's id (older profiles: the account id is the Discord id) */
+const profileDiscord = (p: PlayerProfile) =>
+  p.discordId !== undefined ? p.discordId : /^\d{5,25}$/.test(p.id) ? p.id : null
+
 /** Avatar, names and originals totals */
 export function ProfileHeader({ profile, admin }: { profile: PlayerProfile; admin?: boolean }) {
   const net = profile.paid - profile.wagered
@@ -39,7 +43,7 @@ export function ProfileHeader({ profile, admin }: { profile: PlayerProfile; admi
         <h2 className="profile-head__name">{profile.name}</h2>
         <p className="profile-head__meta">
           @{profile.username} · Member since {date(profile.firstSeen)}
-          {admin && <> · Discord ID {profile.id}</>}
+          {admin && <> · {profileDiscord(profile) ? `Discord ID ${profileDiscord(profile)}` : `Account ${profile.id}`}</>}
         </p>
       </div>
       <dl className="profile-head__stats">

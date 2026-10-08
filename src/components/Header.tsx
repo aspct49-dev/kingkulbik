@@ -1,7 +1,7 @@
 import { Link, useLocation } from 'react-router'
 import dividerLine from '../assets/sidebar/divider.svg'
 import coinIcon from '../assets/coin.svg'
-import { signInUrl, useAuth, usePoints } from '../hooks/useAuth'
+import { signInUrl, useAuth, userAvatar, userName, usePoints } from '../hooks/useAuth'
 import './Header.css'
 
 type HeaderProps = {
@@ -43,25 +43,25 @@ export default function Header({ className = '', menuOpen, onMenuToggle }: Heade
           </Link>
         )}
         {user ? (
-          <Link to="/account" className="header__user" aria-label={`Your account (${user.discord.name})`}>
-            {user.discord.avatar ? (
-              <img className="header__avatar" src={user.discord.avatar} width={32} height={32} alt="" />
+          <Link to="/account" className="header__user" aria-label={`Your account (${userName(user)})`}>
+            {userAvatar(user) ? (
+              <img className="header__avatar" src={userAvatar(user)!} width={32} height={32} alt="" />
             ) : (
               <span className="header__avatar header__avatar--blank" aria-hidden>
-                {user.discord.name.slice(0, 1).toUpperCase()}
+                {userName(user).slice(0, 1).toUpperCase()}
               </span>
             )}
-            <span className="header__user-name">{user.discord.name}</span>
+            <span className="header__user-name">{userName(user)}</span>
           </Link>
         ) : (
           <>
-            {/* Sign-in is Discord; a full page load, since it leaves the site */}
-            <a className="header__sign-in" href={signInUrl(returnTo)}>
+            {/* The account page offers Kick or Discord */}
+            <Link className="header__sign-in" to={signInUrl(returnTo)}>
               Sign in
-            </a>
-            <a className="header__register" href={signInUrl(returnTo)}>
+            </Link>
+            <Link className="header__register" to={signInUrl(returnTo)}>
               Register
-            </a>
+            </Link>
           </>
         )}
       </div>

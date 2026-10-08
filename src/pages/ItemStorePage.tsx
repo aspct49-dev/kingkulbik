@@ -213,14 +213,14 @@ export default function ItemStorePage() {
             </h2>
             <p className="store-gate__text">
               {gate === 'signin'
-                ? 'Sign in with Discord, then link your Kick to spend the King Points you earn on stream.'
+                ? 'Sign in with Kick to spend the King Points you earn on stream.'
                 : 'King Points are earned by watching and chatting on Kick. Link your Kick account to see your balance and shop.'}
             </p>
             <a
               className="kk-button store-gate__button"
               href={gate === 'signin' ? signInUrl('/item-store') : linkKickUrl('/item-store')}
             >
-              {gate === 'signin' ? 'Sign in with Discord' : 'Link Kick'}
+              {gate === 'signin' ? 'Sign in' : 'Link Kick'}
             </a>
           </section>
         ) : gate === null ? (
