@@ -75,17 +75,17 @@ export default function RafflesAdmin({ notify }: { notify: (message: string) => 
         </div>
         <div className="admin-actions admin-actions--split">
           <p className="admin-note">
-            BotRix has no monthly table, so watch time is counted from a snapshot taken when the month is first
-            checked. Reset it if a month started without one.
+            BotRix has no monthly table, so each watch-time raffle counts from a snapshot taken when it’s first
+            checked. Reset to make every open watch-time raffle count from now.
           </p>
           <div className="admin-row__actions">
             <ConfirmButton
               label="Reset watch baseline"
-              confirm="Count watch time from now?"
+              confirm="Count open watch raffles from now?"
               onConfirm={() =>
                 void adminPost('raffles/baseline')
                   .then(load)
-                  .then(() => notify('Watch time now counts from today'))
+                  .then(() => notify('Open watch raffles now count from now'))
                   .catch((err: Error) => notify(err.message))
               }
             />

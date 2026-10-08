@@ -110,6 +110,19 @@ async function load(): Promise<KickSocials> {
   return cache ?? next
 }
 
+/**
+ * Whether the stream is live (null: not known yet, or Kick couldn't be
+ * reached). Answers from the last copy at once; asks Kick about once a minute.
+ */
+export async function kickLive(): Promise<boolean | null> {
+  if (!cache || Date.now() - cache.at > FRESH_MS) {
+    pending ??= load().finally(() => (pending = null))
+    if (cache) pending.catch(() => undefined)
+    else await pending.catch(() => undefined)
+  }
+  return cache?.channel ? Boolean(cache.channel.live) : null
+}
+
 export async function handleSocialsRequest(req: AuthRequest): Promise<AuthResponse | null> {
   if (!req.url.startsWith('/api/socials/kick')) return null
   if (!cache || Date.now() - cache.at > FRESH_MS) {

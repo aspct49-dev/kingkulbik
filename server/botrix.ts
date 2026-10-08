@@ -41,7 +41,10 @@ export async function getBotrixViewer(kickName: string, fresh = false): Promise<
   url.searchParams.set('platform', 'kick')
   url.searchParams.set('user', BOTRIX_CHANNEL)
   url.searchParams.set('search', kickName)
-  const res = await fetch(url, { headers: { Accept: 'application/json', 'User-Agent': 'Mozilla/5.0' } })
+  const res = await fetch(url, {
+    headers: { Accept: 'application/json', 'User-Agent': 'Mozilla/5.0' },
+    signal: AbortSignal.timeout(10_000),
+  })
   if (!res.ok) throw new Error(`BotRix answered ${res.status}`)
   const rows = (await res.json()) as { name?: string; points?: number; watchtime?: number; level?: number }[]
   // The search is a prefix/contains match: pick the exact name

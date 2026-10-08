@@ -5,11 +5,12 @@
  *   Wager: Stake's affiliate leaderboard for the raffle's dates (customRange),
  *   one ticket per `ticketUnit` dollars wagered under the code.
  *   Watch: BotRix only publishes all-time watch minutes (top 100, or one name
- *   by search) with no monthly table. So the first time a month is asked
- *   about, the server saves everyone's all-time minutes as that month's
- *   baseline; monthly watch time is the current total minus the baseline.
- *   It covers BotRix's top 100 plus everyone who linked Kick on the site;
- *   someone seen for the first time mid-month counts from then.
+ *   by search) with no monthly table. So the first time a raffle is counted,
+ *   the server saves everyone's all-time minutes as its baseline; the raffle's
+ *   watch time is the current total minus the baseline. It covers BotRix's
+ *   top 100 plus everyone who linked Kick on the site; someone seen for the
+ *   first time mid-raffle counts from then. Off stream it recounts every 15
+ *   minutes (watch time can't grow), live every minute.
  *
  * Draws (see shared/raffles.ts): locking freezes the tickets and commits to
  * a secret seed (its hash is public); each draw is reproducible from the seed,
@@ -24,7 +25,7 @@
  *   POST /api/admin/raffles/<id>/unlock        back to open (before any draw)
  *   POST /api/admin/raffles/<id>/draw          the next draw
  *   POST /api/admin/raffles/<id>/delete
- *   POST /api/admin/raffles/baseline           retake this month's watch-time baseline
+ *   POST /api/admin/raffles/baseline           open watch raffles count from now
  */
 
 import { createHash, randomBytes } from 'node:crypto'
@@ -40,12 +41,14 @@ import type { PublicRaffle, Raffle, RaffleEntry, RaffleKind } from '../shared/ra
 import { isAdmin, json, readSession } from './auth.js'
 import type { AuthEnv, AuthRequest, AuthResponse } from './auth.js'
 import { BOTRIX_CHANNEL, getBotrixViewer } from './botrix.js'
+import { kickLive } from './socials.js'
 import { parseLeaderboardCsv } from './stakeLeaderboard.js'
 import { read, StoreError, update } from './store.js'
 
 class InputError extends Error {}
 
 const CACHE_MS = 60_000
+const OFFLINE_CACHE_MS = 15 * 60_000
 const monthKey = (at: number) => new Date(at).toISOString().slice(0, 7)
 
 // ---------------------------------------------------------------- wager (Stake)
@@ -97,42 +100,69 @@ async function botrixTop(): Promise<BotrixRow[]> {
   return rows
 }
 
+/**
+ * The most minutes ever seen per viewer. All-time minutes only go up, but
+ * BotRix's top 100 is cached on its side (sometimes behind a viewer's own
+ * lookup) and a lookup can fail when it's busy: without this, people would
+ * drop out of a raffle or lose tickets for a minute.
+ */
+const highest = new Map<string, BotrixRow>()
+
 /** All-time minutes for BotRix's top 100 plus every Kick account linked on the site */
 async function watchNow(): Promise<Map<string, BotrixRow>> {
   const out = new Map<string, BotrixRow>()
   for (const r of await botrixTop()) out.set(r.name.toLowerCase(), r)
-  const linked = (await read('players'))
-    .map((p) => p.kick?.username)
-    .filter((n): n is string => Boolean(n) && !out.has(n!.toLowerCase()))
+  // Linked viewers are looked up one by one even when in the top 100: their own lookup is up to date
+  const linked = (await read('players')).map((p) => p.kick?.username).filter((n): n is string => Boolean(n))
   // Eight lookups at a time: quick with many linked viewers, gentle on BotRix
   for (let i = 0; i < linked.length; i += 8) {
     const found = await Promise.all(linked.slice(i, i + 8).map((name) => getBotrixViewer(name).catch(() => null)))
     for (const v of found) if (v) out.set(v.name.toLowerCase(), { name: v.name, watchtime: v.watchtime })
   }
+  for (const [key, r] of out) {
+    const best = highest.get(key)
+    if (best && best.watchtime > r.watchtime) out.set(key, best)
+    else highest.set(key, r)
+  }
+  // Seen before but missing this time (a failed lookup, or out of the top 100): keep their last count
+  for (const [key, r] of highest) if (!out.has(key)) out.set(key, r)
   return out
 }
 
-/** This month's watch minutes per viewer (current all-time minus the month's baseline) */
-async function watchTotals(at = Date.now(), reset = false) {
-  const month = monthKey(at)
+type Baseline = { month: string; takenAt: number; minutes: Record<string, number> }
+
+/**
+ * A watch raffle's minutes per viewer: current all-time minus the raffle's
+ * baseline (everyone's all-time minutes when it was first counted). Each
+ * raffle has its own, so a second raffle in a month doesn't count the first
+ * one's minutes. A raffle from before that (when the month shared one) keeps
+ * the month's, if taken after it was created.
+ */
+async function watchTotals(r: Raffle, reset = false) {
+  const key = `raffle:${r.id}`
   const now = await watchNow()
-  let baseline = (await read('watchBaselines')).find((b) => b.month === month)
-  const missing = [...now.values()].filter((r) => !baseline || reset || !(r.name.toLowerCase() in baseline.minutes))
-  if (!baseline || reset || missing.length) {
-    // First sight this month (or a reset): today's total becomes the starting point
-    const next = {
-      month,
+  const all = await read('watchBaselines')
+  let baseline: Baseline | undefined = all.find((b) => b.month === key)
+  if (!baseline && !reset) {
+    const month = all.find((b) => b.month === monthKey(r.start) && b.takenAt >= r.createdAt)
+    if (month) baseline = { ...month, month: key }
+  }
+  const missing = [...now.values()].filter((v) => !baseline || reset || !(v.name.toLowerCase() in baseline.minutes))
+  const stored = all.some((b) => b.month === key)
+  if (!baseline || reset || missing.length || !stored) {
+    // First count (or a reset): today's total is the starting point; someone seen for the first time counts from now
+    const next: Baseline = {
+      month: key,
       takenAt: !baseline || reset ? Date.now() : baseline.takenAt,
-      minutes: reset || !baseline ? {} : { ...baseline.minutes },
-    } as { month: string; takenAt: number; minutes: Record<string, number> }
-    for (const r of missing) next.minutes[r.name.toLowerCase()] = r.watchtime
-    if (reset || !baseline) for (const r of now.values()) next.minutes[r.name.toLowerCase()] = r.watchtime
-    await update('watchBaselines', (list) => [next, ...list.filter((b) => b.month !== month)].slice(0, 24)).catch(() => undefined)
+      minutes: !baseline || reset ? {} : { ...baseline.minutes },
+    }
+    for (const v of missing) next.minutes[v.name.toLowerCase()] = v.watchtime
+    await update('watchBaselines', (list) => [next, ...list.filter((b) => b.month !== key)].slice(0, 48)).catch(() => undefined)
     baseline = next
   }
   const rows = [...now.values()]
-    .map((r) => ({ name: r.name, amount: Math.max(0, r.watchtime - (baseline!.minutes[r.name.toLowerCase()] ?? r.watchtime)) }))
-    .filter((r) => r.amount > 0)
+    .map((v) => ({ name: v.name, amount: Math.max(0, v.watchtime - (baseline!.minutes[v.name.toLowerCase()] ?? v.watchtime)) }))
+    .filter((v) => v.amount > 0)
   return { rows, countingFrom: baseline.takenAt }
 }
 
@@ -149,7 +179,7 @@ async function countNow(r: Raffle, env: AuthEnv, key: string): Promise<LiveEntri
   const v: LiveEntries =
     r.kind === 'wager'
       ? { at: Date.now(), entries: freezeEntries(await wagerTotals(r.start, r.end, env), r.ticketUnit), countingFrom: null }
-      : await watchTotals(r.start).then(({ rows, countingFrom }) => ({
+      : await watchTotals(r).then(({ rows, countingFrom }) => ({
           at: Date.now(),
           entries: freezeEntries(rows, r.ticketUnit),
           countingFrom,
@@ -168,7 +198,9 @@ async function entriesOf(r: Raffle, env: AuthEnv, fresh = false): Promise<{ entr
   const key = `${r.id}:${r.ticketUnit}:${r.start}:${r.end}`
   if (fresh) return countNow(r, env, key)
   const hit = liveCache.get(key)
-  if (hit && Date.now() - hit.at < CACHE_MS) return hit
+  // Off stream, watch time can't grow: recount every 15 minutes instead of every minute
+  const ttl = r.kind === 'watch' && (await kickLive()) === false ? OFFLINE_CACHE_MS : CACHE_MS
+  if (hit && Date.now() - hit.at < ttl) return hit
   let pending = recounting.get(key)
   if (!pending) {
     pending = countNow(r, env, key).finally(() => recounting.delete(key))
@@ -285,7 +317,7 @@ export async function handleRaffleRequest(req: AuthRequest, env: AuthEnv): Promi
     }
 
     if (rest === 'baseline') {
-      await watchTotals(Date.now(), true)
+      for (const r of await read('raffles')) if (r.kind === 'watch' && r.status === 'open') await watchTotals(r, true)
       liveCache.clear()
       return json(200, { ok: true })
     }
