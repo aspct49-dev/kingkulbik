@@ -19,13 +19,26 @@ function set(next: AuthState) {
   listeners.forEach((l) => l())
 }
 
-export function refreshAuth() {
+/**
+ * Ask the server who's signed in. Only its answer can sign someone out: if the
+ * request fails (a network blip, the server restarting), keep what we had and
+ * try again shortly, rather than showing a signed-in player as signed out.
+ */
+export function refreshAuth(attempt = 0): Promise<void> {
   return fetch('/api/auth/me', { credentials: 'same-origin' })
-    .then((r) => (r.ok ? r.json() : { user: null }))
-    .then((body: { user: AuthUser | null; admin?: boolean }) =>
-      set({ status: 'ready', user: body.user ?? null, admin: Boolean(body.user && body.admin) }),
-    )
-    .catch(() => set({ status: 'ready', user: null, admin: false }))
+    .then((r) => {
+      if (!r.ok) throw new Error(`HTTP ${r.status}`)
+      return r.json() as Promise<{ user: AuthUser | null; admin?: boolean }>
+    })
+    .then((body) => set({ status: 'ready', user: body.user ?? null, admin: Boolean(body.user && body.admin) }))
+    .catch(() => {
+      if (attempt < 5) {
+        window.setTimeout(() => void refreshAuth(attempt + 1), 1500 * 2 ** attempt)
+        return
+      }
+      // Still nothing after several tries: show the page, keeping any user we already knew
+      if (state.status === 'loading') set({ status: 'ready', user: null, admin: false })
+    })
 }
 
 function subscribe(listener: () => void) {

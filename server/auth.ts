@@ -210,7 +210,10 @@ export async function handleAuthRequest(req: AuthRequest, env: AuthEnv): Promise
   const clearState = cookie(STATE_COOKIE, '', 0, secure)
   const route = url.pathname.slice('/api/auth/'.length)
 
-  if (route === 'me') return json(200, { user, admin: isAdmin(user, env) })
+  // Each visit starts the 30 days again, so people who keep coming back stay signed in
+  if (route === 'me') {
+    return json(200, { user, admin: isAdmin(user, env) }, user ? [cookie(SESSION_COOKIE, seal(user, secret), SESSION_DAYS * 86400, secure)] : [])
+  }
 
   if (route === 'stake') {
     if (req.method !== 'POST') return json(405, { error: 'Use POST.' })

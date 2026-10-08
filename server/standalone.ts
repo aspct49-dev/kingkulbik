@@ -107,7 +107,33 @@ async function serveStatic(req: IncomingMessage, res: ServerResponse, pathname: 
  */
 const isAppRoute = (pathname: string) => pathname === '/' || pathname.startsWith('/overlay/')
 
+/** The site's one address (SITE_URL, else AUTH_URL), e.g. https://kingkulbik.com */
+const canonical = (() => {
+  try {
+    return new URL(process.env.SITE_URL || process.env.AUTH_URL || '')
+  } catch {
+    return null
+  }
+})()
+
+/**
+ * www.<domain> sends visitors to <domain>. Sign-in always finishes on the main
+ * address, and its cookie belongs to that address only, so someone browsing on
+ * www would otherwise look signed out.
+ */
+function wwwRedirect(req: IncomingMessage, res: ServerResponse) {
+  if (!canonical) return false
+  const forwarded = req.headers['x-forwarded-host']
+  const host = (Array.isArray(forwarded) ? forwarded[0] : forwarded) ?? req.headers.host ?? ''
+  if (host.toLowerCase() !== `www.${canonical.host}`) return false
+  res.statusCode = 301
+  res.setHeader('Location', canonical.origin + (req.url ?? '/'))
+  res.end()
+  return true
+}
+
 async function handle(req: IncomingMessage, res: ServerResponse) {
+  if (wwwRedirect(req, res)) return
   const url = new URL(req.url ?? '/', 'http://localhost')
 
   if (url.pathname === '/api/leaderboard') {
