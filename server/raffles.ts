@@ -200,13 +200,15 @@ async function publicView(r: Raffle, env: AuthEnv, me: { stake?: string; kick?: 
   const { total, list } = withOdds(entries)
   const mineName = (r.kind === 'wager' ? me.stake : me.kick)?.toLowerCase()
   const mine = mineName ? list.find((e) => e.name.toLowerCase() === mineName) : undefined
+  const shown = (name: string) => (r.kind === 'wager' ? maskName(name) : name)
   return {
     ...sealed(r),
-    entries: list.map((e) => ({ ...e, name: r.kind === 'wager' ? maskName(e.name) : e.name })),
-    draws: r.draws.map((d) => ({ ...d, name: r.kind === 'wager' ? maskName(d.name) : d.name })),
+    entries: list.map((e) => ({ ...e, name: shown(e.name) })),
+    draws: r.draws.map((d) => ({ ...d, name: shown(d.name) })),
     totalTickets: total,
     drawsTotal: drawCount(r),
-    mine: mine ? { ...mine, wins: r.draws.filter((d) => d.name === mine.name).length } : null,
+    // Named as in the entries, so the page can find its own row
+    mine: mine ? { ...mine, name: shown(mine.name), wins: r.draws.filter((d) => d.name === mine.name).length } : null,
     countingFrom,
     updatedAt: Date.now(),
   }

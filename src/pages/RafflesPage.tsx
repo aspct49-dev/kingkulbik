@@ -316,7 +316,7 @@ function Entries({ raffle }: { raffle: PublicRaffle }) {
             <span role="columnheader">Odds</span>
           </div>
           {rows.map((e, i) => {
-            const you = mine && mine.tickets === e.tickets && mine.amount === e.amount
+            const you = mine && mine.name === e.name && mine.tickets === e.tickets && mine.amount === e.amount
             return (
               <div key={e.name + i} role="row" className={`ev-table__row${you ? ' ev-table__row--you' : ''}`}>
                 <span role="cell">
