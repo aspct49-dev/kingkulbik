@@ -53,7 +53,6 @@ import { read, StoreError, update } from './store.js'
 class InputError extends Error {}
 
 const CACHE_MS = 60_000
-const OFFLINE_CACHE_MS = 15 * 60_000
 const monthKey = (at: number) => new Date(at).toISOString().slice(0, 7)
 
 // ---------------------------------------------------------------- wager (Stake)
@@ -298,9 +297,9 @@ async function entriesOf(r: Raffle, env: AuthEnv, fresh = false): Promise<{ entr
   const key = `${r.id}:${r.ticketUnit}:${r.start}:${r.end}`
   if (fresh) return countNow(r, env, key)
   const hit = liveCache.get(key)
-  // Off stream, watch time can't grow: recount every 15 minutes instead of every minute
-  const ttl = r.kind === 'watch' && (await kickLive()) === false ? OFFLINE_CACHE_MS : CACHE_MS
-  if (hit && Date.now() - hit.at < ttl) return hit
+  // Every minute, live or not: off stream, due() asks BotRix about hardly anyone, but a
+  // list still catching up (after a restart, say) keeps going instead of waiting 15 minutes
+  if (hit && Date.now() - hit.at < CACHE_MS) return hit
   let pending = recounting.get(key)
   if (!pending) {
     pending = countNow(r, env, key).finally(() => recounting.delete(key))
@@ -316,7 +315,7 @@ async function entriesOf(r: Raffle, env: AuthEnv, fresh = false): Promise<{ entr
 /**
  * On the VPS: keep open watch raffles counted without waiting for visitors, so
  * a new chatter's starting point is taken soon after their first message.
- * entriesOf decides whether a count is due (every minute live, 15 off stream).
+ * entriesOf decides whether a count is due (once a minute).
  */
 export function startWatchCounter(env: AuthEnv) {
   let running = false
