@@ -106,10 +106,30 @@ async function botrixTop(): Promise<BotrixRow[]> {
 /**
  * The most minutes ever seen per viewer. All-time minutes only go up, but
  * BotRix's top 100 is cached on its side (sometimes behind a viewer's own
- * lookup) and a lookup can fail when it's busy: without this, people would
- * drop out of a raffle or lose tickets for a minute.
+ * lookup), a lookup can fail when it's busy, and people drop out of the top
+ * 100: without this, they'd drop out of a raffle or lose tickets. Saved
+ * (watchSeen) so a restart doesn't forget anyone either.
  */
 const highest = new Map<string, BotrixRow>()
+let seenLoaded = false
+let seenSavedAt = 0
+let seenChanged = false
+const SEEN_SAVE_MS = 60_000
+
+async function loadSeen() {
+  if (seenLoaded) return
+  const saved = await read('watchSeen')
+  for (const [key, r] of Object.entries(saved)) if (!highest.has(key) || highest.get(key)!.watchtime < r.watchtime) highest.set(key, r)
+  seenLoaded = true
+}
+
+async function saveSeen() {
+  if (!seenChanged || Date.now() - seenSavedAt < SEEN_SAVE_MS) return
+  seenChanged = false
+  seenSavedAt = Date.now()
+  const snapshot = Object.fromEntries(highest)
+  await update('watchSeen', () => snapshot).catch(() => (seenChanged = true))
+}
 
 /** When each viewer was last looked up on BotRix (ms, by lowercase name) */
 const lookedUp = new Map<string, number>()
@@ -143,14 +163,18 @@ function due(key: string, chatted: number | null, live: boolean | null, now: num
 
 /**
  * All-time minutes for BotRix's top 100, every Kick account linked on the
- * site and everyone seen in Kick chat since `since` (server/kickChat.ts).
+ * site, everyone seen in Kick chat since `since` (server/kickChat.ts), and
+ * everyone already in the raffle (`known`, lowercase names: someone who has
+ * since dropped out of the top 100 is still looked up).
  */
-async function watchNow(since: number): Promise<Map<string, BotrixRow>> {
+async function watchNow(since: number, known: string[] = []): Promise<Map<string, BotrixRow>> {
+  await loadSeen().catch(() => undefined)
   const now = Date.now()
   const out = new Map<string, BotrixRow>()
   for (const r of await botrixTop()) out.set(r.name.toLowerCase(), r)
 
   const names = new Map<string, { name: string; chatted: number | null }>()
+  for (const key of known) names.set(key, { name: highest.get(key)?.name ?? key, chatted: null })
   for (const p of await read('players')) if (p.kick?.username) names.set(p.kick.username.toLowerCase(), { name: p.kick.username, chatted: null })
   for (const c of await chattersSince(since)) names.set(c.name.toLowerCase(), { name: c.name, chatted: c.lastSeen })
 
@@ -172,11 +196,15 @@ async function watchNow(since: number): Promise<Map<string, BotrixRow>> {
   }
   for (const [key, r] of out) {
     const best = highest.get(key)
-    if (best && best.watchtime > r.watchtime) out.set(key, best)
-    else highest.set(key, r)
+    if (best && best.watchtime >= r.watchtime) out.set(key, best)
+    else {
+      highest.set(key, r)
+      seenChanged = true
+    }
   }
   // Seen before but missing this time (a failed lookup, or out of the top 100): keep their last count
   for (const [key, r] of highest) if (!out.has(key)) out.set(key, r)
+  await saveSeen()
   return out
 }
 
@@ -191,7 +219,9 @@ type Baseline = { month: string; takenAt: number; minutes: Record<string, number
  */
 async function watchTotals(r: Raffle, reset = false) {
   const key = `raffle:${r.id}`
-  const now = await watchNow(Math.min(r.start, r.createdAt))
+  const saved = await read('watchBaselines')
+  const known = saved.find((b) => b.month === key)?.minutes ?? {}
+  const now = await watchNow(Math.min(r.start, r.createdAt), Object.keys(known))
   const all = await read('watchBaselines')
   let baseline: Baseline | undefined = all.find((b) => b.month === key)
   if (!baseline && !reset) {

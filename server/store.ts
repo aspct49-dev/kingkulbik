@@ -61,6 +61,8 @@ type Tables = {
   stakeUnlinks: Record<string, number>
   /** Everyone seen in Kick chat (via Kick's webhooks), by lowercase name */
   chatters: Record<string, Chatter>
+  /** Watch-time raffles: the most all-time BotRix minutes seen per viewer (lowercase name), kept across restarts */
+  watchSeen: Record<string, { name: string; watchtime: number }>
   /** Originals house results: wagered, paid and bets per UTC hour and game */
   houseStats: HouseStats
   /** The Kick chat webhook subscription */
@@ -96,6 +98,7 @@ const DEFAULTS: Tables = {
   stakeUnlinks: {},
   chatters: {},
   houseStats: { filled: false, hours: {} },
+  watchSeen: {},
   kickChat: {},
 }
 
