@@ -17,14 +17,7 @@ export const userName = (user: AuthUser) => user.discord?.name ?? user.kick?.use
 
 export const userAvatar = (user: AuthUser) => user.discord?.avatar ?? user.kick?.avatar ?? null
 
-type AuthState = {
-  status: 'loading' | 'ready'
-  user: AuthUser | null
-  /** In ADMIN_DISCORD_IDS, signed in or confirmed with Discord */
-  admin: boolean
-  /** In ADMIN_DISCORD_IDS but signed in with Kick: the admin panel asks to confirm with Discord */
-  adminUnconfirmed?: boolean
-}
+type AuthState = { status: 'loading' | 'ready'; user: AuthUser | null; /** In ADMIN_DISCORD_IDS */ admin: boolean }
 
 /* One shared copy for the whole app (header, account page, gates), fetched once */
 let state: AuthState = { status: 'loading', user: null, admin: false }
@@ -45,16 +38,9 @@ export function refreshAuth(attempt = 0): Promise<void> {
   return fetch('/api/auth/me', { credentials: 'same-origin' })
     .then((r) => {
       if (!r.ok) throw new Error(`HTTP ${r.status}`)
-      return r.json() as Promise<{ user: AuthUser | null; admin?: boolean; adminUnconfirmed?: boolean }>
+      return r.json() as Promise<{ user: AuthUser | null; admin?: boolean }>
     })
-    .then((body) =>
-      set({
-        status: 'ready',
-        user: body.user ?? null,
-        admin: Boolean(body.user && body.admin),
-        adminUnconfirmed: Boolean(body.user && body.adminUnconfirmed),
-      }),
-    )
+    .then((body) => set({ status: 'ready', user: body.user ?? null, admin: Boolean(body.user && body.admin) }))
     .catch(() => {
       if (attempt < 5) {
         window.setTimeout(() => void refreshAuth(attempt + 1), 1500 * 2 ** attempt)

@@ -101,16 +101,11 @@ function sessionUser(token: string | undefined, secret: string) {
   return user && accountId(user) ? user : null
 }
 
-/** The account's Discord is in ADMIN_DISCORD_IDS (checked on every request: no stored roles) */
-function onAdminList(user: SessionUser | null, env: AuthEnv) {
-  if (!user?.discord) return false
+/** Admins come from ADMIN_DISCORD_IDS, checked on every request (no stored roles); signed in with Discord */
+export function isAdmin(user: SessionUser | null, env: AuthEnv) {
+  if (!user?.discord || user.via === 'kick') return false
   const ids = (env.ADMIN_DISCORD_IDS ?? '').split(/[\s,]+/).filter((id) => /^\d{5,25}$/.test(id))
   return ids.includes(user.discord.id)
-}
-
-/** An admin, signed in (or confirmed) with Discord: a Kick sign-in alone never opens the admin panel */
-export function isAdmin(user: SessionUser | null, env: AuthEnv) {
-  return onAdminList(user, env) && user!.via !== 'kick'
 }
 
 export const SESSION_COOKIE = 'kk_session'
@@ -244,9 +239,7 @@ export async function handleAuthRequest(req: AuthRequest, env: AuthEnv): Promise
 
   // Each visit starts the 30 days again, so people who keep coming back stay signed in
   if (route === 'me') {
-    const admin = isAdmin(user, env)
-    // On the list but signed in with Kick: the menu shows the admin panel, which asks to confirm with Discord
-    return json(200, { user, admin, adminUnconfirmed: !admin && onAdminList(user, env) }, user ? [cookie(SESSION_COOKIE, seal(user, secret), SESSION_DAYS * 86400, secure)] : [])
+    return json(200, { user, admin: isAdmin(user, env) }, user ? [cookie(SESSION_COOKIE, seal(user, secret), SESSION_DAYS * 86400, secure)] : [])
   }
 
   if (route === 'stake') {

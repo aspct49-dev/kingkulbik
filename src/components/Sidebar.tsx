@@ -158,9 +158,7 @@ const adminSection: NavSection = {
 }
 
 export default function Sidebar({ open, onClose }: SidebarProps) {
-  // Admins signed in with Kick see the link too: the panel asks them to confirm with Discord
-  const { admin: confirmed, adminUnconfirmed } = useAuth()
-  const admin = confirmed || Boolean(adminUnconfirmed)
+  const { admin } = useAuth()
   // While the drawer is open: Escape closes it and the page behind can't scroll
   useEffect(() => {
     if (!open) return
