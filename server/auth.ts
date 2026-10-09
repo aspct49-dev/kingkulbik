@@ -65,7 +65,7 @@ export type SessionUser = {
   stake?: { username: string; linkedAt: number } | null
   /** Unix seconds */
   signedInAt: number
-  /** How this browser signed in (older cookies: Discord). Only a Discord sign-in opens the admin panel */
+  /** How this browser signed in (older cookies: Discord) */
   via?: 'discord' | 'kick'
 }
 
@@ -101,9 +101,13 @@ function sessionUser(token: string | undefined, secret: string) {
   return user && accountId(user) ? user : null
 }
 
-/** Admins come from ADMIN_DISCORD_IDS, checked on every request (no stored roles); signed in with Discord */
+/**
+ * Admins come from ADMIN_DISCORD_IDS, checked on every request (no stored
+ * roles): the account's Discord, however it signed in. A Discord on an account
+ * was linked by signing in with it, so a Kick sign-in to that account counts.
+ */
 export function isAdmin(user: SessionUser | null, env: AuthEnv) {
-  if (!user?.discord || user.via === 'kick') return false
+  if (!user?.discord) return false
   const ids = (env.ADMIN_DISCORD_IDS ?? '').split(/[\s,]+/).filter((id) => /^\d{5,25}$/.test(id))
   return ids.includes(user.discord.id)
 }

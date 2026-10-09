@@ -6,7 +6,7 @@ import coinIcon from '../assets/coin.svg'
 import gemIcon from '../assets/keno/gem.svg'
 import PageHeading from '../components/PageHeading'
 import Toast, { useToast } from '../components/Toast'
-import { discordUrl } from '../hooks/useAuth'
+import { discordUrl, signInUrl } from '../hooks/useAuth'
 import { setChallenges, setOriginalsRules, setStoreItems } from '../hooks/useContent'
 import { useLiveBets } from '../hooks/useLiveBets'
 import { formatPoints } from '../components/keno/format'
@@ -114,9 +114,9 @@ export default function AdminPage() {
         {status.kind === 'loading' && <div className="admin-loading" aria-label="Loading" />}
 
         {status.kind === 'signed-out' && (
-          <Gate title="Sign in to continue" text="The admin panel is for the King Kulbik team. Sign in with Discord.">
-            <a className="kk-button store-gate__button" href={discordUrl('/admin')}>
-              Sign in with Discord
+          <Gate title="Sign in to continue" text="The admin panel is for the King Kulbik team.">
+            <a className="kk-button store-gate__button" href={signInUrl('/admin')}>
+              Sign in
             </a>
           </Gate>
         )}
@@ -127,12 +127,12 @@ export default function AdminPage() {
             text={
               status.discordId
                 ? 'This Discord account isn’t on the admin list.'
-                : 'Admins confirm with Discord: it opens the panel if your Discord is on the admin list.'
+                : 'Admin is checked by Discord: link yours to open the panel if it’s on the admin list.'
             }
           >
             {!status.discordId && (
               <a className="kk-button store-gate__button" href={discordUrl('/admin')}>
-                Confirm with Discord
+                Link Discord
               </a>
             )}
             {status.discordId && (
