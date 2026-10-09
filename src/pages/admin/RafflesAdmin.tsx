@@ -397,12 +397,28 @@ function KickChatCard({ notify }: { notify: (message: string) => void }) {
       </div>
       <div className="admin-actions admin-actions--split">
         <p className="admin-note">
-          {!status
-            ? 'Everyone who chats on Kick gets watch-time tickets once this is connected.'
-            : status.connected
-              ? `Connected. ${status.lastEventAt ? `Last chat message ${ago(status.lastEventAt)}` : 'No chat messages yet'} · ${status.chattersToday.toLocaleString('en-US')} chatters in the last 24 h.`
-              : 'Not connected: only BotRix’s top 100 and people signed in on the site get watch-time tickets.'}
-          {status?.error && <> Last problem: {status.error}</>}
+          {!status ? (
+            'Everyone who chats on Kick gets watch-time tickets. Chat comes in two ways, so one can fail without missing anyone.'
+          ) : (
+            <>
+              Webhooks:{' '}
+              {status.connected
+                ? status.lastWebhookAt
+                  ? `connected, last message ${ago(status.lastWebhookAt)}`
+                  : 'connected, no messages since the server started'
+                : 'not connected'}
+              . Live chat connection:{' '}
+              {status.socket === 'on'
+                ? status.lastSocketAt
+                  ? `on, last message ${ago(status.lastSocketAt)}`
+                  : 'on, no messages since the server started'
+                : status.socket === 'connecting'
+                  ? 'reconnecting'
+                  : 'off'}
+              . {status.chattersToday.toLocaleString('en-US')} chatters in the last 24 h.
+              {status.error && <> Last problem: {status.error}</>}
+            </>
+          )}
         </p>
         <div className="admin-row__actions">
           <button type="button" className="admin-button" disabled={busy} onClick={() => void connect()}>

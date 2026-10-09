@@ -1,9 +1,15 @@
 /*
- * Kick chat, from Kick's own webhooks: every chat message on the channel is
- * POSTed here by Kick (the "Subscribe to events" scope and the webhook URL
- * https://<site>/api/kick/webhook, set on the site's Kick app). It records
- * who chatted and when, so watch-time raffles can count everyone in chat,
- * not just BotRix's top 100 and people signed in on the site.
+ * Kick chat: who chatted and when, so watch-time raffles can count everyone
+ * in chat, not just BotRix's top 100 and people signed in on the site.
+ *
+ * Two independent sources, so either can fail without missing anyone:
+ *   - Kick's webhooks: every chat message is POSTed here by Kick (the
+ *     "Subscribe to events" scope and the webhook URL
+ *     https://<site>/api/kick/webhook, set on the site's Kick app);
+ *   - Kick's live chat connection (public Pusher, the same one the admin's
+ *     giveaway reader uses), held open by the server all the time and
+ *     reconnected whenever it drops or goes quiet.
+ * Both record a chatter the same way, so a message seen twice changes nothing.
  *
  * Kick signs each delivery (RSA SHA-256 over "<message id>.<timestamp>.<body>")
  * with the key at /public/v1/public-key; anything unsigned, stale or repeated
@@ -17,7 +23,7 @@
  */
 
 import { createVerify } from 'node:crypto'
-import { KICK_CHANNEL } from '../shared/events.js'
+import { KICK_CHANNEL, KICK_CHATROOM_ID } from '../shared/events.js'
 import type { KickChatStatus } from '../shared/raffles.js'
 import { isAdmin, json, readSession } from './auth.js'
 import type { AuthEnv, AuthRequest, AuthResponse } from './auth.js'
@@ -41,6 +47,8 @@ let chatters: Map<string, Chatter> | null = null
 let loading: Promise<Map<string, Chatter>> | null = null
 let dirty = false
 let lastEventAt: number | null = null
+/** The last message from each source (ms) */
+const lastFrom = { webhook: null as number | null, socket: null as number | null }
 
 async function roster() {
   if (chatters) return chatters
@@ -50,7 +58,8 @@ async function roster() {
   return loading
 }
 
-async function noteChatter(name: string, kickId: string, at: number) {
+async function noteChatter(name: string, kickId: string, at: number, source: keyof typeof lastFrom) {
+  lastFrom[source] = Date.now()
   const all = await roster()
   const key = name.toLowerCase()
   const seen = all.get(key)
@@ -204,7 +213,7 @@ export async function handleKickChatRequest(req: AuthRequest, env: AuthEnv): Pro
         const sender = event.sender
         if (ours && sender?.username && sender.user_id && !sender.is_anonymous) {
           const sent = Date.parse(event.created_at ?? '')
-          await noteChatter(sender.username, String(sender.user_id), Number.isFinite(sent) ? Math.min(sent, Date.now()) : Date.now())
+          await noteChatter(sender.username, String(sender.user_id), Number.isFinite(sent) ? Math.min(sent, Date.now()) : Date.now(), 'webhook')
         }
       } catch {
         /* a malformed event isn't worth an error back to Kick */
@@ -236,13 +245,105 @@ async function status(): Promise<KickChatStatus> {
     connected: Boolean(state.subscriptionId),
     connectedAt: state.connectedAt ?? null,
     lastEventAt: lastEventAt ?? state.lastEventAt ?? null,
+    lastWebhookAt: lastFrom.webhook,
+    socket: socketState,
+    lastSocketAt: lastFrom.socket,
     chattersToday: day.length,
     error: state.error ?? null,
   }
 }
 
-/** On the VPS: save chatters every 30 s, and keep the subscription alive (checked hourly once connected) */
+// ---------------------------------------------------------------- live chat connection
+
+const PUSHER_URL = 'wss://ws-us2.pusher.com/app/32cbd69e4b950bf97679?protocol=7&client=js&version=8.4.0-rc2&flash=false'
+/** Pusher expects some traffic every 120 s; a ping each minute keeps it open */
+const PING_MS = 60_000
+/** Nothing at all for this long (not even a pong): the connection is dead, start a new one */
+const SILENT_MS = 150_000
+
+let socketState: KickChatStatus['socket'] = 'off'
+
+/** Hold Kick's chat connection open for good: reconnect on any drop, waiting longer after each failure (up to a minute) */
+function listenToChat() {
+  let failures = 0
+  let heardAt = Date.now()
+
+  const open = () => {
+    socketState = 'connecting'
+    let ws: WebSocket
+    try {
+      ws = new WebSocket(PUSHER_URL)
+    } catch {
+      return retry()
+    }
+    let done = false
+    heardAt = Date.now()
+    const ping = setInterval(() => {
+      if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ event: 'pusher:ping', data: {} }))
+      if (Date.now() - heardAt > SILENT_MS) {
+        console.error('[kick chat] connection went quiet: reconnecting')
+        ws.close()
+        dropped()
+      }
+    }, PING_MS)
+    ping.unref()
+
+    const dropped = () => {
+      if (done) return
+      done = true
+      clearInterval(ping)
+      socketState = 'connecting'
+      retry()
+    }
+
+    ws.onopen = () => ws.send(JSON.stringify({ event: 'pusher:subscribe', data: { channel: `chatrooms.${KICK_CHATROOM_ID}.v2` } }))
+    ws.onmessage = (event) => {
+      heardAt = Date.now()
+      let frame: { event?: string; data?: unknown }
+      try {
+        frame = JSON.parse(String(event.data))
+      } catch {
+        return
+      }
+      if (frame.event === 'pusher:ping') return void ws.send(JSON.stringify({ event: 'pusher:pong', data: {} }))
+      if (frame.event === 'pusher_internal:subscription_succeeded') {
+        socketState = 'on'
+        failures = 0
+        return
+      }
+      if (frame.event !== 'App\\Events\\ChatMessageEvent') return
+      try {
+        // Pusher double-encodes: a JSON string inside JSON
+        const body = (typeof frame.data === 'string' ? JSON.parse(frame.data) : frame.data) as {
+          created_at?: string
+          sender?: { id?: number; username?: string }
+        }
+        const sender = body.sender
+        if (!sender?.username || !sender.id) return
+        const sent = Date.parse(body.created_at ?? '')
+        void noteChatter(sender.username, String(sender.id), Number.isFinite(sent) ? Math.min(sent, Date.now()) : Date.now(), 'socket')
+      } catch {
+        /* a malformed frame isn't worth dropping the connection for */
+      }
+    }
+    ws.onclose = dropped
+    ws.onerror = dropped
+  }
+
+  const retry = () => {
+    failures++
+    setTimeout(open, Math.min(60_000, 2000 * 2 ** Math.min(failures, 5))).unref()
+  }
+
+  open()
+}
+
+/**
+ * On the VPS: listen to Kick chat all the time, save chatters every 30 s, and
+ * keep the webhook subscription alive (checked hourly once connected).
+ */
 export function startKickChat(env: AuthEnv) {
+  listenToChat()
   setInterval(() => void flush(), FLUSH_MS).unref()
   const check = async () => {
     const state = await read('kickChat').catch(() => null)

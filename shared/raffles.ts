@@ -136,8 +136,14 @@ export type KickChatStatus = {
   /** Subscribed to the channel's chat */
   connected: boolean
   connectedAt: number | null
-  /** The last chat message Kick delivered */
+  /** The last chat message from either source */
   lastEventAt: number | null
+  /** The last one from Kick's webhooks (since the server started) */
+  lastWebhookAt: number | null
+  /** Kick's live chat connection, held open by the server */
+  socket: 'off' | 'connecting' | 'on'
+  /** The last message from the live connection (since the server started) */
+  lastSocketAt: number | null
   /** Different people who chatted in the last 24 hours */
   chattersToday: number
   /** The last thing that went wrong (connecting, or the hourly check) */
