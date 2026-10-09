@@ -155,6 +155,7 @@ function RaffleView({ raffle }: { raffle: PublicRaffle }) {
         </div>
         <div className="raffles__side">
           <YourTickets raffle={raffle} />
+          {!wager && <TicketCheck raffle={raffle} />}
           <section className="ev-card ev-how ev-how--compact">
             <h2 className="ev-card__title">How it works</h2>
             <ol className="ev-how__steps">
@@ -281,6 +282,51 @@ function YourTickets({ raffle }: { raffle: PublicRaffle }) {
             : `No tickets yet. Watch ${raffle.ticketUnit} minutes on Kick this month for your first.`}
         </p>
       )}
+    </section>
+  )
+}
+
+/**
+ * Anyone can look up a Kick name: chatters get tickets without signing in, so
+ * this is how they see theirs. Watch raffles only (wager names are masked).
+ */
+function TicketCheck({ raffle }: { raffle: PublicRaffle }) {
+  const [query, setQuery] = useState('')
+  const name = query.trim().replace(/^@/, '').toLowerCase()
+  const ranked = [...raffle.entries].sort((a, b) => b.tickets - a.tickets || a.name.localeCompare(b.name))
+  const at = name ? ranked.findIndex((e) => e.name.toLowerCase() === name) : -1
+  const found = at >= 0 ? ranked[at] : null
+
+  return (
+    <section className="ev-card raffles__check">
+      <h2 className="ev-card__title">Check your tickets</h2>
+      <label className="visually-hidden" htmlFor="raffle-check">
+        Kick username
+      </label>
+      <input
+        id="raffle-check"
+        className="raffles__check-input"
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        placeholder="Your Kick username"
+        maxLength={40}
+        autoComplete="off"
+        spellCheck={false}
+      />
+      <p className="ev-card__text raffles__check-result" aria-live="polite">
+        {!name ? (
+          'No need to sign in: chat on stream and your watch time counts.'
+        ) : found ? (
+          <>
+            <strong>{found.name}</strong>: {found.tickets.toLocaleString('en-US')} {found.tickets === 1 ? 'ticket' : 'tickets'} ·{' '}
+            {hours(found.amount)} watched · #{at + 1} of {ranked.length} · {pct(raffle.totalTickets ? found.tickets / raffle.totalTickets : 0)} per draw
+          </>
+        ) : name.length < 3 ? (
+          'Keep typing your full Kick name.'
+        ) : (
+          `No tickets for ${query.trim()} yet. Chat on stream: tickets show after your first ${raffle.ticketUnit} minutes of watch time (BotRix adds it every 10 minutes).`
+        )}
+      </p>
     </section>
   )
 }

@@ -23,7 +23,9 @@
  *   GET  /api/admin/raffles                    every raffle, live tickets with full names
  *   POST /api/admin/raffles                    { kind, title?, prizePool?, prizePerDraw?, maxWinsPerPerson?, ticketUnit?, start?, end? }
  *   POST /api/admin/raffles/<id>               settings (open raffles only)
- *   POST /api/admin/raffles/<id>/lock          freeze tickets, commit the seed
+ *   POST /api/admin/raffles/<id>/lock          freeze tickets, commit the seed ({ snapshot: at } locks with a saved copy)
+ *   GET  /api/admin/raffles/<id>/snapshots     the saved copies of the ticket list
+ *   GET  /api/admin/raffles/<id>/snapshots/<at>  one of them, with tickets
  *   POST /api/admin/raffles/<id>/unlock        back to open (before any draw)
  *   POST /api/admin/raffles/<id>/draw          the next draw
  *   POST /api/admin/raffles/<id>/delete
@@ -39,7 +41,7 @@ import {
   maskName,
   monthWindow,
 } from '../shared/raffles.js'
-import type { PublicRaffle, Raffle, RaffleEntry, RaffleKind } from '../shared/raffles.js'
+import type { PublicRaffle, Raffle, RaffleEntry, RaffleKind, RaffleSnapshot, RaffleSnapshotSummary } from '../shared/raffles.js'
 import { isAdmin, json, readSession } from './auth.js'
 import type { AuthEnv, AuthRequest, AuthResponse } from './auth.js'
 import { BOTRIX_CHANNEL, getBotrixViewer } from './botrix.js'
@@ -305,10 +307,63 @@ export function startWatchCounter(env: AuthEnv) {
     if (running) return
     running = true
     read('raffles')
-      .then((all) => Promise.all(all.filter((r) => r.kind === 'watch' && r.status === 'open').map((r) => entriesOf(r, env).catch(() => undefined))))
+      .then((all) =>
+        Promise.all(
+          all
+            .filter((r) => r.status === 'open')
+            .map(async (r) => {
+              if (r.kind === 'watch') await entriesOf(r, env)
+              await hourlySnapshot(r, env)
+            }),
+        ),
+      )
       .catch(() => undefined)
       .finally(() => (running = false))
   }, 30_000).unref()
+}
+
+// ---------------------------------------------------------------- snapshots
+
+const SNAPSHOT_EVERY_MS = 3600_000
+/** Every snapshot is kept this long; older ones, one per day */
+const KEEP_ALL_MS = 48 * 3600_000
+const KEEP_MS = 60 * 24 * 3600_000
+
+/** Hourly for two days, then the last of each day, for 60 days; lock and reset copies stay for the 60 */
+function prune(list: RaffleSnapshot[], now: number) {
+  const days = new Set<string>()
+  return list.filter((s) => {
+    if (now - s.at > KEEP_MS) return false
+    if (now - s.at <= KEEP_ALL_MS || s.reason !== 'hourly') return true
+    const day = new Date(s.at).toISOString().slice(0, 10)
+    if (days.has(day)) return false
+    days.add(day)
+    return true
+  })
+}
+
+/** Save a copy of the ticket list (an hourly one only when something changed since the last) */
+async function snapshot(r: Raffle, entries: RaffleEntry[], reason: RaffleSnapshot['reason']) {
+  const rows = entries.map((e): [string, number] => [e.name, e.amount])
+  const now = Date.now()
+  await update('raffleSnapshots', (all) => {
+    const list = all[r.id] ?? []
+    if (reason === 'hourly' && list[0] && JSON.stringify(list[0].rows) === JSON.stringify(rows)) return all
+    return { ...all, [r.id]: prune([{ at: now, reason, rows }, ...list], now) }
+  })
+}
+
+async function hourlySnapshot(r: Raffle, env: AuthEnv) {
+  const last = (await read('raffleSnapshots'))[r.id]?.find((s) => s.reason === 'hourly')
+  if (last && Date.now() - last.at < SNAPSHOT_EVERY_MS) return
+  const { entries } = await entriesOf(r, env)
+  // Nothing counted yet: nothing worth keeping
+  if (entries.length) await snapshot(r, entries, 'hourly')
+}
+
+const summarize = (s: RaffleSnapshot, unit: number): RaffleSnapshotSummary => {
+  const entries = freezeEntries(s.rows.map(([name, amount]) => ({ name, amount })), unit)
+  return { at: s.at, reason: s.reason, players: entries.length, tickets: entries.reduce((t, e) => t + e.tickets, 0) }
 }
 
 function withOdds(entries: RaffleEntry[]) {
@@ -406,6 +461,18 @@ export async function handleRaffleRequest(req: AuthRequest, env: AuthEnv): Promi
       return json(200, { raffles: out })
     }
 
+    const snapshots = rest.match(/^([\w-]+)\/snapshots(?:\/(\d+))?$/)
+    if (snapshots && req.method === 'GET') {
+      const raffle = (await read('raffles')).find((r) => r.id === snapshots[1])
+      if (!raffle) throw new InputError('That raffle no longer exists.')
+      const list = (await read('raffleSnapshots'))[raffle.id] ?? []
+      if (!snapshots[2]) return json(200, { snapshots: list.map((s) => summarize(s, raffle.ticketUnit)) })
+      const one = list.find((s) => s.at === Number(snapshots[2]))
+      if (!one) throw new InputError('That snapshot no longer exists.')
+      const entries = freezeEntries(one.rows.map(([name, amount]) => ({ name, amount })), raffle.ticketUnit)
+      return json(200, { snapshot: { ...summarize(one, raffle.ticketUnit), entries } })
+    }
+
     if (req.method !== 'POST') return json(405, { error: 'Use POST.' })
     let body: Record<string, unknown> = {}
     try {
@@ -415,7 +482,13 @@ export async function handleRaffleRequest(req: AuthRequest, env: AuthEnv): Promi
     }
 
     if (rest === 'baseline') {
-      for (const r of await read('raffles')) if (r.kind === 'watch' && r.status === 'open') await watchTotals(r, true)
+      for (const r of await read('raffles')) {
+        if (r.kind !== 'watch' || r.status !== 'open') continue
+        // What it was before, in case the reset wasn't meant
+        const { entries } = await entriesOf(r, env).catch(() => ({ entries: [] as RaffleEntry[] }))
+        if (entries.length) await snapshot(r, entries, 'reset')
+        await watchTotals(r, true)
+      }
       liveCache.clear()
       return json(200, { ok: true })
     }
@@ -464,8 +537,17 @@ export async function handleRaffleRequest(req: AuthRequest, env: AuthEnv): Promi
     if (action === 'lock') {
       if (current.status !== 'open') throw new InputError('This raffle is already locked.')
       liveCache.clear()
-      const { entries } = await entriesOf(current, env, true)
+      let entries: RaffleEntry[]
+      if (body.snapshot !== undefined) {
+        // Lock with a saved copy (when the live count is off at draw time)
+        const saved = (await read('raffleSnapshots'))[id]?.find((s) => s.at === Number(body.snapshot))
+        if (!saved) throw new InputError('That snapshot no longer exists.')
+        entries = freezeEntries(saved.rows.map(([name, amount]) => ({ name, amount })), current.ticketUnit)
+      } else {
+        entries = (await entriesOf(current, env, true)).entries
+      }
       if (!entries.length) throw new InputError('Nobody has a ticket yet.')
+      await snapshot(current, entries, 'lock')
       const seed = randomBytes(32).toString('hex')
       const next: Raffle = {
         ...current,

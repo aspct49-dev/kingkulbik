@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import ticketIcon from '../../assets/ticket.svg'
 import RaffleMachine from '../../components/raffle/RaffleMachine'
 import type { RaffleDrawShow } from '../../components/raffle/RaffleMachine'
-import type { KickChatStatus, Raffle, RaffleEntry, RaffleKind } from '../../../shared/raffles'
+import type { KickChatStatus, Raffle, RaffleEntry, RaffleKind, RaffleSnapshotSummary } from '../../../shared/raffles'
 import { adminPost } from './api'
 import { ConfirmButton, Field, Input, num } from './ui'
 import '../../components/events/EventBlocks.css'
@@ -350,7 +350,147 @@ function RaffleEditor({ raffle, reload, notify }: { raffle: AdminRaffle; reload:
           </div>
         )}
       </section>
+
+      <SnapshotsCard key={raffle.id} raffle={raffle} busy={busy} lock={(at) => void act('/lock', { snapshot: at }, 'Locked with the snapshot. Ready to draw')} />
     </>
+  )
+}
+
+const snapshotTime = (at: number) =>
+  `${new Date(at).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'UTC' })} UTC`
+
+const REASONS = { hourly: 'hourly', lock: 'at lock', reset: 'before reset' } as const
+
+/**
+ * Saved copies of the ticket list: what it was at any hour, who's in a copy
+ * but missing now, a CSV, and (while open) locking with a copy instead of the
+ * live count.
+ */
+function SnapshotsCard({ raffle, busy, lock }: { raffle: AdminRaffle; busy: boolean; lock: (at: number) => void }) {
+  const [list, setList] = useState<RaffleSnapshotSummary[] | null>(null)
+  const [picked, setPicked] = useState<number | null>(null)
+  const [entries, setEntries] = useState<RaffleEntry[] | null>(null)
+  const wager = raffle.kind === 'wager'
+
+  useEffect(() => {
+    fetch(`/api/admin/raffles/${raffle.id}/snapshots`, { credentials: 'same-origin' })
+      .then((r) => (r.ok ? (r.json() as Promise<{ snapshots: RaffleSnapshotSummary[] }>) : Promise.reject(new Error(String(r.status)))))
+      .then((body) => {
+        setList(body.snapshots)
+        setPicked((p) => p ?? body.snapshots[0]?.at ?? null)
+      })
+      .catch(() => setList([]))
+    // A lock or a reset adds one: look again when the raffle changes
+  }, [raffle.id, raffle.status, raffle.lockedAt])
+
+  useEffect(() => {
+    if (picked === null) return setEntries(null)
+    let cancelled = false
+    fetch(`/api/admin/raffles/${raffle.id}/snapshots/${picked}`, { credentials: 'same-origin' })
+      .then((r) => (r.ok ? (r.json() as Promise<{ snapshot: { entries: RaffleEntry[] } }>) : Promise.reject(new Error(String(r.status)))))
+      .then((body) => !cancelled && setEntries(body.snapshot.entries))
+      .catch(() => !cancelled && setEntries(null))
+    return () => {
+      cancelled = true
+    }
+  }, [raffle.id, picked])
+
+  const summary = list?.find((s) => s.at === picked) ?? null
+  // Compared with the live list (open) or the locked one
+  const now = new Map(raffle.entries.map((e) => [e.name.toLowerCase(), e]))
+  const missing = (entries ?? []).filter((e) => !now.has(e.name.toLowerCase()))
+  const fewer = (entries ?? []).filter((e) => {
+    const n = now.get(e.name.toLowerCase())
+    return n && n.tickets < e.tickets
+  })
+
+  const download = () => {
+    if (!entries || !summary) return
+    const cell = (v: string | number) => `"${String(v).replace(/"/g, '""')}"`
+    const rows = [['name', wager ? 'wagered' : 'minutes', 'tickets'], ...entries.map((e) => [e.name, e.amount, e.tickets])]
+    const blob = new Blob([rows.map((r) => r.map(cell).join(',')).join('\n')], { type: 'text/csv' })
+    const a = document.createElement('a')
+    a.href = URL.createObjectURL(blob)
+    a.download = `raffle-${raffle.id}-${new Date(summary.at).toISOString().slice(0, 16).replace(':', '')}.csv`
+    a.click()
+    URL.revokeObjectURL(a.href)
+  }
+
+  return (
+    <section className="admin-card">
+      <h2 className="admin-card__title">
+        Snapshots <span className="admin-count">hourly while counting, at lock, and before a reset</span>
+      </h2>
+      {!list ? (
+        <div className="admin-loading" aria-label="Loading" />
+      ) : list.length === 0 ? (
+        <p className="admin-empty">None yet: the first is saved within the hour once there are tickets.</p>
+      ) : (
+        <>
+          <div className="admin-actions admin-actions--split">
+            <span className="admin-input admin-select">
+              <select value={picked ?? ''} onChange={(e) => setPicked(Number(e.target.value))} aria-label="Snapshot">
+                {list.map((s) => (
+                  <option key={s.at} value={s.at}>
+                    {snapshotTime(s.at)} · {REASONS[s.reason]} · {s.players.toLocaleString('en-US')} players ·{' '}
+                    {s.tickets.toLocaleString('en-US')} tickets
+                  </option>
+                ))}
+              </select>
+            </span>
+            <div className="admin-row__actions">
+              <button type="button" className="admin-button" disabled={!entries} onClick={download}>
+                Download CSV
+              </button>
+              {raffle.status === 'open' && summary && (
+                <ConfirmButton
+                  tone="gold"
+                  label="Lock with this snapshot"
+                  confirm={`Lock ${summary.tickets.toLocaleString('en-US')} tickets from ${snapshotTime(summary.at)}?`}
+                  onConfirm={() => !busy && lock(summary.at)}
+                />
+              )}
+            </div>
+          </div>
+          {summary && entries && (
+            <p className="admin-note">
+              Then: {summary.players.toLocaleString('en-US')} players, {summary.tickets.toLocaleString('en-US')} tickets. Now:{' '}
+              {raffle.entries.length.toLocaleString('en-US')} players, {raffle.totalTickets.toLocaleString('en-US')} tickets.{' '}
+              {missing.length
+                ? `${missing.length} in this snapshot ${missing.length === 1 ? 'is' : 'are'} missing now${fewer.length ? `, ${fewer.length} have fewer tickets now` : ''}.`
+                : fewer.length
+                  ? `${fewer.length} have fewer tickets now.`
+                  : 'Everyone in it is still counted, with at least as many tickets.'}
+            </p>
+          )}
+          {missing.length > 0 && (
+            <div className="ev-table raffles__table">
+              <div className="ev-table__row ev-table__row--head">
+                <span>#</span>
+                <span>Missing now</span>
+                <span>{wager ? 'Wagered then' : 'Watched then'}</span>
+                <span>Tickets then</span>
+                <span />
+              </div>
+              {missing.slice(0, 100).map((e, i) => (
+                <div key={e.name} className="ev-table__row">
+                  <span>
+                    <span className="ev-table__place">{i + 1}</span>
+                  </span>
+                  <span className="ev-table__name">{e.name}</span>
+                  <span className="raffles__muted">{wager ? money(e.amount) : hours(e.amount)}</span>
+                  <span className="raffles__tickets">
+                    <img src={ticketIcon} width={15} height={15} alt="" />
+                    {e.tickets.toLocaleString('en-US')}
+                  </span>
+                  <span />
+                </div>
+              ))}
+            </div>
+          )}
+        </>
+      )}
+    </section>
   )
 }
 

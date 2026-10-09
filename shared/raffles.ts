@@ -28,6 +28,17 @@ export type RaffleEntry = {
   tickets: number
 }
 
+/** A saved copy of a raffle's ticket list (server/raffles.ts takes one hourly while open, at lock and before a reset) */
+export type RaffleSnapshot = {
+  at: number
+  reason: 'hourly' | 'lock' | 'reset'
+  /** [name, amount]: tickets are worked out with the raffle's unit, as at lock */
+  rows: [string, number][]
+}
+
+/** The admin's list of a raffle's snapshots */
+export type RaffleSnapshotSummary = { at: number; reason: RaffleSnapshot['reason']; players: number; tickets: number }
+
 export type RaffleDraw = {
   /** 0-based draw number */
   n: number

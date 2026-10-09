@@ -30,7 +30,7 @@ import type { FeedBet, OriginalsRules, OwedPayout, PfState } from '../shared/ori
 import type { Giveaway, GuessRound, Hunt, RaffleWin, Tournament } from '../shared/events.js'
 import { DEFAULT_SHOP_SETTINGS } from '../shared/profiles.js'
 import type { PlayerBet, PlayerProfile, PointsLogEntry, Redemption, ShopSettings } from '../shared/profiles.js'
-import type { Raffle } from '../shared/raffles.js'
+import type { Raffle, RaffleSnapshot } from '../shared/raffles.js'
 import type { HouseStats } from '../shared/house.js'
 import type { Chatter } from './kickChat.js'
 
@@ -61,6 +61,8 @@ type Tables = {
   stakeUnlinks: Record<string, number>
   /** Everyone seen in Kick chat (via Kick's webhooks), by lowercase name */
   chatters: Record<string, Chatter>
+  /** Each raffle's saved ticket lists, newest first (hourly while open, at lock, before a reset) */
+  raffleSnapshots: Record<string, RaffleSnapshot[]>
   /** Watch-time raffles: the most all-time BotRix minutes seen per viewer (lowercase name), kept across restarts */
   watchSeen: Record<string, { name: string; watchtime: number }>
   /** Originals house results: wagered, paid and bets per UTC hour and game */
@@ -99,6 +101,7 @@ const DEFAULTS: Tables = {
   chatters: {},
   houseStats: { filled: false, hours: {} },
   watchSeen: {},
+  raffleSnapshots: {},
   kickChat: {},
 }
 
