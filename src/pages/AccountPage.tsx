@@ -193,21 +193,18 @@ export default function AccountPage() {
 
         {!user ? (
           <section className="account-signin">
-            <h2 className="account-signin__title">Sign in</h2>
+            <h2 className="account-signin__title">Sign in with Kick</h2>
             <p className="account-signin__text">
-              Sign in with Kick: your King Points, raffle tickets and the Item Store are ready straight away. Signed in
-              with Discord before? Use Discord and everything&rsquo;s still there.
+              Your King Points, raffle tickets and the Item Store are ready straight away. You can link Discord after.
             </p>
-            <div className="account-signin__buttons">
-              <a className="account-button account-button--kick" href={linkKickUrl(returnTo)}>
-                <Glyph src={kickIcon} width={12} height={15} />
-                Continue with Kick
-              </a>
-              <a className="account-button account-button--discord" href={discordUrl(returnTo)}>
-                <img src={discordIcon} width={20} height={16} alt="" />
-                Continue with Discord
-              </a>
-            </div>
+            <a className="account-button account-button--kick" href={linkKickUrl(returnTo)}>
+              <Glyph src={kickIcon} width={12} height={15} />
+              Continue with Kick
+            </a>
+            <p className="account-signin__text account-signin__text--note">
+              Had an account with Discord before? Sign in with Kick, then link Discord on this page: everything moves
+              over.
+            </p>
           </section>
         ) : (
           <>

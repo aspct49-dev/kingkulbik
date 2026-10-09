@@ -126,13 +126,13 @@ export default function AdminPage() {
             title="Admins only"
             text={
               status.discordId
-                ? 'This account isn’t on the admin list, or it signed in with Kick: admins sign in with Discord.'
-                : 'Admins sign in with Discord.'
+                ? 'This Discord account isn’t on the admin list.'
+                : 'Admins confirm with Discord: it opens the panel if your Discord is on the admin list.'
             }
           >
             {!status.discordId && (
               <a className="kk-button store-gate__button" href={discordUrl('/admin')}>
-                Sign in with Discord
+                Confirm with Discord
               </a>
             )}
             {status.discordId && (

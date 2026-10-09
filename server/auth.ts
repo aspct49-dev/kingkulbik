@@ -10,7 +10,11 @@
  * Routes (served by api/auth.ts on Vercel and by the Vite dev server locally):
  *   GET  /api/auth/me                  → { user } or { user: null }
  *   GET  /api/auth/discord/login       → redirect to Discord
- *   GET  /api/auth/discord/callback    → sign in (or link Discord to a Kick sign-in), back to the page
+ *   GET  /api/auth/discord/callback    → link Discord to a Kick sign-in, or sign in to an existing account
+ *
+ * New accounts are made with Kick only; Discord is linked afterwards. Signing
+ * in with Discord still works for accounts that already have it (accounts from
+ * before Kick sign-in, and admins, who confirm with Discord).
  *   GET  /api/auth/kick/login          → redirect to Kick
  *   GET  /api/auth/kick/callback       → sign in (or link Kick when signed in), back to the page
  *   POST /api/auth/logout              → clear the session
@@ -383,6 +387,10 @@ export async function handleAuthRequest(req: AuthRequest, env: AuthEnv): Promise
       } else {
         // Signing in again on this browser keeps its links; elsewhere they come from the account
         const same = user?.discord?.id === me.id
+        // No account with this Discord: new accounts start with Kick
+        if (!same && !owner) {
+          return failBack(returnTo, 'Sign in with Kick first. You can link Discord on your account page after.', [clearState])
+        }
         const restored = owner ? sessionFromProfile(owner, 'discord') : null
         const id = same ? user!.id : restored?.id
         session = {

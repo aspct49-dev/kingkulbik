@@ -157,7 +157,7 @@ function GuessCard({ round, onGuessed }: { round: PublicGuessRound; onGuessed: (
     return (
       <section className="ev-card gtb-guess">
         <h2 className="ev-card__title">Make your guess</h2>
-        <p className="ev-card__text">Sign in with Kick or Discord to enter. One guess per account, free to play.</p>
+        <p className="ev-card__text">Sign in with Kick to enter. One guess per account, free to play.</p>
         <a className="kk-button gtb-guess__signin" href={signInUrl('/guess-the-balance')}>
           Sign in to guess
         </a>

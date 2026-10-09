@@ -65,7 +65,7 @@ export function useAuth() {
   return useSyncExternalStore(subscribe, () => state)
 }
 
-/** The sign-in page (Kick or Discord), coming back to `returnTo` (defaults to here) */
+/** The sign-in page (Kick), coming back to `returnTo` (defaults to here) */
 export function signInUrl(returnTo = window.location.pathname) {
   return `/account?return=${encodeURIComponent(returnTo)}`
 }
@@ -75,7 +75,7 @@ export function linkKickUrl(returnTo = window.location.pathname) {
   return `/api/auth/kick/login?return=${encodeURIComponent(returnTo)}`
 }
 
-/** Full-page redirect into Discord: signs in, or links Discord to a Kick sign-in */
+/** Full-page redirect into Discord: links Discord to a Kick sign-in, or signs in to an account that has it (admins) */
 export function discordUrl(returnTo = window.location.pathname) {
   return `/api/auth/discord/login?return=${encodeURIComponent(returnTo)}`
 }

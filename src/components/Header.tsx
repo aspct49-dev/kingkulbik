@@ -55,7 +55,7 @@ export default function Header({ className = '', menuOpen, onMenuToggle }: Heade
           </Link>
         ) : (
           <>
-            {/* The account page offers Kick or Discord */}
+            {/* The account page: sign in with Kick */}
             <Link className="header__sign-in" to={signInUrl(returnTo)}>
               Sign in
             </Link>
