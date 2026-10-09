@@ -1,0 +1,238 @@
+/*
+ * The admin's House tab. Chart colours are the validated dark-mode diverging
+ * pair (house up blue, house down red: both clear 3:1 on the card and each
+ * other for colour-blind readers); text stays in the page's text colours.
+ */
+
+.house-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+/* A new timeframe loading: the last one stays, dimmed */
+.house {
+  transition: opacity 0.2s ease;
+}
+
+.house--loading {
+  opacity: 0.55;
+}
+
+.house-card {
+  --house-up: #3987e5;
+  --house-down: #e66767;
+  padding-bottom: 8px;
+}
+
+.house-card__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  margin-bottom: 6px;
+}
+
+.house-legend {
+  display: flex;
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.house-legend li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.house-legend__key {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+}
+
+.house-legend__key--up {
+  background: var(--house-up);
+}
+
+.house-legend__key--down {
+  background: var(--house-down);
+}
+
+/* ---------------------------------------------------------------- chart */
+
+.house-chart {
+  position: relative;
+  width: 100%;
+  min-height: 200px;
+}
+
+.house-chart svg {
+  display: block;
+  overflow: visible;
+  touch-action: pan-y;
+}
+
+.house-chart svg:focus-visible {
+  outline: 2px solid #e6d218;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.house-axes__grid {
+  stroke: rgb(255 255 255 / 0.06);
+}
+
+.house-axes__zero {
+  stroke: rgb(255 255 255 / 0.28);
+}
+
+.house-axes__y,
+.house-axes__x {
+  font-size: 11px;
+  font-weight: 600;
+  fill: var(--color-text-muted);
+}
+
+.house-axes__y {
+  text-anchor: end;
+}
+
+.house-chart__wash {
+  fill: rgb(255 255 255 / 0.05);
+}
+
+.house-bar--up {
+  fill: var(--house-up);
+}
+
+.house-bar--down {
+  fill: var(--house-down);
+}
+
+/* The hovered bar lifts */
+.house-bar--active {
+  filter: brightness(1.25);
+}
+
+.house-line {
+  fill: none;
+  stroke: var(--house-up);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.house-crosshair {
+  stroke: rgb(255 255 255 / 0.35);
+  stroke-width: 1;
+}
+
+/* An 8 px marker with a 2 px ring in the card's colour */
+.house-dot {
+  fill: var(--house-up);
+  stroke: var(--color-surface);
+  stroke-width: 2;
+}
+
+/* ---------------------------------------------------------------- tooltip */
+
+.house-tip {
+  position: absolute;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 180px;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+  box-shadow: 0 4px 16px rgb(0 0 0 / 0.4);
+  pointer-events: none;
+}
+
+.house-tip__value {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--color-text);
+}
+
+.house-tip__label {
+  margin-bottom: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.house-tip__row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.house-tip__row b {
+  color: var(--color-text);
+}
+
+/* ---------------------------------------------------------------- table */
+
+.house-table summary {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.house-table summary:focus-visible {
+  outline: 2px solid #e6d218;
+  outline-offset: 2px;
+}
+
+.house-table__scroll {
+  max-height: 360px;
+  margin-top: 10px;
+  overflow: auto;
+}
+
+.house-table table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.house-table th,
+.house-table td {
+  padding: 6px 8px;
+  border-bottom: 1px solid rgb(255 255 255 / 0.06);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.house-table th[scope='row'],
+.house-table thead th:first-child {
+  text-align: left;
+}
+
+.house-table thead th {
+  position: sticky;
+  top: 0;
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  font-weight: 700;
+}
+
+.house-table td,
+.house-table th[scope='row'] {
+  color: var(--color-text);
+  font-weight: 600;
+}

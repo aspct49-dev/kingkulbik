@@ -8,6 +8,7 @@ import type { IncomingMessage, ServerResponse } from 'node:http'
 import { handleAdminRequest } from './admin.js'
 import { handleAuthRequest, json, readSession, SESSION_COOKIE } from './auth.js'
 import { handleEventsRequest } from './events.js'
+import { handleHouseRequest } from './house.js'
 import { handleKickChatRequest } from './kickChat.js'
 import type { AuthEnv, AuthRequest, AuthResponse } from './auth.js'
 import { handleOriginalsRequest } from './originals.js'
@@ -39,6 +40,7 @@ export async function handleApiRequest(req: AuthRequest, env: AuthEnv): Promise<
       (await handleProfileRequest(req, env)) ??
       (await handleRaffleRequest(req, env)) ??
       (await handleKickChatRequest(req, env)) ??
+      (await handleHouseRequest(req, env)) ??
       (await handleAdminRequest(req, env))
 
     // Give the player their updated session, unless the route set one itself (sign-in, linking, sign-out)

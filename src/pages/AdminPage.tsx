@@ -13,6 +13,7 @@ import { formatPoints } from '../components/keno/format'
 import { loadAdmin } from './admin/api'
 import type { AdminData, AdminStatus } from './admin/api'
 import BetsAdmin, { Stat } from './admin/BetsAdmin'
+import HouseAdmin from './admin/HouseAdmin'
 import ChallengesAdmin from './admin/ChallengesAdmin'
 import GiveawayAdmin from './admin/GiveawayAdmin'
 import GuessAdmin from './admin/GuessAdmin'
@@ -38,6 +39,7 @@ type Tab =
   | 'store'
   | 'originals'
   | 'bets'
+  | 'house'
   | 'hunt'
   | 'guess'
   | 'tournaments'
@@ -62,6 +64,7 @@ const GROUPS: { title: string; tabs: { id: Tab; label: string }[] }[] = [
     tabs: [
       { id: 'originals', label: 'Rules' },
       { id: 'bets', label: 'Live Bets' },
+      { id: 'house', label: 'House Results' },
     ],
   },
   {
@@ -232,6 +235,7 @@ export default function AdminPage() {
                 />
               )}
               {tab === 'bets' && <BetsAdmin notify={show} />}
+              {tab === 'house' && <HouseAdmin />}
               {tab === 'hunt' && <HuntAdmin hunts={status.data.hunts} onChange={(hunts) => update({ hunts })} notify={show} />}
               {tab === 'guess' && (
                 <GuessAdmin

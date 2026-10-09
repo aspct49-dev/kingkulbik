@@ -15,6 +15,7 @@
 import { randomBytes } from 'node:crypto'
 import type { PlayerBet, PlayerProfile, ProfileView } from '../shared/profiles.js'
 import { accountId, displayName, userAvatar } from './accounts.js'
+import { recordHouseBet } from './house.js'
 import { isAdmin, json, readSession } from './auth.js'
 import type { AuthEnv, AuthRequest, AuthResponse, SessionUser } from './auth.js'
 import { lookupStakePlayer } from './stakeLink.js'
@@ -66,6 +67,8 @@ export async function recordPlayerBet(user: SessionUser, bet: Omit<PlayerBet, 'i
   try {
     await touchProfile(user)
     await update('bets', (list) => [entry, ...list].slice(0, BET_HISTORY))
+    // The admin's house results keep every bet, past the history's cap
+    await recordHouseBet(entry.game, entry.bet, entry.payout, entry.at).catch(() => undefined)
     await update('players', (list) =>
       list.map((p) =>
         p.id === accountId(user)

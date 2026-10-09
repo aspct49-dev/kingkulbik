@@ -31,6 +31,7 @@ import type { Giveaway, GuessRound, Hunt, RaffleWin, Tournament } from '../share
 import { DEFAULT_SHOP_SETTINGS } from '../shared/profiles.js'
 import type { PlayerBet, PlayerProfile, PointsLogEntry, Redemption, ShopSettings } from '../shared/profiles.js'
 import type { Raffle } from '../shared/raffles.js'
+import type { HouseStats } from '../shared/house.js'
 import type { Chatter } from './kickChat.js'
 
 type Tables = {
@@ -60,6 +61,8 @@ type Tables = {
   stakeUnlinks: Record<string, number>
   /** Everyone seen in Kick chat (via Kick's webhooks), by lowercase name */
   chatters: Record<string, Chatter>
+  /** Originals house results: wagered, paid and bets per UTC hour and game */
+  houseStats: HouseStats
   /** The Kick chat webhook subscription */
   kickChat: {
     broadcasterId?: number | null
@@ -92,6 +95,7 @@ const DEFAULTS: Tables = {
   owedPayouts: [],
   stakeUnlinks: {},
   chatters: {},
+  houseStats: { filled: false, hours: {} },
   kickChat: {},
 }
 
