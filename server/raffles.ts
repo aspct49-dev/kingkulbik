@@ -8,9 +8,11 @@
  *   by search) with no monthly table. So the first time a raffle is counted,
  *   the server saves everyone's all-time minutes as its baseline; the raffle's
  *   watch time is the current total minus the baseline. It covers BotRix's
- *   top 100 plus everyone who linked Kick on the site; someone seen for the
- *   first time mid-raffle counts from then. Off stream it recounts every 15
- *   minutes (watch time can't grow), live every minute.
+ *   top 100, everyone who signed in with Kick, and everyone seen in Kick chat
+ *   (server/kickChat.ts); someone seen for the first time mid-raffle counts
+ *   from then, which for a chatter is their first message. On the VPS a
+ *   background count runs every 30 s, so that first look happens within a
+ *   minute or so whether or not anyone has the raffle page open.
  *
  * Draws (see shared/raffles.ts): locking freezes the tickets and commits to
  * a secret seed (its hash is public); each draw is reproducible from the seed,
@@ -41,6 +43,7 @@ import type { PublicRaffle, Raffle, RaffleEntry, RaffleKind } from '../shared/ra
 import { isAdmin, json, readSession } from './auth.js'
 import type { AuthEnv, AuthRequest, AuthResponse } from './auth.js'
 import { BOTRIX_CHANNEL, getBotrixViewer } from './botrix.js'
+import { chattersSince } from './kickChat.js'
 import { kickLive } from './socials.js'
 import { parseLeaderboardCsv } from './stakeLeaderboard.js'
 import { read, StoreError, update } from './store.js'
@@ -108,16 +111,64 @@ async function botrixTop(): Promise<BotrixRow[]> {
  */
 const highest = new Map<string, BotrixRow>()
 
-/** All-time minutes for BotRix's top 100 plus every Kick account linked on the site */
-async function watchNow(): Promise<Map<string, BotrixRow>> {
+/** When each viewer was last looked up on BotRix (ms, by lowercase name) */
+const lookedUp = new Map<string, number>()
+/** Chatted this recently: may be earning minutes right now */
+const ACTIVE_FOR_MS = 20 * 60_000
+/** BotRix adds watch time in 10-minute steps, so asking more often than this gains nothing */
+const ACTIVE_EVERY_MS = 4 * 60_000
+/** After someone goes quiet, one more look this much later catches BotRix's last step */
+const SETTLE_MS = 12 * 60_000
+/** Signed-in viewers not seen in chat: live, and off stream */
+const QUIET_EVERY_MS = 15 * 60_000
+const OFFLINE_EVERY_MS = 60 * 60_000
+/** At most this many lookups per count (eight at a time); the rest go first next time */
+const LOOKUPS_PER_COUNT = 400
+
+/**
+ * Whether a viewer's BotRix minutes are worth asking for again. Anyone never
+ * looked up goes first (that sets where their raffle count starts). Chatters
+ * are asked every few minutes while active, once more after they go quiet,
+ * then not until they chat again. Signed-in viewers who don't chat, now and then.
+ */
+function due(key: string, chatted: number | null, live: boolean | null, now: number) {
+  const last = lookedUp.get(key)
+  if (last === undefined) return true
+  if (chatted !== null) {
+    if (now - chatted < ACTIVE_FOR_MS) return now - last > ACTIVE_EVERY_MS
+    return last < chatted + ACTIVE_FOR_MS + SETTLE_MS && now >= chatted + ACTIVE_FOR_MS + SETTLE_MS
+  }
+  return now - last > (live === false ? OFFLINE_EVERY_MS : QUIET_EVERY_MS)
+}
+
+/**
+ * All-time minutes for BotRix's top 100, every Kick account linked on the
+ * site and everyone seen in Kick chat since `since` (server/kickChat.ts).
+ */
+async function watchNow(since: number): Promise<Map<string, BotrixRow>> {
+  const now = Date.now()
   const out = new Map<string, BotrixRow>()
   for (const r of await botrixTop()) out.set(r.name.toLowerCase(), r)
-  // Linked viewers are looked up one by one even when in the top 100: their own lookup is up to date
-  const linked = (await read('players')).map((p) => p.kick?.username).filter((n): n is string => Boolean(n))
-  // Eight lookups at a time: quick with many linked viewers, gentle on BotRix
-  for (let i = 0; i < linked.length; i += 8) {
-    const found = await Promise.all(linked.slice(i, i + 8).map((name) => getBotrixViewer(name).catch(() => null)))
-    for (const v of found) if (v) out.set(v.name.toLowerCase(), { name: v.name, watchtime: v.watchtime })
+
+  const names = new Map<string, { name: string; chatted: number | null }>()
+  for (const p of await read('players')) if (p.kick?.username) names.set(p.kick.username.toLowerCase(), { name: p.kick.username, chatted: null })
+  for (const c of await chattersSince(since)) names.set(c.name.toLowerCase(), { name: c.name, chatted: c.lastSeen })
+
+  const live = await kickLive()
+  const ask = [...names]
+    .filter(([key, v]) => due(key, v.chatted, live, now))
+    .sort(([a], [b]) => (lookedUp.get(a) ?? 0) - (lookedUp.get(b) ?? 0))
+    .slice(0, LOOKUPS_PER_COUNT)
+  // Eight at a time: quick with many viewers, gentle on BotRix. Their own lookup is fresher than the top 100
+  for (let i = 0; i < ask.length; i += 8) {
+    await Promise.all(
+      ask.slice(i, i + 8).map(async ([key, v]) => {
+        const found = await getBotrixViewer(v.name).catch(() => undefined)
+        if (found === undefined) return // BotRix didn't answer: asked again next time
+        lookedUp.set(key, Date.now())
+        if (found) out.set(found.name.toLowerCase(), { name: found.name, watchtime: found.watchtime })
+      }),
+    )
   }
   for (const [key, r] of out) {
     const best = highest.get(key)
@@ -140,7 +191,7 @@ type Baseline = { month: string; takenAt: number; minutes: Record<string, number
  */
 async function watchTotals(r: Raffle, reset = false) {
   const key = `raffle:${r.id}`
-  const now = await watchNow()
+  const now = await watchNow(Math.min(r.start, r.createdAt))
   const all = await read('watchBaselines')
   let baseline: Baseline | undefined = all.find((b) => b.month === key)
   if (!baseline && !reset) {
@@ -211,6 +262,23 @@ async function entriesOf(r: Raffle, env: AuthEnv, fresh = false): Promise<{ entr
     return hit
   }
   return pending
+}
+
+/**
+ * On the VPS: keep open watch raffles counted without waiting for visitors, so
+ * a new chatter's starting point is taken soon after their first message.
+ * entriesOf decides whether a count is due (every minute live, 15 off stream).
+ */
+export function startWatchCounter(env: AuthEnv) {
+  let running = false
+  setInterval(() => {
+    if (running) return
+    running = true
+    read('raffles')
+      .then((all) => Promise.all(all.filter((r) => r.kind === 'watch' && r.status === 'open').map((r) => entriesOf(r, env).catch(() => undefined))))
+      .catch(() => undefined)
+      .finally(() => (running = false))
+  }, 30_000).unref()
 }
 
 function withOdds(entries: RaffleEntry[]) {

@@ -243,7 +243,7 @@ function YourTickets({ raffle }: { raffle: PublicRaffle }) {
       ) : !linked ? (
         <>
           <p className="ev-card__text">
-            {wager ? 'Link your Stake username to see your tickets.' : 'Link your Kick account to count your watch time.'}
+            {wager ? 'Link your Stake username to see your tickets.' : 'Link your Kick account to see your tickets.'}
           </p>
           <Link className="kk-button raffles__you-action" to="/account">
             {wager ? 'Link Stake' : 'Link Kick'}

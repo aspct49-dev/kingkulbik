@@ -79,6 +79,8 @@ export type AuthRequest = {
   proto: string | undefined
   /** Request body (JSON), for POSTs */
   body?: string
+  /** Kick's webhook headers (kick-event-*), lowercase names */
+  headers?: Record<string, string | undefined>
 }
 
 export type AuthResponse = {

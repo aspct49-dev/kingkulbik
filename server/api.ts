@@ -8,6 +8,7 @@ import type { IncomingMessage, ServerResponse } from 'node:http'
 import { handleAdminRequest } from './admin.js'
 import { handleAuthRequest, json, readSession, SESSION_COOKIE } from './auth.js'
 import { handleEventsRequest } from './events.js'
+import { handleKickChatRequest } from './kickChat.js'
 import type { AuthEnv, AuthRequest, AuthResponse } from './auth.js'
 import { handleOriginalsRequest } from './originals.js'
 import { handleProfileRequest, touchProfile } from './profiles.js'
@@ -37,6 +38,7 @@ export async function handleApiRequest(req: AuthRequest, env: AuthEnv): Promise<
       (await handleShopRequest(req, env)) ??
       (await handleProfileRequest(req, env)) ??
       (await handleRaffleRequest(req, env)) ??
+      (await handleKickChatRequest(req, env)) ??
       (await handleAdminRequest(req, env))
 
     // Give the player their updated session, unless the route set one itself (sign-in, linking, sign-out)
@@ -91,6 +93,11 @@ export async function serveApi(
       host: (forwarded ? header('x-forwarded-host') : undefined) ?? header('host'),
       proto: forwarded ? header('x-forwarded-proto') : undefined,
       body,
+      headers: Object.fromEntries(
+        Object.keys(req.headers)
+          .filter((name) => name.startsWith('kick-event-'))
+          .map((name) => [name, header(name)]),
+      ),
     },
     env,
   )

@@ -18,6 +18,8 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { serveApi } from './api.js'
 import type { AuthEnv } from './auth.js'
+import { startKickChat } from './kickChat.js'
+import { startWatchCounter } from './raffles.js'
 import { handleLeaderboardRequest } from './stakeLeaderboard.js'
 import { storeKind } from './store.js'
 
@@ -176,4 +178,7 @@ createServer((req, res) => {
   console.log(`[server] King Kulbik on http://${HOST}:${PORT} (serving ${ROOT})`)
   if (!env.SESSION_SECRET) console.warn('[server] SESSION_SECRET is not set: sign-in will not work')
   console.log(`[server] store: ${storeKind()}`)
+  // A long-running server: count watch time and keep Kick chat connected in the background
+  startKickChat(env)
+  startWatchCounter(env)
 })

@@ -131,6 +131,19 @@ export function monthWindow(now = Date.now()) {
 }
 
 /** What the public page gets */
+/** Kick chat webhooks (server/kickChat.ts), for the admin panel */
+export type KickChatStatus = {
+  /** Subscribed to the channel's chat */
+  connected: boolean
+  connectedAt: number | null
+  /** The last chat message Kick delivered */
+  lastEventAt: number | null
+  /** Different people who chatted in the last 24 hours */
+  chattersToday: number
+  /** The last thing that went wrong (connecting, or the hourly check) */
+  error: string | null
+}
+
 export type PublicRaffle = Omit<Raffle, 'entries' | 'draws'> & {
   entries: (RaffleEntry & { odds: number })[]
   draws: RaffleDraw[]

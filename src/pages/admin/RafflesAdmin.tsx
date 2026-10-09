@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import ticketIcon from '../../assets/ticket.svg'
 import RaffleMachine from '../../components/raffle/RaffleMachine'
 import type { RaffleDrawShow } from '../../components/raffle/RaffleMachine'
-import type { Raffle, RaffleEntry, RaffleKind } from '../../../shared/raffles'
+import type { KickChatStatus, Raffle, RaffleEntry, RaffleKind } from '../../../shared/raffles'
 import { adminPost } from './api'
 import { ConfirmButton, Field, Input, num } from './ui'
 import '../../components/events/EventBlocks.css'
@@ -68,6 +68,8 @@ export default function RafflesAdmin({ notify }: { notify: (message: string) => 
         tickets from minutes watched this month (from BotRix). Lock the tickets when the month ends, then draw live:
         each draw picks a ticket at random, so odds are each player's share of the tickets.
       </p>
+
+      <KickChatCard notify={notify} />
 
       <section className="admin-card">
         <div className="admin-card__head">
@@ -349,5 +351,65 @@ function RaffleEditor({ raffle, reload, notify }: { raffle: AdminRaffle; reload:
         )}
       </section>
     </>
+  )
+}
+
+const ago = (at: number) => {
+  const minutes = Math.round((Date.now() - at) / 60_000)
+  if (minutes < 1) return 'just now'
+  if (minutes < 60) return `${minutes} min ago`
+  const hours = Math.round(minutes / 60)
+  return hours < 48 ? `${hours} h ago` : `${Math.round(hours / 24)} days ago`
+}
+
+/**
+ * Kick chat webhooks: with them, everyone who chats counts for watch-time
+ * raffles, not only BotRix's top 100 and people signed in on the site.
+ */
+function KickChatCard({ notify }: { notify: (message: string) => void }) {
+  const [status, setStatus] = useState<KickChatStatus | null>(null)
+  const [busy, setBusy] = useState(false)
+
+  useEffect(() => {
+    fetch('/api/admin/kick-chat', { credentials: 'same-origin' })
+      .then((r) => (r.ok ? (r.json() as Promise<{ status: KickChatStatus }>) : Promise.reject(new Error(String(r.status)))))
+      .then((body) => setStatus(body.status))
+      .catch(() => setStatus(null))
+  }, [])
+
+  const connect = async () => {
+    setBusy(true)
+    try {
+      const body = await adminPost<{ status: KickChatStatus }>('kick-chat/connect')
+      setStatus(body.status)
+      notify('Kick chat connected')
+    } catch (err) {
+      notify(err instanceof Error ? err.message : 'Could not reach Kick.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <section className="admin-card">
+      <div className="admin-card__head">
+        <h2 className="admin-card__title">Kick chat</h2>
+      </div>
+      <div className="admin-actions admin-actions--split">
+        <p className="admin-note">
+          {!status
+            ? 'Everyone who chats on Kick gets watch-time tickets once this is connected.'
+            : status.connected
+              ? `Connected. ${status.lastEventAt ? `Last chat message ${ago(status.lastEventAt)}` : 'No chat messages yet'} · ${status.chattersToday.toLocaleString('en-US')} chatters in the last 24 h.`
+              : 'Not connected: only BotRix’s top 100 and people signed in on the site get watch-time tickets.'}
+          {status?.error && <> Last problem: {status.error}</>}
+        </p>
+        <div className="admin-row__actions">
+          <button type="button" className="admin-button" disabled={busy} onClick={() => void connect()}>
+            {status?.connected ? 'Check connection' : 'Connect Kick chat'}
+          </button>
+        </div>
+      </div>
+    </section>
   )
 }

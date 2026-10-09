@@ -31,6 +31,7 @@ import type { Giveaway, GuessRound, Hunt, RaffleWin, Tournament } from '../share
 import { DEFAULT_SHOP_SETTINGS } from '../shared/profiles.js'
 import type { PlayerBet, PlayerProfile, PointsLogEntry, Redemption, ShopSettings } from '../shared/profiles.js'
 import type { Raffle } from '../shared/raffles.js'
+import type { Chatter } from './kickChat.js'
 
 type Tables = {
   challenges: Challenge[]
@@ -57,6 +58,17 @@ type Tables = {
   owedPayouts: OwedPayout[]
   /** Stake links an admin removed: account id → when (seconds); older links in cookies stop counting */
   stakeUnlinks: Record<string, number>
+  /** Everyone seen in Kick chat (via Kick's webhooks), by lowercase name */
+  chatters: Record<string, Chatter>
+  /** The Kick chat webhook subscription */
+  kickChat: {
+    broadcasterId?: number | null
+    subscriptionId?: string | null
+    connectedAt?: number | null
+    checkedAt?: number | null
+    lastEventAt?: number | null
+    error?: string | null
+  }
 }
 
 const DEFAULTS: Tables = {
@@ -79,6 +91,8 @@ const DEFAULTS: Tables = {
   pfStates: {},
   owedPayouts: [],
   stakeUnlinks: {},
+  chatters: {},
+  kickChat: {},
 }
 
 export class StoreError extends Error {
