@@ -29,10 +29,48 @@ export type BotrixViewer = {
   level: number
 }
 
+// ---------------------------------------------------------------- rate limit
+
+/*
+ * BotRix allows about 100 requests a minute from one server, then refuses
+ * everything (points changes included) for ~40 s: 429 with Retry-After.
+ * Every call here shares one budget under that: background work (raffle
+ * counting) may use BACKGROUND_PER_MIN of it, so people using the site
+ * (points, the shop, the originals) always have room; after a 429 nothing is
+ * sent until BotRix says to try again.
+ */
+const WINDOW_MS = 60_000
+const PER_MIN = 90
+const BACKGROUND_PER_MIN = 50
+const sent: number[] = []
+let blockedUntil = 0
+
+/** Not sent: the budget for this minute is used, or BotRix asked us to wait */
+export class BotrixBusyError extends Error {}
+
+/** A GET to BotRix within the budget; `background` work gets the smaller share */
+export async function botrixFetch(url: URL | string, background = false) {
+  const now = Date.now()
+  while (sent.length && now - sent[0] >= WINDOW_MS) sent.shift()
+  if (now < blockedUntil) throw new BotrixBusyError(`BotRix asked us to wait ${Math.ceil((blockedUntil - now) / 1000)} s.`)
+  if (sent.length >= (background ? BACKGROUND_PER_MIN : PER_MIN)) throw new BotrixBusyError('BotRix budget for this minute is used.')
+  sent.push(now)
+  const res = await fetch(url, { headers: { Accept: 'application/json', 'User-Agent': 'Mozilla/5.0' }, signal: AbortSignal.timeout(10_000) })
+  if (res.status === 429) {
+    const wait = Number(res.headers.get('retry-after'))
+    blockedUntil = Date.now() + (Number.isFinite(wait) && wait > 0 ? wait : 60) * 1000
+    console.error(`[botrix] rate limited: waiting ${Math.round((blockedUntil - Date.now()) / 1000)} s`)
+  }
+  return res
+}
+
 const cache = new Map<string, { at: number; value: BotrixViewer | null }>()
 
-/** A viewer's points on the King Kulbik channel, or null if BotRix has never seen them */
-export async function getBotrixViewer(kickName: string, fresh = false): Promise<BotrixViewer | null> {
+/**
+ * A viewer's points on the King Kulbik channel, or null if BotRix has never
+ * seen them. `background`: raffle counting, which gets the smaller budget.
+ */
+export async function getBotrixViewer(kickName: string, fresh = false, background = false): Promise<BotrixViewer | null> {
   const key = kickName.toLowerCase()
   const hit = cache.get(key)
   if (!fresh && hit && Date.now() - hit.at < CACHE_MS) return hit.value
@@ -41,10 +79,7 @@ export async function getBotrixViewer(kickName: string, fresh = false): Promise<
   url.searchParams.set('platform', 'kick')
   url.searchParams.set('user', BOTRIX_CHANNEL)
   url.searchParams.set('search', kickName)
-  const res = await fetch(url, {
-    headers: { Accept: 'application/json', 'User-Agent': 'Mozilla/5.0' },
-    signal: AbortSignal.timeout(10_000),
-  })
+  const res = await botrixFetch(url, background)
   if (!res.ok) throw new Error(`BotRix answered ${res.status}`)
   const rows = (await res.json()) as { name?: string; points?: number; watchtime?: number; level?: number }[]
   // The search is a prefix/contains match: pick the exact name
@@ -86,7 +121,7 @@ export async function adjustBotrixPoints(kickName: string, delta: number, bid: s
 
   let text: string
   try {
-    const res = await fetch(url, { headers: { Accept: 'application/json', 'User-Agent': 'Mozilla/5.0' }, signal: AbortSignal.timeout(10_000) })
+    const res = await botrixFetch(url)
     text = await res.text()
     if (!res.ok) throw new BotrixError(`BotRix answered ${res.status}.`, 'unreachable')
   } catch (err) {

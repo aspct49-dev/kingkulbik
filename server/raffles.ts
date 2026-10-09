@@ -44,7 +44,7 @@ import {
 import type { PublicRaffle, Raffle, RaffleEntry, RaffleKind, RaffleSnapshot, RaffleSnapshotSummary } from '../shared/raffles.js'
 import { isAdmin, json, readSession } from './auth.js'
 import type { AuthEnv, AuthRequest, AuthResponse } from './auth.js'
-import { BOTRIX_CHANNEL, getBotrixViewer } from './botrix.js'
+import { BOTRIX_CHANNEL, BotrixBusyError, botrixFetch, getBotrixViewer } from './botrix.js'
 import { chattersSince } from './kickChat.js'
 import { kickLive } from './socials.js'
 import { parseLeaderboardCsv } from './stakeLeaderboard.js'
@@ -92,17 +92,25 @@ async function wagerTotals(start: number, end: number, env: AuthEnv) {
 type BotrixRow = { name: string; watchtime: number }
 let topCache: { at: number; rows: BotrixRow[] } | null = null
 
-/** BotRix's public top 100 by points (all-time watch minutes included) */
+/**
+ * BotRix's public top 100 by points (all-time watch minutes included). If
+ * BotRix won't answer, the last list (or none: saved counts and lookups still
+ * cover everyone) rather than failing the whole count.
+ */
 async function botrixTop(): Promise<BotrixRow[]> {
   if (topCache && Date.now() - topCache.at < CACHE_MS) return topCache.rows
-  const url = `https://botrix.live/api/public/leaderboard?platform=kick&user=${BOTRIX_CHANNEL}`
-  const res = await fetch(url, { headers: { Accept: 'application/json', 'User-Agent': 'Mozilla/5.0' }, signal: AbortSignal.timeout(10_000) })
-  if (!res.ok) throw new InputError(`BotRix answered ${res.status}.`)
-  const rows = ((await res.json()) as { name?: string; watchtime?: number }[])
-    .filter((r) => r.name)
-    .map((r) => ({ name: String(r.name), watchtime: Number(r.watchtime) || 0 }))
-  topCache = { at: Date.now(), rows }
-  return rows
+  try {
+    const url = `https://botrix.live/api/public/leaderboard?platform=kick&user=${BOTRIX_CHANNEL}`
+    const res = await botrixFetch(url, true)
+    if (!res.ok) throw new Error(`BotRix answered ${res.status}.`)
+    const rows = ((await res.json()) as { name?: string; watchtime?: number }[])
+      .filter((r) => r.name)
+      .map((r) => ({ name: String(r.name), watchtime: Number(r.watchtime) || 0 }))
+    topCache = { at: Date.now(), rows }
+    return rows
+  } catch {
+    return topCache?.rows ?? []
+  }
 }
 
 /**
@@ -144,8 +152,12 @@ const SETTLE_MS = 12 * 60_000
 /** Signed-in viewers not seen in chat: live, and off stream */
 const QUIET_EVERY_MS = 15 * 60_000
 const OFFLINE_EVERY_MS = 60 * 60_000
-/** At most this many lookups per count (eight at a time); the rest go first next time */
-const LOOKUPS_PER_COUNT = 400
+/**
+ * At most this many lookups per count (eight at a time); the rest go first
+ * next time. BotRix's limit (server/botrix.ts) caps it further: about 50 a
+ * minute for raffle counting, so a long list catches up over a few minutes.
+ */
+const LOOKUPS_PER_COUNT = 50
 
 /**
  * Whether a viewer's BotRix minutes are worth asking for again. Anyone never
@@ -186,10 +198,15 @@ async function watchNow(since: number, known: string[] = []): Promise<Map<string
     .sort(([a], [b]) => (lookedUp.get(a) ?? 0) - (lookedUp.get(b) ?? 0))
     .slice(0, LOOKUPS_PER_COUNT)
   // Eight at a time: quick with many viewers, gentle on BotRix. Their own lookup is fresher than the top 100
-  for (let i = 0; i < ask.length; i += 8) {
+  let busy = false
+  for (let i = 0; i < ask.length && !busy; i += 8) {
     await Promise.all(
       ask.slice(i, i + 8).map(async ([key, v]) => {
-        const found = await getBotrixViewer(v.name).catch(() => undefined)
+        const found = await getBotrixViewer(v.name, false, true).catch((err) => {
+          // Over BotRix's limit: stop here, the rest go first next time
+          if (err instanceof BotrixBusyError) busy = true
+          return undefined
+        })
         if (found === undefined) return // BotRix didn't answer: asked again next time
         lookedUp.set(key, Date.now())
         if (found) out.set(found.name.toLowerCase(), { name: found.name, watchtime: found.watchtime })
