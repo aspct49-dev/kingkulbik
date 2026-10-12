@@ -56,3 +56,41 @@
   color: var(--color-text-subtle);
   text-align: center;
 }
+
+/* Opens the wager contribution rules: the countdown label's pill, made a button */
+.leaderboard-page__rules {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  align-self: center;
+  height: 30px;
+  margin-top: 14px;
+  padding: 0 16px;
+  border-radius: var(--radius-md);
+  background: rgb(36 44 58 / 0.65);
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: #6d7a96;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease,
+    transform 0.15s ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .leaderboard-page__rules:hover {
+    background: #2c3647;
+    color: var(--color-text);
+  }
+}
+
+.leaderboard-page__rules:active {
+  transform: translateY(1px);
+}
+
+.leaderboard-page__rules:focus-visible {
+  outline: 2px solid #e6d218;
+  outline-offset: 2px;
+}

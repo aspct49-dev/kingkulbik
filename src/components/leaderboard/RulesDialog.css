@@ -1,0 +1,156 @@
+/*
+ * The leaderboard's rules: the Item Store confirm dialog's panel, backdrop and
+ * entrance (ItemStorePage.css), wider for four rules side by side.
+ */
+
+.lb-rules {
+  width: min(760px, calc(100vw - 32px));
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: #151a24;
+  box-shadow: 0 24px 60px rgb(0 0 0 / 0.55);
+  color: var(--color-text);
+}
+
+.lb-rules::backdrop {
+  background: rgb(5 7 11 / 0.7);
+}
+
+.lb-rules[open] {
+  animation: lb-rules-in 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@keyframes lb-rules-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+}
+
+.lb-rules__body {
+  display: flex;
+  flex-direction: column;
+  padding: 20px 22px 22px;
+  outline: 0;
+}
+
+.lb-rules__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.lb-rules__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.lb-rules__close {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+  transition:
+    color 0.15s ease,
+    background-color 0.15s ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .lb-rules__close:hover {
+    background: var(--nav-item-from);
+    color: var(--color-text);
+  }
+}
+
+.lb-rules__close:focus-visible {
+  outline: 2px solid #e6d218;
+  outline-offset: 2px;
+}
+
+.lb-rules__intro {
+  margin: 8px 0 0;
+  max-width: 540px;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 21px;
+  color: #6d7a96;
+}
+
+/* Four tiles in the confirm dialog's raised style; two by two on a phone */
+.lb-rules__list {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin: 18px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.lb-rules__rule {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 14px 16px;
+  border-radius: 10px;
+  background: #1d2533;
+  box-shadow: inset 0 1.5px 0 0 rgb(255 255 255 / 0.05);
+}
+
+.lb-rules__share {
+  margin-bottom: 4px;
+  font-family: var(--font-display);
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1;
+  background: linear-gradient(to bottom, #e4de2c, #a88600);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+/* Doesn't count at all: the site's "down" red */
+.lb-rules__share--none {
+  background: none;
+  color: #e5736f;
+}
+
+.lb-rules__rule-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.lb-rules__rule-text {
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 17px;
+  color: #6d7a96;
+}
+
+@media (max-width: 640px) {
+  .lb-rules__body {
+    padding: 16px;
+  }
+
+  .lb-rules__title {
+    font-size: 17px;
+  }
+
+  .lb-rules__list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lb-rules[open] {
+    animation: none;
+  }
+}
