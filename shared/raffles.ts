@@ -94,8 +94,8 @@ export const drawCount = (r: Pick<Raffle, 'prizePool' | 'prizePerDraw'>) =>
 
 export const ticketsFor = (amount: number, unit: number) => (unit > 0 ? Math.floor(amount / unit + 1e-9) : 0)
 
-/** Accounts that never get tickets: Kick's and BotRix's bots, which sit in chat all stream */
-export const EXCLUDED_NAMES = ['kickbot', 'botrix']
+/** Accounts that never get tickets: chat bots (Kick's, BotRix's, BonusTracker's), which sit in chat all stream */
+export const EXCLUDED_NAMES = ['kickbot', 'botrix', 'bonustracker']
 const excluded = new Set(EXCLUDED_NAMES)
 export const isExcluded = (name: string) => excluded.has(name.trim().toLowerCase())
 
