@@ -49,7 +49,7 @@ import { isAdmin, json, readSession } from './auth.js'
 import type { AuthEnv, AuthRequest, AuthResponse } from './auth.js'
 import { BOTRIX_CHANNEL, BotrixBusyError, botrixFetch, getBotrixViewer } from './botrix.js'
 import { chattersSince } from './kickChat.js'
-import { kickLive } from './socials.js'
+import { kickLive, liveMinutesSince } from './socials.js'
 import { parseLeaderboardCsv } from './stakeLeaderboard.js'
 import { read, StoreError, update } from './store.js'
 
@@ -155,6 +155,16 @@ const SETTLE_MS = 12 * 60_000
 const QUIET_EVERY_MS = 15 * 60_000
 const OFFLINE_EVERY_MS = 60 * 60_000
 /**
+ * A starting point is only taken from a lookup this recent. A saved count can
+ * be hours old (the viewer went quiet, or the server was down), and a raffle
+ * starting from it would count minutes from before it began.
+ */
+const FRESH_MS = 3 * 60_000
+const isFresh = (key: string) => Date.now() - (lookedUp.get(key) ?? 0) <= FRESH_MS
+/** BotRix adds watch time in 10-minute steps: the most a count can run ahead of the stream's own live time */
+const STEP_SLACK_MIN = 10
+
+/**
  * At most this many lookups per count (eight at a time); the rest go first
  * next time. BotRix's limit (server/botrix.ts) caps it further: about 50 a
  * minute for raffle counting, so a long list catches up over a few minutes.
@@ -181,23 +191,28 @@ function due(key: string, chatted: number | null, live: boolean | null, now: num
  * All-time minutes for BotRix's top 100, every Kick account linked on the
  * site, everyone seen in Kick chat since `since` (server/kickChat.ts), and
  * everyone already in the raffle (`known`, lowercase names: someone who has
- * since dropped out of the top 100 is still looked up).
+ * since dropped out of the top 100 is still looked up). Anyone not in the
+ * raffle yet is looked up first, so their starting point is a fresh count.
  */
-async function watchNow(since: number, known: string[] = []): Promise<Map<string, BotrixRow>> {
+async function watchNow(since: number, known: Set<string>): Promise<Map<string, BotrixRow>> {
   await loadSeen().catch(() => undefined)
   const now = Date.now()
   const out = new Map<string, BotrixRow>()
-  for (const r of await botrixTop()) out.set(r.name.toLowerCase(), r)
+  const top = await botrixTop()
+  for (const r of top) out.set(r.name.toLowerCase(), r)
 
   const names = new Map<string, { name: string; chatted: number | null }>()
   for (const key of known) names.set(key, { name: highest.get(key)?.name ?? key, chatted: null })
+  // Top 100 not in the raffle yet: their own lookup gives the starting point (the list can lag)
+  for (const r of top) if (!known.has(r.name.toLowerCase())) names.set(r.name.toLowerCase(), { name: r.name, chatted: null })
   for (const p of await read('players')) if (p.kick?.username) names.set(p.kick.username.toLowerCase(), { name: p.kick.username, chatted: null })
   for (const c of await chattersSince(since)) names.set(c.name.toLowerCase(), { name: c.name, chatted: c.lastSeen })
 
   const live = await kickLive()
   const ask = [...names]
-    .filter(([key, v]) => due(key, v.chatted, live, now))
-    .sort(([a], [b]) => (lookedUp.get(a) ?? 0) - (lookedUp.get(b) ?? 0))
+    .filter(([key, v]) => (known.has(key) ? due(key, v.chatted, live, now) : !isFresh(key)))
+    // Not in the raffle yet first, then whoever was looked up longest ago
+    .sort(([a], [b]) => Number(known.has(a)) - Number(known.has(b)) || (lookedUp.get(a) ?? 0) - (lookedUp.get(b) ?? 0))
     .slice(0, LOOKUPS_PER_COUNT)
   // Eight at a time: quick with many viewers, gentle on BotRix. Their own lookup is fresher than the top 100
   let busy = false
@@ -242,14 +257,17 @@ async function watchTotals(r: Raffle, reset = false) {
   const key = `raffle:${r.id}`
   const saved = await read('watchBaselines')
   const known = saved.find((b) => b.month === key)?.minutes ?? {}
-  const now = await watchNow(Math.min(r.start, r.createdAt), Object.keys(known))
+  const now = await watchNow(Math.min(r.start, r.createdAt), new Set(reset ? [] : Object.keys(known)))
   const all = await read('watchBaselines')
   let baseline: Baseline | undefined = all.find((b) => b.month === key)
   if (!baseline && !reset) {
     const month = all.find((b) => b.month === monthKey(r.start) && b.takenAt >= r.createdAt)
     if (month) baseline = { ...month, month: key }
   }
-  const missing = [...now.values()].filter((v) => !baseline || reset || !(v.name.toLowerCase() in baseline.minutes))
+  // New to the raffle: their starting point is today's total, but only from a fresh lookup (the next one, if not yet)
+  const missing = [...now.values()].filter(
+    (v) => (!baseline || reset || !(v.name.toLowerCase() in baseline.minutes)) && isFresh(v.name.toLowerCase()),
+  )
   const stored = all.some((b) => b.month === key)
   if (!baseline || reset || missing.length || !stored) {
     // First count (or a reset): today's total is the starting point; someone seen for the first time counts from now
@@ -262,8 +280,11 @@ async function watchTotals(r: Raffle, reset = false) {
     await update('watchBaselines', (list) => [next, ...list.filter((b) => b.month !== key)].slice(0, 48)).catch(() => undefined)
     baseline = next
   }
+  // Nobody can have watched more than the stream was live since the raffle began (plus one BotRix step)
+  const liveMin = await liveMinutesSince(baseline.takenAt).catch(() => null)
+  const cap = liveMin === null ? Infinity : liveMin + STEP_SLACK_MIN
   const rows = [...now.values()]
-    .map((v) => ({ name: v.name, amount: Math.max(0, v.watchtime - (baseline!.minutes[v.name.toLowerCase()] ?? v.watchtime)) }))
+    .map((v) => ({ name: v.name, amount: Math.min(cap, Math.max(0, v.watchtime - (baseline!.minutes[v.name.toLowerCase()] ?? v.watchtime))) }))
     .filter((v) => v.amount > 0)
   return { rows, countingFrom: baseline.takenAt }
 }

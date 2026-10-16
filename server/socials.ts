@@ -110,6 +110,37 @@ async function load(): Promise<KickSocials> {
   return cache ?? next
 }
 
+/** Kick's times ("2026-10-16 16:32:26") are UTC without saying so */
+const kickTime = (s: string) => Date.parse(/[zZ]|[+-]\d\d:?\d\d$/.test(s) ? s : `${s.replace(' ', 'T')}Z`)
+
+/**
+ * Minutes the channel was live from `since` until now, from its streams
+ * (Kick's VOD list, the live one included). null when that can't be known:
+ * Kick unreachable, or `since` is older than the streams the list goes back to.
+ */
+export async function liveMinutesSince(since: number): Promise<number | null> {
+  if (!cache || Date.now() - cache.at > 5 * 60_000) {
+    pending ??= load().finally(() => (pending = null))
+    await pending.catch(() => undefined)
+  }
+  // No stream list (Kick unreachable when it was first asked): unknown, not "never live"
+  if (!cache?.vods.length) return null
+  const now = Date.now()
+  const streams = cache.vods
+    .map((v) => ({ start: kickTime(v.startedAt), end: v.live ? now : kickTime(v.startedAt) + v.durationMs }))
+    .filter((s) => Number.isFinite(s.start) && Number.isFinite(s.end))
+  const live = cache.channel?.live
+  if (live && !cache.vods.some((v) => v.live)) {
+    const start = kickTime(live.startedAt)
+    if (Number.isFinite(start)) streams.push({ start, end: now })
+  }
+  // The list is the latest 24: if it's full and starts after `since`, earlier streams are missing
+  const oldest = Math.min(...streams.map((s) => s.start))
+  if (cache.vods.length >= 24 && oldest > since) return null
+  const ms = streams.reduce((sum, s) => sum + Math.max(0, Math.min(s.end, now) - Math.max(s.start, since)), 0)
+  return ms / 60_000
+}
+
 /**
  * Whether the stream is live (null: not known yet, or Kick couldn't be
  * reached). Answers from the last copy at once; asks Kick about once a minute.
