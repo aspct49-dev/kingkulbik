@@ -97,7 +97,9 @@ export const ticketsFor = (amount: number, unit: number) => (unit > 0 ? Math.flo
 /** Accounts that never get tickets: chat bots (Kick's, BotRix's, BonusTracker's), which sit in chat all stream */
 export const EXCLUDED_NAMES = ['kickbot', 'botrix', 'bonustracker']
 const excluded = new Set(EXCLUDED_NAMES)
-export const isExcluded = (name: string) => excluded.has(name.trim().toLowerCase())
+/** Letters and digits only: "@BonusTracker" and "Kick_Bot " match too */
+const plain = (name: string) => name.toLowerCase().replace(/[^a-z0-9]/g, '')
+export const isExcluded = (name: string) => excluded.has(plain(name))
 
 /** Freeze entries in a fixed, reproducible order (by name, then amount) */
 export function freezeEntries(rows: { name: string; amount: number }[], unit: number): RaffleEntry[] {
