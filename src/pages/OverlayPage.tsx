@@ -7,6 +7,7 @@ import type { RaffleDrawShow } from '../components/raffle/RaffleMachine'
 import { bonusMultiplier, huntMoney, huntStats } from '../../shared/events'
 import type { Hunt, PublicGiveaway } from '../../shared/events'
 import { useGiveaway, useGuessRound, useHunt, useRaffles, useTournaments } from '../hooks/useEvents'
+import { keptDraws, stillInDraw } from '../../shared/raffles'
 import './OverlayPage.css'
 
 /*
@@ -318,12 +319,11 @@ function RaffleOverlay() {
   }, [count, raffle])
 
   if (!raffle) return null
-  const wins = new Map<string, number>()
-  raffle.draws.forEach((d) => wins.set(d.name, (wins.get(d.name) ?? 0) + 1))
-  const balls = [...raffle.entries]
-    .filter((e) => (wins.get(e.name) ?? 0) < raffle.maxWinsPerPerson)
+  const balls = stillInDraw(raffle.entries, raffle.draws, raffle.maxWinsPerPerson)
     .sort((a, b) => b.tickets - a.tickets)
     .map((e) => e.name)
+  // Rerolls don't count as prizes
+  const kept = keptDraws(raffle.draws).length
 
   return (
     <section className="ov-panel ov-raffle">
@@ -336,7 +336,7 @@ function RaffleOverlay() {
       </header>
       <RaffleMachine names={balls} draw={show} resting={show ? null : raffle.draws[count - 1]?.name ?? null} tight />
       <footer className="ov-foot">
-        Draw <strong>{Math.min(count + (raffle.status === 'complete' ? 0 : 1), raffle.drawsTotal)}</strong> of {raffle.drawsTotal} ·{' '}
+        Draw <strong>{Math.min(kept + (kept < raffle.drawsTotal && raffle.status !== 'complete' ? 1 : 0), raffle.drawsTotal)}</strong> of {raffle.drawsTotal} ·{' '}
         <strong>{raffle.totalTickets.toLocaleString('en-US')}</strong> tickets · {raffle.entries.length} players
       </footer>
     </section>

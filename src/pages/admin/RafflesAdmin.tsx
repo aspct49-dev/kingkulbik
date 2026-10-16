@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import ticketIcon from '../../assets/ticket.svg'
 import RaffleMachine from '../../components/raffle/RaffleMachine'
 import type { RaffleDrawShow } from '../../components/raffle/RaffleMachine'
+import { keptDraws, stillInDraw } from '../../../shared/raffles'
 import type { KickChatStatus, Raffle, RaffleEntry, RaffleKind, RaffleSnapshotSummary } from '../../../shared/raffles'
 import { adminPost } from './api'
 import { ConfirmButton, Field, Input, num } from './ui'
@@ -177,16 +178,14 @@ function RaffleEditor({ raffle, reload, notify }: { raffle: AdminRaffle; reload:
 
   // Balls: everyone still able to win
   const balls = useMemo(() => {
-    const wins = new Map<string, number>()
-    raffle.draws.forEach((d) => wins.set(d.name, (wins.get(d.name) ?? 0) + 1))
-    return [...raffle.entries]
-      .filter((e) => (wins.get(e.name) ?? 0) < raffle.maxWinsPerPerson)
+    return stillInDraw(raffle.entries, raffle.draws, raffle.maxWinsPerPerson)
       .sort((a, b) => b.tickets - a.tickets)
       .map((e) => e.name)
   }, [raffle.entries, raffle.draws, raffle.maxWinsPerPerson])
   const resting = raffle.draws.length ? raffle.draws[raffle.draws.length - 1].name : null
   const sorted = [...raffle.entries].sort((a, b) => b.tickets - a.tickets)
-  const done = raffle.draws.length
+  // Prizes drawn (a rerolled draw doesn't count)
+  const done = keptDraws(raffle.draws).length
 
   return (
     <>
@@ -276,16 +275,24 @@ function RaffleEditor({ raffle, reload, notify }: { raffle: AdminRaffle; reload:
           <h2 className="admin-card__title">
             Draws <span className="admin-count">{done} of {raffle.drawsTotal}</span>
           </h2>
-          {raffle.status === 'locked' && (
-            <button
-              type="button"
-              className="kk-button admin-submit"
-              disabled={busy || animating}
-              onClick={() => void act('/draw', {}, '')}
-            >
-              {animating ? 'Drawing…' : `Draw ${done + 1} of ${raffle.drawsTotal}`}
-            </button>
-          )}
+          {raffle.status === 'locked' &&
+            (done < raffle.drawsTotal ? (
+              <button
+                type="button"
+                className="kk-button admin-submit"
+                disabled={busy || animating}
+                onClick={() => void act('/draw', {}, 'Everyone left has reached the win cap')}
+              >
+                {animating ? 'Drawing…' : `Draw ${done + 1} of ${raffle.drawsTotal}`}
+              </button>
+            ) : (
+              <ConfirmButton
+                tone="gold"
+                label="Finish & reveal seed"
+                confirm="Finish it? Winners can't be rerolled after."
+                onConfirm={() => !busy && !animating && void act('/finish', {}, 'Raffle finished: the seed is revealed')}
+              />
+            ))}
         </div>
         <div className="admin-raffle-machine">
           <RaffleMachine
@@ -298,17 +305,31 @@ function RaffleEditor({ raffle, reload, notify }: { raffle: AdminRaffle; reload:
             }}
           />
         </div>
-        {done > 0 && (
+        {raffle.draws.length > 0 && (
           <ol className="raffles__draws">
-            {raffle.draws.map((d) => (
-              <li key={d.n} className="raffles__draw raffles__draw--done">
-                <span className="raffles__draw-n">Draw {d.n + 1}</span>
-                <span className="raffles__draw-name">{animating && d.n === done - 1 ? '…' : d.name}</span>
-                <span className="raffles__draw-prize">
-                  {usd(d.prize)} · ticket {d.ticket + 1} of {d.pool}
-                </span>
-              </li>
-            ))}
+            {(() => {
+              let slot = 0
+              return raffle.draws.map((d) => {
+                const label = d.rerolledAt ? 'Rerolled' : `Draw ${++slot}`
+                const last = d.n === raffle.draws.length - 1
+                return (
+                  <li key={d.n} className={`raffles__draw raffles__draw--done${d.rerolledAt ? ' raffles__draw--rerolled' : ''}`}>
+                    <span className="raffles__draw-n">{label}</span>
+                    <span className="raffles__draw-name">{animating && last ? '…' : d.name}</span>
+                    <span className="raffles__draw-prize">
+                      {usd(d.prize)} · ticket {d.ticket + 1} of {d.pool}
+                    </span>
+                    {raffle.status === 'locked' && !d.rerolledAt && !(animating && last) && (
+                      <ConfirmButton
+                        label="Reroll"
+                        confirm={`Reroll ${d.name}? They can't win again in this raffle.`}
+                        onConfirm={() => !busy && !animating && void act('/reroll', { n: d.n }, 'Rerolled. Nobody left to draw')}
+                      />
+                    )}
+                  </li>
+                )
+              })
+            })()}
           </ol>
         )}
         {raffle.status === 'complete' && raffle.seed && (

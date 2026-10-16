@@ -28,6 +28,8 @@
  *   GET  /api/admin/raffles/<id>/snapshots/<at>  one of them, with tickets
  *   POST /api/admin/raffles/<id>/unlock        back to open (before any draw)
  *   POST /api/admin/raffles/<id>/draw          the next draw
+ *   POST /api/admin/raffles/<id>/reroll        { n }: void draw n, draw its replacement
+ *   POST /api/admin/raffles/<id>/finish        every prize drawn: complete it, reveal the seed
  *   POST /api/admin/raffles/<id>/delete
  *   POST /api/admin/raffles/baseline           open watch raffles count from now
  */
@@ -38,6 +40,7 @@ import {
   drawCount,
   drawNext,
   freezeEntries,
+  keptDraws,
   maskName,
   monthWindow,
 } from '../shared/raffles.js'
@@ -409,7 +412,7 @@ async function publicView(r: Raffle, env: AuthEnv, me: { stake?: string; kick?: 
     totalTickets: total,
     drawsTotal: drawCount(r),
     // Named as in the entries, so the page can find its own row
-    mine: mine ? { ...mine, name: shown(mine.name), wins: r.draws.filter((d) => d.name === mine.name).length } : null,
+    mine: mine ? { ...mine, name: shown(mine.name), wins: keptDraws(r.draws).filter((d) => d.name === mine.name).length } : null,
     countingFrom,
     updatedAt: Date.now(),
   }
@@ -585,32 +588,49 @@ export async function handleRaffleRequest(req: AuthRequest, env: AuthEnv): Promi
       return json(200, { raffle: sealed(next) })
     }
 
-    if (action === 'draw') {
-      let drawn: Raffle | undefined
+    if (action === 'draw' || action === 'reroll') {
       if (current.status !== 'locked' || !current.seed) {
-        throw new InputError(current.status === 'open' ? 'Lock the raffle first.' : 'Every draw has been made.')
+        throw new InputError(current.status === 'open' ? 'Lock the raffle first.' : 'This raffle is finished.')
       }
-      // Computed outside the store's queue (it's async); the save below checks nobody drew meanwhile
-      const fresh = current
-      const next = await drawNext(fresh, fresh.seed!, fresh.draws)
-      if (!next) throw new InputError('Everyone left has reached the win cap.')
+      let draws = current.draws
+      if (action === 'reroll') {
+        // The winner couldn't take it: the draw stays on the record, marked, and they leave the pool
+        const n = Number(body.n)
+        const target = draws.find((d) => d.n === n)
+        if (!target) throw new InputError('That draw doesn’t exist.')
+        if (target.rerolledAt) throw new InputError('That draw was already rerolled.')
+        draws = draws.map((d) => (d.n === n ? { ...d, rerolledAt: Date.now() } : d))
+      } else if (keptDraws(draws).length >= drawCount(current)) {
+        throw new InputError('Every prize has been drawn. Finish the raffle to reveal the seed.')
+      }
+      // The next draw from the seed: a new prize, or the rerolled one's replacement
+      const next = await drawNext(current, current.seed, draws)
+      if (next) {
+        const prize = action === 'reroll' ? draws.find((d) => d.n === Number(body.n))!.prize : current.prizePerDraw
+        draws = [...draws, { n: draws.length, ticket: next.ticket, pool: next.pool, name: next.name, prize, at: Date.now() }]
+      } else if (action === 'draw') throw new InputError('Everyone left has reached the win cap. Finish the raffle.')
+      let saved: Raffle | undefined
       await update('raffles', (list) =>
         list.map((r) => {
           if (r.id !== id) return r
-          if (r.draws.length !== fresh.draws.length) throw new InputError('Someone else drew at the same moment. Try again.')
-          const draws = [...r.draws, { n: r.draws.length, ticket: next.ticket, pool: next.pool, name: next.name, prize: r.prizePerDraw, at: Date.now() }]
-          const done = draws.length >= drawCount(r)
-          drawn = { ...r, draws, status: done ? 'complete' : 'locked', completedAt: done ? Date.now() : null }
-          return drawn
+          // Computed outside the store's queue (it's async): nobody may have drawn or rerolled meanwhile
+          if (r.draws.length !== current.draws.length || r.draws.some((d, i) => d.rerolledAt !== current.draws[i].rerolledAt)) {
+            throw new InputError('Someone else drew at the same moment. Try again.')
+          }
+          saved = { ...r, draws }
+          return saved
         }),
       )
-      // The last possible draw also finishes it (when the cap empties the pool early)
-      if (drawn && drawn.status === 'locked' && !(await drawNext(drawn, drawn.seed!, drawn.draws))) {
-        drawn = { ...drawn, status: 'complete', completedAt: Date.now() }
-        const final = drawn
-        await update('raffles', (list) => list.map((r) => (r.id === id ? final : r)))
-      }
-      return json(200, { raffle: sealed(drawn!), draw: drawn!.draws[drawn!.draws.length - 1] })
+      return json(200, { raffle: sealed(saved!), draw: next ? saved!.draws[saved!.draws.length - 1] : undefined })
+    }
+
+    if (action === 'finish') {
+      if (current.status !== 'locked' || !current.seed) throw new InputError('Only a raffle being drawn can be finished.')
+      const left = keptDraws(current.draws).length < drawCount(current) && (await drawNext(current, current.seed, current.draws))
+      if (left) throw new InputError('There are prizes left to draw.')
+      const next: Raffle = { ...current, status: 'complete', completedAt: Date.now() }
+      await update('raffles', (list) => list.map((r) => (r.id === id ? next : r)))
+      return json(200, { raffle: sealed(next) })
     }
 
     return json(404, { error: 'Not found.' })

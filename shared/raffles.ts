@@ -9,8 +9,15 @@
  *   HMAC-SHA256(seed, `${raffleId}:${k}:0`) (the originals' scheme), picks
  *   ticket floor(float × tickets in play), and the entry holding that ticket
  *   wins. So odds are exactly tickets ÷ tickets in play. Someone who reaches
- *   the win cap leaves the pool for the draws after. Finishing reveals the
- *   seed, and the same function below re-runs every draw.
+ *   the win cap leaves the pool for the draws after.
+ *
+ *   An admin can reroll a draw (the winner couldn't take it): it stays on the
+ *   list marked rerolled, that player leaves the pool, and the replacement is
+ *   simply the next draw k from the same seed, so rerolls are re-run too. The
+ *   seed is revealed only when an admin finishes the raffle: until then
+ *   nobody can know who a reroll would pick.
+ *
+ *   Bots (EXCLUDED_NAMES) never get tickets.
  */
 
 import { fairFloats } from './originals.js'
@@ -49,6 +56,8 @@ export type RaffleDraw = {
   name: string
   prize: number
   at: number
+  /** Rerolled by an admin: doesn't count, and that player can't be drawn again in this raffle */
+  rerolledAt?: number
 }
 
 export type Raffle = {
@@ -85,26 +94,47 @@ export const drawCount = (r: Pick<Raffle, 'prizePool' | 'prizePerDraw'>) =>
 
 export const ticketsFor = (amount: number, unit: number) => (unit > 0 ? Math.floor(amount / unit + 1e-9) : 0)
 
+/** Accounts that never get tickets: Kick's and BotRix's bots, which sit in chat all stream */
+export const EXCLUDED_NAMES = ['kickbot', 'botrix']
+const excluded = new Set(EXCLUDED_NAMES)
+export const isExcluded = (name: string) => excluded.has(name.trim().toLowerCase())
+
 /** Freeze entries in a fixed, reproducible order (by name, then amount) */
 export function freezeEntries(rows: { name: string; amount: number }[], unit: number): RaffleEntry[] {
   return rows
     .map((r) => ({ name: r.name, amount: Math.round(r.amount * 100) / 100, tickets: ticketsFor(r.amount, unit) }))
-    .filter((e) => e.tickets > 0)
+    .filter((e) => e.tickets > 0 && !isExcluded(e.name))
     .sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()) || b.amount - a.amount)
 }
 
+/** The draws that count: not rerolled */
+export const keptDraws = <T extends Pick<RaffleDraw, 'rerolledAt'>>(draws: T[]) => draws.filter((d) => !d.rerolledAt)
+
+/** Who can still be drawn: under the win cap, and not rerolled away */
+export function stillInDraw<E extends Pick<RaffleEntry, 'name'>>(
+  entries: E[],
+  draws: Pick<RaffleDraw, 'name' | 'rerolledAt'>[],
+  maxWinsPerPerson: number,
+): E[] {
+  const wins = new Map<string, number>()
+  const out = new Set<string>()
+  for (const d of draws) {
+    if (d.rerolledAt) out.add(d.name)
+    else wins.set(d.name, (wins.get(d.name) ?? 0) + 1)
+  }
+  return entries.filter((e) => !out.has(e.name) && (wins.get(e.name) ?? 0) < maxWinsPerPerson)
+}
+
 /**
- * Draw k given the draws before it. Returns null when nobody can win any more
- * (everyone left has hit the cap).
+ * Draw k (k = every draw before it, rerolled ones included). Returns null
+ * when nobody can win any more (everyone left has hit the cap).
  */
 export async function drawNext(
   raffle: Pick<Raffle, 'id' | 'entries' | 'maxWinsPerPerson'>,
   seed: string,
-  previous: Pick<RaffleDraw, 'name'>[],
+  previous: Pick<RaffleDraw, 'name' | 'rerolledAt'>[],
 ): Promise<{ name: string; ticket: number; pool: number } | null> {
-  const wins = new Map<string, number>()
-  for (const d of previous) wins.set(d.name, (wins.get(d.name) ?? 0) + 1)
-  const eligible = raffle.entries.filter((e) => (wins.get(e.name) ?? 0) < raffle.maxWinsPerPerson)
+  const eligible = stillInDraw(raffle.entries, previous, raffle.maxWinsPerPerson)
   const pool = eligible.reduce((s, e) => s + e.tickets, 0)
   if (pool <= 0) return null
   const [f] = await fairFloats(seed, raffle.id, previous.length, 1)
@@ -117,13 +147,22 @@ export async function drawNext(
   return null
 }
 
-/** Re-run every draw from a revealed seed (for the Verify button) */
-export async function replayDraws(raffle: Pick<Raffle, 'id' | 'entries' | 'maxWinsPerPerson' | 'prizePool' | 'prizePerDraw'>, seed: string) {
-  const out: { name: string; ticket: number; pool: number }[] = []
-  for (let k = 0; k < drawCount(raffle); k++) {
+/**
+ * Re-run every draw from a revealed seed (for the Verify button). `recorded`:
+ * the raffle's draws, for which ones were rerolled (an admin's call, so it
+ * comes from the record; who each draw picked is what the re-run checks).
+ */
+export async function replayDraws(
+  raffle: Pick<Raffle, 'id' | 'entries' | 'maxWinsPerPerson' | 'prizePool' | 'prizePerDraw'>,
+  seed: string,
+  recorded?: Pick<RaffleDraw, 'rerolledAt'>[],
+) {
+  const out: { name: string; ticket: number; pool: number; rerolledAt?: number }[] = []
+  while (recorded ? out.length < recorded.length : keptDraws(out).length < drawCount(raffle)) {
     const next = await drawNext(raffle, seed, out)
     if (!next) break
-    out.push(next)
+    const rerolledAt = recorded?.[out.length]?.rerolledAt
+    out.push(rerolledAt ? { ...next, rerolledAt } : next)
   }
   return out
 }

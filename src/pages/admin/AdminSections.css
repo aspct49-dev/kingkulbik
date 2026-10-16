@@ -1069,3 +1069,14 @@
     justify-self: end;
   }
 }
+
+/* Raffle draws: the reroll button (and its "are you sure") under each winner */
+.raffles__draw > .admin-button,
+.raffles__draw > .admin-confirm {
+  align-self: flex-start;
+  margin-top: 8px;
+}
+
+.raffles__draw > .admin-confirm {
+  flex-wrap: wrap;
+}

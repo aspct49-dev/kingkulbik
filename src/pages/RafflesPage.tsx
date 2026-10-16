@@ -7,7 +7,7 @@ import EventBanner from '../components/events/EventBanner'
 import RaffleMachine from '../components/raffle/RaffleMachine'
 import type { RaffleDrawShow } from '../components/raffle/RaffleMachine'
 import { socials } from '../data/links'
-import { replayDraws } from '../../shared/raffles'
+import { keptDraws, replayDraws, stillInDraw } from '../../shared/raffles'
 import type { PublicRaffle, RaffleKind } from '../../shared/raffles'
 import { signInUrl, useAuth } from '../hooks/useAuth'
 import { useGiveaway, useRaffles } from '../hooks/useEvents'
@@ -96,14 +96,11 @@ const STATUS: Record<PublicRaffle['status'], { chip: string; tone: string }> = {
 function RaffleView({ raffle }: { raffle: PublicRaffle }) {
   const wager = raffle.kind === 'wager'
   const maxWin = raffle.prizePerDraw * raffle.maxWinsPerPerson
-  const remaining = raffle.drawsTotal - raffle.draws.length
+  const remaining = raffle.drawsTotal - keptDraws(raffle.draws).length
 
   // Balls: everyone who can still win, most tickets first
   const balls = useMemo(() => {
-    const wins = new Map<string, number>()
-    raffle.draws.forEach((d) => wins.set(d.name, (wins.get(d.name) ?? 0) + 1))
-    return [...raffle.entries]
-      .filter((e) => (wins.get(e.name) ?? 0) < raffle.maxWinsPerPerson)
+    return stillInDraw(raffle.entries, raffle.draws, raffle.maxWinsPerPerson)
       .sort((a, b) => b.tickets - a.tickets)
       .map((e) => e.name)
   }, [raffle.entries, raffle.draws, raffle.maxWinsPerPerson])
@@ -124,7 +121,9 @@ function RaffleView({ raffle }: { raffle: PublicRaffle }) {
     raffle.status === 'open'
       ? `Tickets count until ${day(raffle.end - 1)} (UTC)${raffle.countingFrom ? ` · watch time counted from ${day(raffle.countingFrom)}` : ''}. Draws happen live on stream.`
       : raffle.status === 'locked'
-        ? `Tickets are locked. ${remaining} of ${raffle.drawsTotal} draws to go.`
+        ? remaining > 0
+          ? `Tickets are locked. ${remaining} of ${raffle.drawsTotal} draws to go.`
+          : 'Every prize is drawn. The seed is revealed once the raffle is finished, so anyone can check the draws.'
         : 'Every draw has been made. The seed is revealed below, so anyone can check them.'
 
   return (
@@ -192,22 +191,36 @@ function RaffleView({ raffle }: { raffle: PublicRaffle }) {
       </div>
 
       <h2 className="ev-section raffles__heading">Draws</h2>
-      <ol className="raffles__draws">
-        {Array.from({ length: raffle.drawsTotal }, (_, n) => {
-          const d = raffle.draws[n]
-          return (
-            <li key={n} className={`raffles__draw${d ? ' raffles__draw--done' : ''}`}>
-              <span className="raffles__draw-n">Draw {n + 1}</span>
-              <span className="raffles__draw-name">{d ? d.name : 'To be drawn'}</span>
-              <span className="raffles__draw-prize">{usd(raffle.prizePerDraw)}</span>
-            </li>
-          )
-        })}
-      </ol>
+      <DrawList raffle={raffle} />
 
       <Entries raffle={raffle} />
       <Fairness raffle={raffle} />
     </>
+  )
+}
+
+/** Every draw in order (a rerolled one stays, marked), then the prizes still to draw */
+function DrawList({ raffle }: { raffle: PublicRaffle }) {
+  let slot = 0
+  const rows = raffle.draws.map((d) => (d.rerolledAt ? { d, label: 'Rerolled' } : { d, label: `Draw ${++slot}` }))
+  const left = Math.max(0, raffle.drawsTotal - slot)
+  return (
+    <ol className="raffles__draws">
+      {rows.map(({ d, label }) => (
+        <li key={d.n} className={`raffles__draw raffles__draw--done${d.rerolledAt ? ' raffles__draw--rerolled' : ''}`}>
+          <span className="raffles__draw-n">{label}</span>
+          <span className="raffles__draw-name">{d.name}</span>
+          <span className="raffles__draw-prize">{d.rerolledAt ? 'redrawn' : usd(d.prize)}</span>
+        </li>
+      ))}
+      {Array.from({ length: left }, (_, i) => (
+        <li key={`left-${i}`} className="raffles__draw">
+          <span className="raffles__draw-n">Draw {slot + i + 1}</span>
+          <span className="raffles__draw-name">To be drawn</span>
+          <span className="raffles__draw-prize">{usd(raffle.prizePerDraw)}</span>
+        </li>
+      ))}
+    </ol>
   )
 }
 
@@ -403,7 +416,7 @@ function Fairness({ raffle }: { raffle: PublicRaffle }) {
     // Public names are masked (two could look alike), so players are told apart by their place
     // in the frozen list; the tickets, their order and the seed are what decide every draw
     const entries = raffle.entries.map((e, i) => ({ ...e, name: String(i) }))
-    const replayed = await replayDraws({ ...raffle, entries }, raffle.seed)
+    const replayed = await replayDraws({ ...raffle, entries }, raffle.seed, raffle.draws)
     const ok = replayed.length === raffle.draws.length && replayed.every((d, i) => d.ticket === raffle.draws[i].ticket && d.pool === raffle.draws[i].pool)
     setCheck(ok ? 'ok' : 'bad')
   }
@@ -414,7 +427,7 @@ function Fairness({ raffle }: { raffle: PublicRaffle }) {
         <h2 className="ev-card__title">Fair draws</h2>
         <p className="ev-card__text">
           When tickets lock, the server commits to a secret seed and shows its fingerprint here. Every draw comes from
-          that seed, and it’s revealed after the last draw so anyone can re-run them.
+          that seed, and it’s revealed when the raffle is finished so anyone can re-run them, rerolls included.
         </p>
       </section>
     )
@@ -433,7 +446,7 @@ function Fairness({ raffle }: { raffle: PublicRaffle }) {
         </div>
         <div>
           <dt>Seed</dt>
-          <dd>{raffle.seed ?? 'Revealed after the last draw'}</dd>
+          <dd>{raffle.seed ?? 'Revealed when the raffle is finished'}</dd>
         </div>
       </dl>
       {raffle.seed && (
