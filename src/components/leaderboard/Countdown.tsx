@@ -31,3 +31,16 @@ export default function Countdown({ end }: CountdownProps) {
     </div>
   )
 }
+
+/** A finished race, in the countdown's place: when it ended */
+export function RaceEnded({ end }: { end: number }) {
+  const day = new Date(end - 1).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' })
+  return (
+    <div className="countdown">
+      <p className="countdown__label">LEADERBOARD ENDED</p>
+      <p className="countdown__time">
+        <span className="countdown__value">{day.toUpperCase()}</span>
+      </p>
+    </div>
+  )
+}

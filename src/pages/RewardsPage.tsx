@@ -106,7 +106,7 @@ const REWARDS: Reward[] = [
     ribbon: 'PAID INSTANTLY EVERY SATURDAY',
     icon: <img className="bonus-card__hexagon" src={iconTrophy} width={245.813} height={237.76} alt="" />,
     top: 'EXCLUSIVE',
-    main: '$40K RACE',
+    main: '$60K RACE',
     text: ['Climb the ranks & secure top', 'places for big prizes!'],
     cta: 'Leaderboard',
     to: '/leaderboard',

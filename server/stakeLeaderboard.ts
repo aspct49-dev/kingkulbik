@@ -17,7 +17,7 @@
  * to the browser, logged, or included in error messages.
  */
 
-import { BOARDS, getRaceWindow } from '../shared/leaderboard.js'
+import { BOARDS, getRaceWindow, prizesFor } from '../shared/leaderboard.js'
 import type { BoardId, LeaderboardEntry, LeaderboardResponse } from '../shared/leaderboard.js'
 
 const STAKE_LEADERBOARD_URL = 'https://api.stake.com/affiliate/leaderboard'
@@ -149,16 +149,34 @@ async function fetchLeaderboard(
   boardId: BoardId,
   token: string,
   cacheKey: string,
-  { now = Date.now(), fetchImpl = fetch, apiUrl = STAKE_LEADERBOARD_URL }: FetchOptions,
+  options: FetchOptions,
 ): Promise<LeaderboardResponse> {
-  const board = BOARDS[boardId]
+  const now = options.now ?? Date.now()
   const window = getRaceWindow(now)
+  const entries = await fetchStandings(boardId, window, token, options)
+  const data: LeaderboardResponse = { board: boardId, window, entries, updatedAt: now }
+  cache.set(cacheKey, { at: now, data })
+  return data
+}
+
+/**
+ * A board's standings for one race (the current one, or a finished one being
+ * archived): ranked, masked, and with that race's prize per place.
+ */
+export async function fetchStandings(
+  boardId: BoardId,
+  window: { start: number; end: number },
+  token: string,
+  { fetchImpl = fetch, apiUrl = STAKE_LEADERBOARD_URL }: FetchOptions = {},
+): Promise<LeaderboardEntry[]> {
+  const board = BOARDS[boardId]
+  const prizes = prizesFor(boardId, window.start)
 
   const url = new URL(apiUrl)
   url.search = new URLSearchParams({
     timePeriod: 'customRange',
     isStakeExclusive: String(board.stakeExclusive),
-    limit: String(Math.max(board.prizes.length, 50)),
+    limit: String(Math.max(prizes.length, 50)),
     startDate: String(window.start),
     endDate: String(window.end - 1), // Stake's endDate is inclusive
   }).toString()
@@ -187,23 +205,26 @@ async function fetchLeaderboard(
     clearTimeout(timer)
   }
 
-  // Ranked by weighted wager, as on kingkulbik.com; players with nothing
-  // counted yet would otherwise sit in a paying place ahead of an empty slot.
-  const entries: LeaderboardEntry[] = parseLeaderboardCsv(csv)
+  return rankEntries(parseLeaderboardCsv(csv), prizes)
+}
+
+/**
+ * Ranked by weighted wager, as on kingkulbik.com: paid places only, names
+ * masked. Players with nothing counted yet would otherwise sit in a paying
+ * place ahead of an empty slot. Also used for a Stake export added by hand.
+ */
+export function rankEntries(rows: ReturnType<typeof parseLeaderboardCsv>, prizes: number[]): LeaderboardEntry[] {
+  return rows
     .filter((row) => row.name && row.weighted > 0)
     .sort((a, b) => b.weighted - a.weighted || a.rank - b.rank)
-    .slice(0, board.prizes.length)
+    .slice(0, prizes.length)
     .map((row, i) => ({
       rank: i + 1,
       name: maskName(row.name),
       wagered: row.wagered,
       weighted: row.weighted,
-      prize: board.prizes[i] ?? 0,
+      prize: prizes[i] ?? 0,
     }))
-
-  const data: LeaderboardResponse = { board: boardId, window, entries, updatedAt: now }
-  cache.set(cacheKey, { at: now, data })
-  return data
 }
 
 /**

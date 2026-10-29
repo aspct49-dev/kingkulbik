@@ -28,19 +28,19 @@ export const PAGES: Record<string, PageSeo> = {
   '/': {
     title: HOME_TITLE,
     description:
-      'Play on Stake with code KINGKULBIK and compete on the $40,000 monthly leaderboards. Rank up milestones, raffles, challenges, King Points rewards and free originals.',
+      'Play on Stake with code KINGKULBIK and compete on the $60,000 monthly leaderboards. Rank up milestones, raffles, challenges, King Points rewards and free originals.',
     index: true,
   },
   '/leaderboard': {
-    title: 'Stake Leaderboard: $40,000 Monthly',
+    title: 'Stake Leaderboard: $60,000 Monthly',
     description:
-      'Live Stake leaderboard for code KINGKULBIK. Wager under the code to climb the $30,000 weighted race and the $10,000 Stake Exclusive board every month.',
+      'Live Stake leaderboard for code KINGKULBIK. Wager under the code to climb the $40,000 Stake race and the $20,000 Only on Stake board every month. Results of past months are kept too.',
     index: true,
   },
   '/rewards': {
     title: 'Kulbik Rewards',
     description:
-      'Every reward for playing under code KINGKULBIK: tripled weekly bonus or 10% lossback, $40,000 monthly VIP giveaways, wager milestones, a free $21 on sign up, weekly $1,000 raffles and the $40K race.',
+      'Every reward for playing under code KINGKULBIK: tripled weekly bonus or 10% lossback, $40,000 monthly VIP giveaways, wager milestones, a free $21 on sign up, weekly $1,000 raffles and the $60K race.',
     index: true,
   },
   '/milestones': {

@@ -57,14 +57,20 @@
   text-align: center;
 }
 
-/* Opens the wager contribution rules: the countdown label's pill, made a button */
-.leaderboard-page__rules {
+/* Rules, previous leaderboards, months: the countdown label's pill, made a button */
+.leaderboard-page__pills {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.leaderboard-page__pill {
   display: flex;
   align-items: center;
   gap: 7px;
-  align-self: center;
   height: 30px;
-  margin-top: 14px;
   padding: 0 16px;
   border-radius: var(--radius-md);
   background: rgb(36 44 58 / 0.65);
@@ -80,17 +86,23 @@
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .leaderboard-page__rules:hover {
+  .leaderboard-page__pill:hover {
     background: #2c3647;
     color: var(--color-text);
   }
 }
 
-.leaderboard-page__rules:active {
+.leaderboard-page__pill:active {
   transform: translateY(1px);
 }
 
-.leaderboard-page__rules:focus-visible {
+.leaderboard-page__pill:focus-visible {
   outline: 2px solid #e6d218;
   outline-offset: 2px;
+}
+
+/* The month being shown */
+.leaderboard-page__pill--selected {
+  background: #2c3647;
+  color: var(--color-text);
 }

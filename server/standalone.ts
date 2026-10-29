@@ -19,6 +19,7 @@ import { fileURLToPath } from 'node:url'
 import { serveApi } from './api.js'
 import type { AuthEnv } from './auth.js'
 import { startKickChat } from './kickChat.js'
+import { startLeaderboardArchiver } from './leaderboardArchive.js'
 import { startWatchCounter } from './raffles.js'
 import { handleLeaderboardRequest } from './stakeLeaderboard.js'
 import { storeKind } from './store.js'
@@ -181,4 +182,5 @@ createServer((req, res) => {
   // A long-running server: count watch time and keep Kick chat connected in the background
   startKickChat(env)
   startWatchCounter(env)
+  startLeaderboardArchiver(env)
 })

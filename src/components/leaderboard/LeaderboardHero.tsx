@@ -16,12 +16,16 @@ const pickerOptions: { id: BoardId; label: string | null }[] = [
 type LeaderboardHeroProps = {
   board: BoardId
   onBoardChange: (board: BoardId) => void
+  /** The board's prize pool (the current race's, or a finished one's) */
+  pool: number
+  /** A finished race: its name and dates replace the call to compete */
+  finished?: { name: string; dates: string }
 }
 
 /**
  * The selected board's monthly prize pool, summed from its prize table (so the
  * title can't drift from the prizes). A two-digit-thousands figure like
- * $30,000 keeps the design's kerning around the zero and the comma.
+ * $40,000 keeps the design's kerning around the zero and the comma.
  */
 function PrizePool({ amount }: { amount: number }) {
   const text = amount.toLocaleString('en-US')
@@ -37,7 +41,7 @@ function PrizePool({ amount }: { amount: number }) {
   )
 }
 
-export default function LeaderboardHero({ board, onBoardChange }: LeaderboardHeroProps) {
+export default function LeaderboardHero({ board, onBoardChange, pool, finished }: LeaderboardHeroProps) {
   return (
     <section className="lb-hero">
       <FloatingSymbol
@@ -78,16 +82,22 @@ export default function LeaderboardHero({ board, onBoardChange }: LeaderboardHer
 
       <h1 className="lb-hero__title">
         <span className="lb-hero__title-line lb-hero__title-line--top">
-          <PrizePool amount={BOARDS[board].prizes.reduce((sum, prize) => sum + prize, 0)} />{' '}
+          <PrizePool amount={pool} />{' '}
           <span className="lb-hero__silver">MONTHLY</span>
         </span>{' '}
         <span className="lb-hero__title-line lb-hero__title-line--main lb-hero__gold">LEADERBOARD</span>
       </h1>
 
-      <p className="lb-hero__subtitle">
-        Compete against other players under code <span className="lb-hero__accent">KingKulbik</span> and win
-        big rewards!
-      </p>
+      {finished ? (
+        <p className="lb-hero__subtitle">
+          <span className="lb-hero__accent">{finished.name}</span> final results · {finished.dates}
+        </p>
+      ) : (
+        <p className="lb-hero__subtitle">
+          Compete against other players under code <span className="lb-hero__accent">KingKulbik</span> and win
+          big rewards!
+        </p>
+      )}
 
       <StakeActions className="lb-hero__actions" />
 

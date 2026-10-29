@@ -32,6 +32,7 @@ import { DEFAULT_SHOP_SETTINGS } from '../shared/profiles.js'
 import type { PlayerBet, PlayerProfile, PointsLogEntry, Redemption, ShopSettings } from '../shared/profiles.js'
 import type { Raffle, RaffleSnapshot } from '../shared/raffles.js'
 import type { HouseStats } from '../shared/house.js'
+import type { ArchivedRace } from '../shared/leaderboard.js'
 import type { Chatter } from './kickChat.js'
 
 type Tables = {
@@ -61,6 +62,8 @@ type Tables = {
   stakeUnlinks: Record<string, number>
   /** Everyone seen in Kick chat (via Kick's webhooks), by lowercase name */
   chatters: Record<string, Chatter>
+  /** Finished leaderboard races, newest first (server/leaderboardArchive.ts) */
+  leaderboardArchive: ArchivedRace[]
   /** Each raffle's saved ticket lists, newest first (hourly while open, at lock, before a reset) */
   raffleSnapshots: Record<string, RaffleSnapshot[]>
   /** Watch-time raffles: the most all-time BotRix minutes seen per viewer (lowercase name), kept across restarts */
@@ -102,6 +105,7 @@ const DEFAULTS: Tables = {
   houseStats: { filled: false, hours: {} },
   watchSeen: {},
   raffleSnapshots: {},
+  leaderboardArchive: [],
   kickChat: {},
 }
 
