@@ -3,12 +3,13 @@
  * Plain TypeScript with no Node or DOM dependencies, so both sides can import it.
  *
  * Two boards under code KINGKULBIK. Races run a calendar month in whole UTC
- * days (Stake counts whole days: a window touching a day takes all of it):
- * from 28 Oct 2026, the 28th through the 27th; before that, the 29th through
- * the 28th. The switch means 28 Oct counts in both October's race (as paid)
- * and the one that began that day. Prizes change over time (PRIZE_HISTORY): from the race that
- * began 29 Oct 2026, $40,000 on the Stake race and $20,000 Only on Stake;
- * before it, $30,000 and $10,000. Finished races are kept (ArchivedRace).
+ * days (Stake counts whole days: a window touching a day takes all of it).
+ * From 28 Oct 2026 a race runs from the 28th at 00:00 UTC until the next 28th
+ * at 00:00 UTC; before that, the 29th to the 29th. The switch means 28 Oct
+ * counts in both October's race (as paid) and the one that began that day.
+ * Prizes change over time (PRIZE_HISTORY): from 28 Oct 2026, $30,000 on the
+ * Stake race and $20,000 Only on Stake; before that, $30,000 and $10,000.
+ * Finished races are kept (ArchivedRace).
  */
 
 export type BoardId = 'weighted' | 'exclusive'
@@ -32,10 +33,10 @@ export const BOARDS: Record<BoardId, BoardConfig> = {
  */
 const PRIZE_HISTORY: { from: number; prizes: Record<BoardId, number[]> }[] = [
   {
-    // $40,000 + $20,000 (Only on Stake: every place doubled)
+    // $30,000 + $20,000 (Only on Stake: every place doubled)
     from: Date.UTC(2026, 9, 28),
     prizes: {
-      weighted: [16500, 10000, 6500, 2500, 1400, 900, 600, 400, 300, 150, 150, 150, 150, 150, 150],
+      weighted: [12500, 7500, 5000, 1800, 1000, 650, 450, 300, 200, 100, 100, 100, 100, 100, 100],
       exclusive: [7000, 3800, 2400, 1600, 1300, 1000, 800, 700, 700, 700],
     },
   },
