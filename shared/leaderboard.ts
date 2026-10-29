@@ -3,7 +3,8 @@
  * Plain TypeScript with no Node or DOM dependencies, so both sides can import it.
  *
  * Two boards under code KINGKULBIK, each race running from the 29th through
- * the 28th (UTC). Prizes change over time (PRIZE_HISTORY): from the race that
+ * the 28th (UTC). Stake counts whole UTC days (a window touching a day takes
+ * all of it), so races start and end at midnight: no gap, no day counted twice. Prizes change over time (PRIZE_HISTORY): from the race that
  * began 29 Oct 2026, $40,000 on the Stake race and $20,000 Only on Stake;
  * before it, $30,000 and $10,000. Finished races are kept (ArchivedRace).
  */
